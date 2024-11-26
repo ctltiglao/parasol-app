@@ -2,11 +2,14 @@ const gluestackPlugin = require('@gluestack-ui/nativewind-utils/tailwind-plugin'
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: "media",
+  darkMode: process.env.DARK_MODE ? process.env.DARK_MODE : 'media',
   content: [
-    "App.{tsx,jsx,ts,js}",
-    "index.{tsx,jsx,ts,js}",
-    "components/**/*.{tsx,jsx,ts,js}"
+    './App.tsx',
+    './app/**/*.{js,ts,jsx,tsx}',
+    './src/**/*.{html,js,jsx,ts,tsx}',
+    './src/core-components/**/**/*.{html,js,jsx,ts,tsx}',
+    './src/components/**/*.{html,js,jsx,ts,tsx,mdx}',
+    './src/hooks/**/*.{html,js,jsx,ts,tsx,mdx}',
   ],
   presets: [require('nativewind/preset')],
   safelist: [
@@ -18,6 +21,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        custom: {
+          primary: 'var(--primary)',
+          secondary: 'var(--secondary)',
+          customBluegray: 'var(--customBluegray)',
+          customBlue: 'var(--customBlue)',
+          customGreen: 'var(--customGreen)',
+          customRed: 'var(--customRed)',
+          customBackground: 'var(--custom-background)',
+        },
         primary: {
           0: 'rgb(var(--color-primary-0)/<alpha-value>)',
           50: 'rgb(var(--color-primary-50)/<alpha-value>)',
@@ -147,6 +159,14 @@ module.exports = {
           950: 'rgb(var(--color-outline-950)/<alpha-value>)',
         },
         background: {
+          primary: 'var(--primary)',
+          secondary: 'var(--secondary)',
+          customBluegray: 'var(--customBluegray)',
+          customBlue: 'var(--customBlue)',
+          customGreen: 'var(--customGreen)',
+          customRed: 'var(--customRed)',
+          customBackground: 'var(--custom-background)',
+
           0: 'rgb(var(--color-background-0)/<alpha-value>)',
           50: 'rgb(var(--color-background-50)/<alpha-value>)',
           100: 'rgb(var(--color-background-100)/<alpha-value>)',

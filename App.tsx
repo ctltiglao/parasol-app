@@ -1,22 +1,30 @@
-import { StatusBar } from 'expo-status-bar';
-import "@/global.css";
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
-import { StyleSheet, Text, View } from 'react-native';
+import '@/global.css';
+import { GluestackUIProvider } from './components/ui/gluestack-ui-provider';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import LoginScreen from './app/(login)/login';
+import RegisterScreen from './app/(register)/register';
+import TabScreen from './app/(tabs)/tab';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <GluestackUIProvider mode="light"><View style={styles.container}>
-        <Text>Open up App.tsx to start working on your app!</Text>
-        <StatusBar style="auto" />
-      </View></GluestackUIProvider>
-  );
+    <GluestackUIProvider mode='light'>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName='Login'
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: 'white' },
+          }}
+        >
+          <Stack.Screen name='Login' component={LoginScreen} />
+          <Stack.Screen name='Register' component={RegisterScreen} />
+          <Stack.Screen name='Tab' component={TabScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GluestackUIProvider>
+  )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
