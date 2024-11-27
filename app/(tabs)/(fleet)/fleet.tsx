@@ -1,25 +1,31 @@
-import { useEffect, useRef, useState } from 'react';
 import '@/global.css';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-
-import { Text } from 'react-native';
+// react native
+import { useEffect, useState, useRef } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-import { MaterialIcons } from '@expo/vector-icons';
+import MapView, { MapMarker, Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import { StyleSheet } from 'react-native';
+// expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
-import MapView, { Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+// gluestack
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { Box } from '@/components/ui/box';
+import { Text } from '@/components/ui/text';
+import { Button, ButtonText } from '@/components/ui/button';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
 
 import { CustomFleetFab } from '@/components/customFab';
-import CustomDrawer from '@/components/_drawer/customDrawer';
+import DrawerScreen from '@/app/(drawer)/drawer';
 import FleetHeader from '@/components/_drawer/_headers/fleetHeader';
 
 import FleetInfo from './(info)/info';
 import DashboardMonitorScreen from './(dashboard)/dashboard';
 import FleetHistoryScreen from './(history)/history';
 import FleetSettingsScreen from './(settings)/settings';
+import { getLocationPermission } from '../tabViewModel';
+import { getFleetDetails, setFleetRecord } from './fleetViewModel';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -36,7 +42,7 @@ function DrawerNavigator() {
     return (
         <Drawer.Navigator
             initialRouteName='Main'
-            drawerContent={props => <CustomDrawer {...props} />}
+            drawerContent={props => <DrawerScreen {...props} />}
 
             screenOptions={{
                 header: (props) => <FleetHeader {...props} />
@@ -63,61 +69,50 @@ function DrawerNavigator() {
     );
 }
 
-type LocationType = {
-    latitude: number;
-    longitude: number;
-} | null;
-
-type RegionType = {
-    latitude: number;
-    longitude: number;
-    latitudeDelta: number;
-    longitudeDelta: number;
-} | null;
-
 function Screen() {
-    const [location, setLocation] = useState<LocationType>(null);
-    const [region, setRegion] = useState<RegionType>(null);
-    const mapRef = useRef<MapView | null>(null);
-
-    const [isOverlayVisible, setOverlayVisible] = useState(false);
+    const mapRef = useRef<MapView>(null);
+    const [location, setLocation] = useState<any|null>(null);
     const [isFleetStart, setFleetStart] = useState(false);
     const [isFleetStop, setFleetStop] = useState(false);
     const [isFleetPause, setFleetPause] = useState(false);
 
-    const toggleOverlay = () => setOverlayVisible(!isOverlayVisible);
+    const [route, setRoute] = useState('');
+    const [vehicleId, setVehicleId] = useState('');
 
-    const handleFabAction = () => {
-        toggleOverlay();
+    const [isOverlayInfoVisible, setIsOverlayInfoVisible] = useState(false);
+    const toggleOverlayInfo = () => {
+        setIsOverlayInfoVisible(!isOverlayInfoVisible);
+
+        getFleetDetails().then((response) => {
+            setRoute(response.route);
+            setVehicleId(response.vehicleId);
+            console.warn(response)
+        })
     }
 
     useEffect(() => {
-        (async () => {
-            let userLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-            const { latitude, longitude } = userLocation.coords;
+        getLocationPermission();
 
-            console.warn(userLocation.coords);
+        const getLocation = async () => {
+            const loc = await Location.getCurrentPositionAsync({});
+            setLocation(loc);
+        }
 
-            setLocation({ latitude, longitude });
-            setRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+        getLocation();
 
-            if (mapRef.current) {
-                mapRef.current.animateToRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 1000);
-            }
-        });
-    }, [location, region]);
+        if (location && mapRef.current) {
+            mapRef.current.animateToRegion({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01
+            });
+        }
+    }, [location]);
 
-    const handleFleetStart = (i : boolean) => {
-        setFleetStart(i);
-    }
-
-    const handleFleetStop = (i : boolean) => {
-        setFleetStop(i);
-    }
-
-    const handleFleetPause = (i : boolean) => {
-        setFleetPause(i);
-    }
+    const handleFleetStart = (i: boolean) => setFleetStart(i);
+    const handleFleetStop = (i: boolean) => setFleetStop(i);
+    const handleFleetPause = (i: boolean) => setFleetPause(i);
 
     return (
         <GluestackUIProvider mode='light'>
@@ -128,6 +123,11 @@ function Screen() {
                             handleFleetStart(false);
                             handleFleetStop(true);
                             handleFleetPause(false);
+
+                            setFleetRecord();
+
+                            setRoute('');
+                            setVehicleId('');
                         }} className='p-4 bg-custom-customRed'>
                             <ButtonText className='text-white text-lg font-bold'>
                                 STOP FLEET TRACKING
@@ -136,13 +136,17 @@ function Screen() {
 
                         {
                             isFleetPause ? (
-                                <Button onPress={() => handleFleetPause(false)} className='p-4 bg-warning-500'>
+                                <Button  className='p-4 bg-warning-500'
+                                    onPress={() => handleFleetPause(false)}
+                                >
                                     <ButtonText className='text-white text-lg font-bold'>
                                         CONTINUE TRACKING
                                     </ButtonText>
                                 </Button>
                             ) : (
-                                <Button onPress={() => handleFleetPause(true)} className='p-4 bg-warning-500'>
+                                <Button className='p-4 bg-warning-500'
+                                    onPress={() => handleFleetPause(true)}
+                                >
                                     <ButtonText className='text-white text-lg font-bold'>
                                         PAUSE TRACKING
                                     </ButtonText>
@@ -151,10 +155,12 @@ function Screen() {
                         }
                     </Box>
                 ) : (
-                    <Button onPress={() => {
-                        handleFleetStart(true);
-                        isFleetStop === true && handleFleetStop(false);
-                    }} className='p-4 bg-custom-secondary'>
+                    <Button className='p-4 bg-custom-secondary'
+                        onPress={() => {
+                            handleFleetStart(true);
+                            isFleetStop === true && handleFleetStop(false);
+                        }}
+                    >
                         <ButtonText className='text-white text-lg font-bold'>
                             START NEW FLEET TRACKING
                         </ButtonText>
@@ -163,35 +169,64 @@ function Screen() {
             }
 
             <Box className='flex-1 w-full h-full'>
-                {isOverlayVisible ? (
-                    <FleetInfo handleFabAction={handleFabAction} />
+                {isOverlayInfoVisible ? (
+                    <FleetInfo handleAction={toggleOverlayInfo} />
                 ) : (
                     <Box className='flex-1 w-full h-full'>
-                        <Box className='absolute z-10 p-2'>
-                            <Text className='bg-white w-fit'>Route info:</Text>
-                            <Text className='bg-white w-fit'>Vehicle info:</Text>
-                        </Box>
+                        <VStack className='z-10 bg-white w-fit absolute p-2'>
+                            <HStack>
+                                <Text>Route Info:</Text>
+                                <Text>{route}</Text>
+                            </HStack>
+                            <HStack>
+                                <Text>Vehicle Info:</Text>
+                                <Text>{vehicleId}</Text>
+                            </HStack>
+                        </VStack>
 
                         <Box className='flex-1 h-full'>
-                            <MapView
-                                style={{ flex: 1 }}
-                                // provider={PROVIDER_GOOGLE}
-                                showsUserLocation={true}
-                                onRegionChangeComplete={(region) => setRegion(region)}
-                            >
-                                {
-                                    location && (
-                                        <Marker coordinate={location} />
+                            {
+                                location && (
+                                    isFleetStart ? (
+                                        <MapView
+                                            ref={mapRef}
+                                            style={StyleSheet.absoluteFillObject}
+                                            showsUserLocation={true}
+                                            initialRegion={{
+                                                latitude: location.coords.latitude,
+                                                longitude: location.coords.longitude,
+                                                latitudeDelta: 0.0922,
+                                                longitudeDelta: 0.0421
+                                            }}
+                                        >
+                                            <MapMarker
+                                                coordinate={{
+                                                    latitude: location.coords.latitude,
+                                                    longitude: location.coords.longitude
+                                                }}
+                                            />
+                                        </MapView>
+                                    ) : (
+                                        <MapView
+                                            style={StyleSheet.absoluteFillObject}
+                                            showsUserLocation={true}
+                                            initialRegion={{
+                                                latitude: location.coords.latitude,
+                                                longitude: location.coords.longitude,
+                                                latitudeDelta: 0.01,
+                                                longitudeDelta: 0.01
+                                            }}
+                                        />
                                     )
-                                }
-                            </MapView>
+                                )
+                            }
                         </Box>
 
                         {
                             isFleetStart === false && (
                                 <Box className='justify-center bottom-1/2'>
                                     <CustomFleetFab onFabPress={() => {
-                                        handleFabAction();
+                                        toggleOverlayInfo();
                                         handleFleetStop(false);
                                     }} />
                                 </Box>
@@ -216,7 +251,7 @@ function Screen() {
                                 <Button
                                     className='bg-custom-customGreen w-16 h-16 p-3 boarder-1 rounded-full m-2'
                                 >
-                                    <MaterialIcons name='add' size={35} color='white'/>
+                                    <MaterialCommunityIcons name='plus' size={35} color='white'/>
                                 </Button>
                             </Box>
 
@@ -238,7 +273,7 @@ function Screen() {
                                 <Button
                                     className='bg-custom-customRed w-16 h-16 p-3 boarder-1 rounded-full m-2'
                                 >
-                                    <MaterialIcons name='remove' size={35} color='white'/>
+                                    <MaterialCommunityIcons name='close' size={35} color='white'/>
                                 </Button>
                             </Box>
                         </Box>

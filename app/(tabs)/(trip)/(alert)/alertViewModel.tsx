@@ -40,6 +40,9 @@ export const handleAlert = ({
     if (selectedCheckboxes.overload) {
         alertString.push('Overloading');
     }
+    if (selectedCheckboxes.line) {
+        alertString.push('Out-of-line operation');
+    }
     if (selectedCheckboxes.crash) {
         alertString.push('Road crash');
     }

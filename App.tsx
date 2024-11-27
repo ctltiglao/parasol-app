@@ -1,7 +1,10 @@
 import '@/global.css';
-import { GluestackUIProvider } from './components/ui/gluestack-ui-provider';
+// react native
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+// expo
+// gluestack
+import { GluestackUIProvider } from './components/ui/gluestack-ui-provider';
 
 import LoginScreen from './app/(login)/login';
 import RegisterScreen from './app/(register)/register';

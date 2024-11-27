@@ -1,7 +1,10 @@
+// react native
 import { Linking } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+// expo
 import * as Device from 'expo-device';
 import * as Location from 'expo-location';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// gluestack
 
 // open privacy policy
 export const useViewModel = () => {

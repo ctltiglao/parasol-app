@@ -1,15 +1,16 @@
-import { useEffect } from 'react';
 import '@/global.css';
+// react native
+import { useEffect } from 'react';
+import { NavigationProp } from '@react-navigation/native';
+// expo
+import { StatusBar } from 'expo-status-bar';
+// gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { Text } from 'react-native';
 import { Box } from '@/components/ui/box';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
-
-import { NavigationProp } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-import { StatusBar } from 'expo-status-bar';
 
 import String from '@/assets/values/strings';
 import { continueAsGuest, getPermissions, useViewModel } from './loginViewModel';
@@ -36,7 +37,7 @@ export default function LoginScreen({ navigation } : { navigation: NavigationPro
           <Box className='w-full items-center justify-center mt-24 flex-col p-4'>
             <Button
               className='bg-custom-primary w-full h-fit p-5 rounded-xl'
-              onPress={() => toTab() }
+              onPress={() => toTab()}
             >
               <ButtonText className='text-black text-lg font-bold'>
                 GET STARTED
@@ -72,15 +73,11 @@ export default function LoginScreen({ navigation } : { navigation: NavigationPro
 
 function TopView() {
   return (
-    <Box
-      className='w-full items-center justify-center mt-20 flex-row p-4'
-    >
+    <Box className='w-full items-center justify-center mt-20 flex-row p-4'>
       <Image size='sm' source={(require('@/assets/icons/stph_72.png'))} alt='logo' />
-      <Box
-        className='flex-col ms-3'
-      >
+      <Box className='flex-col ms-3'>
         <Text className='text-custom-customBluegray text-[38px] font-bold' >SafeTravelPH</Text>
-        <Text className='text-custom-customBluegray text-[10px] font-bold'>Shaing Information. Improving Transportation.</Text>
+        <Text className='text-custom-customBluegray text-[11px] font-bold'>Shaing Information. Improving Transportation.</Text>
       </Box>
     </Box>
   );
@@ -88,25 +85,25 @@ function TopView() {
 
 function BottomView() {
   return (
-    <Box className='flex-col w-full absolute bottom-0 mb-4 p-4'>
-      <Text className='text-black text-sm'>
+    <Box className='flex-col w-full absolute bottom-0 mb-8 p-4'>
+      <Text size='sm' className='text-black'>
         {String.notice_contact}
       </Text>
 
-      <Text className='text-black text-sm mt-5'>
+      <Text size='sm' className='text-black mt-5'>
         {String.notice_policy}
       </Text>
         
-      <Button className='bg-transparent justify-start'
+      <Button className='bg-transparent justify-start items-start'
         onPress={
           () => viewModel.openPolicy()
       }>
-        <ButtonText className='text-black text-sm font-normal'>
+        <ButtonText size='sm' className='text-black font-normal'>
           {String.notice_policy_link}
         </ButtonText>
       </Button>
 
-      <Text className='text-black text-sm mt-5'>
+      <Text size='sm' className='text-black'>
         {String.notice_copyright}
       </Text>
     </Box>

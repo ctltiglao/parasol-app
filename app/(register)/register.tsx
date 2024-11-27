@@ -1,20 +1,20 @@
-
 import '@/global.css';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { Box } from '@/components/ui/box';
-import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
-import { Button } from '@/components/ui/button';
-
-import { Text, Linking } from 'react-native';
+// react native
+import { Linking } from 'react-native';
 import WebView from 'react-native-webview';
 import { useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
-
-import { Ionicons } from '@expo/vector-icons';
-
-import LoginScreen from '../(login)/login';
+// expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+// gluestack
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { Box } from '@/components/ui/box';
+import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
+import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 
 const Drawer = createDrawerNavigator();
+var getUrl : string = 'https://form.jotform.com/233600687638463';
 
 export default function RegisterScreen() {
     return (
@@ -27,23 +27,28 @@ export default function RegisterScreen() {
 function DrawerRegisterNavigator() {
     return (
         <Drawer.Navigator
-            initialRouteName='Reg'
+            initialRouteName='main'
 
             screenOptions={{
                 header: (props) => <Header {...props} />
             }}
         >
-            <Drawer.Screen name='Reg' component={RegisterOrganization} />
+            <Drawer.Screen name='main' component={Screen} />
         </Drawer.Navigator>
     );
 }
 
-function RegisterOrganization() {
+function Screen() {
+    const handleUrlChange = (navState: any) => {
+        getUrl = navState.url;
+    }
+
     return (
         <GluestackUIProvider mode='light'>
             <Box className='flex-1 w-full h-full items justify-center'>
                 <WebView
                     source={{ uri: 'https://form.jotform.com/233600687638463' }}
+                    onNavigationStateChange={handleUrlChange}
                 />
             </Box>
         </GluestackUIProvider>
@@ -57,8 +62,8 @@ function Header({ navigation } : any) {
         <Box 
             style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
             className='items-center bg-custom-primary p-5 pt-14 pb-2'>
-            <Ionicons
-                name='arrow-back'
+            <MaterialCommunityIcons
+                name='arrow-left'
                 size={25}
                 color='#0038A8'
                 onPress={() => nav.dispatch( navigation.goBack() )}
@@ -77,15 +82,15 @@ function Header({ navigation } : any) {
                 trigger={({ ...triggerProps }) => {
                     return (
                         <Button {...triggerProps} className='bg-transparent'>
-                            <Ionicons name='ellipsis-vertical' size={25} color='#0038A8' />
+                            <MaterialCommunityIcons name='dots-vertical' size={25} color='#0038A8' />
                         </Button>
                     )
                 }}
             >
                 <MenuItem key='1' textValue='Open in Browser'
                     onPress={() => {
-                        Linking.openURL('https://form.jotform.com/233600687638463')
-                        .catch((err) => console.error('An error occurred', err));
+                        Linking.openURL(getUrl)
+                        .catch((err) => alert(`An error occurred: ${err}`));
                     }}
                 >
                     <MenuItemLabel>Open in Browser</MenuItemLabel>

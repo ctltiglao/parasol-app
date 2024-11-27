@@ -1,10 +1,15 @@
-import { useState } from 'react';
 import '@/global.css';
-import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { ScrollView, Text } from 'react-native';
-import { RadioGroup, RadioIndicator, Radio, RadioLabel } from '@/components/ui/radio';
+// react native
+import { useState } from 'react';
+import { ScrollView } from 'react-native';
+// expo
 import { MaterialIcons } from '@expo/vector-icons';
+// gluestack
+import { Box } from '@/components/ui/box';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
+import { Button, ButtonText } from '@/components/ui/button';
+import { RadioGroup, RadioIndicator, Radio, RadioLabel } from '@/components/ui/radio';
 
 import { handleRating } from './rateViewModel';
 
@@ -26,37 +31,14 @@ export default function TripRate({ handleAction } : any) {
     const [isSelectedRoute, setIsSelectedRoute] = useState(null);
     const [isSelectedOverall, setIsSelectedOverall] = useState(null);
 
-    const toggleSelectedCondition = (value : any) => {
-        setIsSelectedCondition(value);
-    };
-
-    const toggleSelectedComfort = (value : any) => {
-        setIsSelectedComfort(value);
-    };
-    
-    const toggleSelectedAdequacy = (value : any) => {
-        setIsSelectedAdequacy(value);
-    };
-
-    const toggleSelectedStop = (value : any) => {
-        setIsSelectedStop(value);
-    };
-
-    const toggleSelectedInfo = (value : any) => {
-        setIsSelectedInfo(value);
-    };
-
-    const toggleSelectedAvailable = (value : any) => {
-        setIsSelectedAvailable(value);
-    };
-
-    const toggleSelectedRoute = (value : any) => {
-        setIsSelectedRoute(value);
-    };
-
-    const toggleSelectedOverall = (value : any) => {
-        setIsSelectedOverall(value);
-    };
+    const toggleSelectedCondition = (value: any) => setIsSelectedCondition(value);
+    const toggleSelectedComfort = (value: any) => setIsSelectedComfort(value);
+    const toggleSelectedAdequacy = (value: any) => setIsSelectedAdequacy(value);
+    const toggleSelectedStop = (value: any) => setIsSelectedStop(value);
+    const toggleSelectedInfo = (value: any) => setIsSelectedInfo(value);
+    const toggleSelectedAvailable = (value: any) => setIsSelectedAvailable(value);
+    const toggleSelectedRoute = (value: any) => setIsSelectedRoute(value);
+    const toggleSelectedOverall = (value: any) => setIsSelectedOverall(value);
 
     return (
         <Box className='p-4'>
@@ -72,14 +54,14 @@ export default function TripRate({ handleAction } : any) {
                 </Button>
             </Box>
 
-            <Box className='flex-col mt-4 mb-20 pl-6 pr-6'>
+            <Box className='mt-4 mb-20 pl-6 pr-6'>
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    <Box className='flex-col mt-1'>
-                        <Text className='text-lg'>1. Vehicle condition</Text>
+                    <VStack className='mt-1'>
+                        <Text size='md'>1. Vehicle condition</Text>
                         <RadioGroup onChange={toggleSelectedCondition} className='flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <VStack>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedCondition === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -88,18 +70,18 @@ export default function TripRate({ handleAction } : any) {
                                             />
                                         </RadioIndicator>
                                         <RadioLabel className='ml-2 text-md'>{smiley.value}</RadioLabel>
-                                    </Box>
+                                    </VStack>
                                 </Radio>
                             ))}
                         </RadioGroup>
-                    </Box>
+                    </VStack>
 
-                    <Box className='flex-col mt-2'>
-                        <Text className='text-lg'>2. Ride comfort</Text>
+                    <VStack className='mt-2'>
+                        <Text size='md'>2. Ride comfort</Text>
                         <RadioGroup onChange={toggleSelectedComfort} className='flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <VStack>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedComfort === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -108,18 +90,18 @@ export default function TripRate({ handleAction } : any) {
                                             />
                                         </RadioIndicator>
                                         <RadioLabel className='ml-2 text-md'>{smiley.value}</RadioLabel>
-                                    </Box>
+                                    </VStack>
                                 </Radio>
                             ))}
                         </RadioGroup>
-                    </Box>
+                    </VStack>
 
-                    <Box className='flex-col mt-2'>
-                        <Text className='text-lg'>3. Service adequacy</Text>
+                    <VStack className='mt-2'>
+                        <Text size='md'>3. Service adequacy</Text>
                         <RadioGroup onChange={toggleSelectedAdequacy} className='flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <VStack>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedAdequacy === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -128,18 +110,18 @@ export default function TripRate({ handleAction } : any) {
                                             />
                                         </RadioIndicator>
                                         <RadioLabel className='ml-2 text-md'>{smiley.value}</RadioLabel>
-                                    </Box>
+                                    </VStack>
                                 </Radio>
                             ))}
                         </RadioGroup>
-                    </Box>
+                    </VStack>
 
-                    <Box className='flex-col mt-2'>
-                        <Text className='text-lg'>4. Stop accessibility</Text>
+                    <Box className='mt-2'>
+                        <Text size='md'>4. Stop accessibility</Text>
                         <RadioGroup onChange={toggleSelectedStop} className='flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <Box>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedStop === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -154,12 +136,12 @@ export default function TripRate({ handleAction } : any) {
                         </RadioGroup>
                     </Box>
 
-                    <Box className='flex-col mt-2'>
-                        <Text className='text-lg'>5. Information provision</Text>
+                    <VStack className='mt-2'>
+                        <Text size='md'>5. Information provision</Text>
                         <RadioGroup onChange={toggleSelectedInfo} className='flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <VStack>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedInfo === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -168,18 +150,18 @@ export default function TripRate({ handleAction } : any) {
                                             />
                                         </RadioIndicator>
                                         <RadioLabel className='ml-2 text-md'>{smiley.value}</RadioLabel>
-                                    </Box>
+                                    </VStack>
                                 </Radio>
                             ))}
                         </RadioGroup>
-                    </Box>
+                    </VStack>
 
-                    <Box className='flex-col mt-2'>
-                        <Text className='text-lg'>6. Service availability</Text>
+                    <VStack className='mt-2'>
+                        <Text size='md'>6. Service availability</Text>
                         <RadioGroup onChange={toggleSelectedAvailable} className='flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <VStack>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedAvailable === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -188,18 +170,18 @@ export default function TripRate({ handleAction } : any) {
                                             />
                                         </RadioIndicator>
                                         <RadioLabel className='ml-2 text-md'>{smiley.value}</RadioLabel>
-                                    </Box>
+                                    </VStack>
                                 </Radio>
                             ))}
                         </RadioGroup>
-                    </Box>
+                    </VStack>
 
-                    <Box className='flex-col mt-2'>
-                        <Text className='text-lg'>7. Route connectivity</Text>
+                    <VStack className='mt-2'>
+                        <Text size='md'>7. Route connectivity</Text>
                         <RadioGroup onChange={toggleSelectedRoute} className='flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <VStack>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedRoute === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -208,18 +190,18 @@ export default function TripRate({ handleAction } : any) {
                                             />
                                         </RadioIndicator>
                                         <RadioLabel className='ml-2 text-md'>{smiley.value}</RadioLabel>
-                                    </Box>
+                                    </VStack>
                                 </Radio>
                             ))}
                         </RadioGroup>
-                    </Box>
+                    </VStack>
 
-                    <Box className='flex-col mt-6 items-center'>
-                        <Text className='text-xl font-medium'>What is your overall rating?</Text>
+                    <VStack className='mt-6 items-center'>
+                        <Text size='lg' className='font-medium'>What is your overall rating?</Text>
                         <RadioGroup onChange={toggleSelectedOverall} className='w-full flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
-                                    <Box className='flex-col'>
+                                    <VStack>
                                         <RadioIndicator className='border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedOverall === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
@@ -228,32 +210,31 @@ export default function TripRate({ handleAction } : any) {
                                             />
                                         </RadioIndicator>
                                         <RadioLabel className='ml-2 text-md'>{smiley.value}</RadioLabel>
-                                    </Box>
+                                    </VStack>
                                 </Radio>
                             ))}
                         </RadioGroup>
-                    </Box>
+                    </VStack>
 
                     <Box className='items-center mt-5'>
                         <Button
                             className='w-1/2 p-4 bg-custom-secondary'
-                            onPress={
-                                () => {
-                                    // console.warn(isSelectedCondition, isSelectedComfort, isSelectedAdequacy, isSelectedStop, isSelectedInfo, isSelectedAvailable, isSelectedRoute, isSelectedOverall);
-                                    const description = handleRating({
-                                        isSelectedCondition,
-                                        isSelectedComfort,
-                                        isSelectedAdequacy,
-                                        isSelectedStop,
-                                        isSelectedInfo,
-                                        isSelectedAvailable,
-                                        isSelectedRoute,
-                                        isSelectedOverall
-                                    });
+                            onPress={() => {
+                                const description = handleRating({
+                                    isSelectedCondition,
+                                    isSelectedComfort,
+                                    isSelectedAdequacy,
+                                    isSelectedStop,
+                                    isSelectedInfo,
+                                    isSelectedAvailable,
+                                    isSelectedRoute,
+                                    isSelectedOverall
+                                });
 
-                                    console.warn(description);
-                                }
-                            }
+                                console.warn(description);
+
+                                alert(description);
+                            }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>
                                 RATE YOUR TRIP

@@ -10,7 +10,7 @@ import * as Location from 'expo-location';
 import MapView, { Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 
-import CustomDrawer from '@/components/_drawer/customDrawer';
+import DrawerScreen from '@/app/(drawer)/drawer';
 import CustomHeader from '@/components/_drawer/_headers/customHeader';
 
 const Drawer = createDrawerNavigator();
@@ -27,7 +27,7 @@ function DrawerNavigator() {
     return (
         <Drawer.Navigator
             initialRouteName='Main'
-            drawerContent={props => <CustomDrawer {...props} />}
+            drawerContent={props => <DrawerScreen {...props} />}
 
             screenOptions={{
                 header: (props) => <CustomHeader {...props} />

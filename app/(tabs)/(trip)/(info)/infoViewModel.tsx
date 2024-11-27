@@ -1,6 +1,9 @@
+// react native
 import React, { useState, useEffect } from "react";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+// expo
 import { Camera } from "expo-camera";
+
 import { purposeOptions, modeOptions } from "@/assets/values/strings";
 
 export const getCameraPermissions = async () => {
@@ -9,18 +12,18 @@ export const getCameraPermissions = async () => {
 }
 
 export const clearSelection = ({
-    setInputOrigin,
-    setInputDestination,
-    setSelectedPurpose,
-    setSelectedMode,
+    // setInputOrigin,
+    // setInputDestination,
+    // setSelectedPurpose,
+    // setSelectedMode,
     setScanned,
     setInputId,
     setInputDescription
 } : any) => {
-    setInputOrigin('');
-    setInputDestination('');
-    setSelectedPurpose(undefined);
-    setSelectedMode(undefined);
+    // setInputOrigin('');
+    // setInputDestination('');
+    // setSelectedPurpose(undefined);
+    // setSelectedMode(undefined);
     setScanned(false);
     setInputId('');
     setInputDescription('');
@@ -38,4 +41,21 @@ export const modeSelectChange = ({value, setSelectedMode}: any) => {
     const selected = res?.label
 
     setSelectedMode(selected!);
+}
+
+export const saveCommuteDetails = async ({vehicleId, vehicleDescription}: any) => {
+    const commuteDetails = {
+        vehicleId: vehicleId,
+        vehicleDescription: vehicleDescription
+    }
+
+    console.log(commuteDetails);
+
+    try {
+        await AsyncStorage.setItem('CommuteVehicle', JSON.stringify(commuteDetails));
+        return true;
+    } catch (e) {
+        alert(`Failed to save commute details: ${e}`);
+        return false;
+    }
 }

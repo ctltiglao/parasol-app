@@ -1,44 +1,57 @@
 import '@/global.css';
-import React from "react";
-import { Box } from '@/components/ui/box';
-import { Divider } from '@/components/ui/divider';
-
+// react native
+import React, { useEffect, useState } from "react";
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
-import { Text } from 'react-native';
-
-import { MaterialIcons } from '@expo/vector-icons';
-import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// expo
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
+// gluestack
+import { Box } from '@/components/ui/box';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Divider } from '@/components/ui/divider';
 
-export default function CustomDrawer(props: any) {
+import { getUserState } from '../(drawer)/drawerViewModel';
+
+export default function DrawerScreen(props: any) {
     const navigation: any = useNavigation();
+
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        getUserState().then((response) => {
+            setUsername(response.username);
+        })
+    })
 
     return (
         <DrawerContentScrollView {...props}>
             <StatusBar backgroundColor='#FCD116' />
-            <Box className='w-full h-10 bg-custom-primary p-4 mt-0'>
-                <Box className='flex-row'>
-                    <Box className='flex-col'>
-                        <MaterialIcons name='account-circle' size={75} color='#0038A8' />
-                        <Text className='text-custom-secondary font-medium'>guest</Text>
-                    </Box>
-
-                    <Box className='flex-col'>
-                        <MaterialIcons className='bg-white' name='qr-code-scanner' size={40} color='black' />
-                    </Box>
-                </Box>
+            <Box className='bg-custom-primary w-full h-fit p-4'>
+                <HStack className='justify-between'>
+                    <VStack>
+                        <MaterialCommunityIcons name='account-circle' size={60} color='#0038A8' />
+                        <Text size='md' bold={true} className='text-custom-secondary'>
+                            {username ? username : 'no_username'}
+                        </Text>
+                    </VStack>
+                    <VStack>
+                        <MaterialCommunityIcons className='bg-white' name='qrcode' size={40} color='black' />
+                    </VStack>            
+                </HStack>
             </Box>
 
-            <Box className='w-full bg-custom-customBackground p-3'>
+            <Box className='bg-custom-customBackground w-full p-3'>
                 <Text className='text-typography-500 font-bold' >PIVE</Text>
-
                 <DrawerItem
                     icon={({ color, size }) => (
                         <MaterialIcons name='edit' size={size} color={color} />
                     )}
                     labelStyle={{ color: '#0038A8' }}
-                    label='Survey'
+                    label='Survey App'
                     onPress={() => navigation.navigate('Survey')}
                 />
 
@@ -51,9 +64,9 @@ export default function CustomDrawer(props: any) {
                     onPress={() => navigation.navigate('Chatbot')}
                 />
 
-                <Divider className="bg-gray-300" />
-                <Text className='text-typography-500 font-bold' >Communicate</Text>
+                <Divider />
 
+                <Text className='text-typography-500 font-bold' >Communicate</Text>
                 <DrawerItem
                     icon={({ color, size }) => (
                         <MaterialIcons name='share' size={size} color={color} />
@@ -63,9 +76,9 @@ export default function CustomDrawer(props: any) {
                     onPress={() => navigation.navigate('Share')}
                 />
 
-                <Divider className="bg-gray-300" />
-                <Text className='text-typography-500 font-bold' >Support</Text>
+                <Divider />
 
+                <Text className='text-typography-500 font-bold' >Support</Text>
                 <DrawerItem
                     icon={({ color, size }) => (
                         <MaterialIcons name='help' size={size} color={color} />
@@ -93,7 +106,7 @@ export default function CustomDrawer(props: any) {
                     onPress={() => navigation.navigate('About')}
                 />
 
-                <Divider className="bg-gray-300" />
+                <Divider />
 
                 <DrawerItem
                     icon={({ color, size }) => (

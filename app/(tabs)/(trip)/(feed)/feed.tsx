@@ -1,19 +1,22 @@
 import '@/global.css';
+// react native
+import WebView from 'react-native-webview';
+// expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+// gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
-import WebView from 'react-native-webview';
-import { MaterialIcons } from '@expo/vector-icons';
 
 export default function TripFeed({ handleAction } : any) {
     return (
-        <Box className='h-full bg-white'>
-            <Box className='p-4 flex-row w-full justify-end'>
+        <Box className='bg-white flex-1 p-2'>
+            <Box className='z-10 absolute top-0 right-2'>
                 <Button
-                    className='bg-custom-primary p-1 left-0 rounded-full'
+                    className='bg-custom-primary h-fit rounded-full p-1 m-2'
                     onPress={handleAction}
                 >
-                    <MaterialIcons name='clear' size={24} color="black" />
+                    <MaterialCommunityIcons name='close' size={24} color="black" />
                 </Button>
             </Box>
 

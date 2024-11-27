@@ -1,17 +1,20 @@
 import '@/global.css';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { Box } from '@/components/ui/box';
-import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
-import { Button } from '@/components/ui/button';
-
-import { Text, Linking } from 'react-native';
+// react native
+import { Linking } from 'react-native';
 import WebView from 'react-native-webview';
 import { useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
-
-import { Ionicons } from '@expo/vector-icons';
+// expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+// gluestack
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { Box } from '@/components/ui/box';
+import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
+import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 
 const Drawer = createDrawerNavigator();
+var getUrl : string = 'https://www.safetravelph.org/get-involved';
 
 export default function FeedbackScreen() {
     return (
@@ -36,10 +39,17 @@ function DrawerFeedbackNavigator() {
 }
 
 function Feedback() {
+    const handleUrlChange = (navState: any) => {
+        getUrl = navState.url;
+    }
+
     return (
         <GluestackUIProvider mode='light'>
             <Box className='flex-1 w-full h-full'>
-                <WebView source={{ uri: 'https://www.safetravelph.org/get-involved' }} />
+                <WebView
+                    source={{ uri: getUrl }}
+                    onNavigationStateChange={handleUrlChange}
+                />
             </Box>
         </GluestackUIProvider>
     );
@@ -52,19 +62,14 @@ function Header({ navigation } : any) {
         <Box 
             style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
             className='items-center bg-custom-primary p-5'>
-            <Ionicons
-                name='arrow-back'
+            <MaterialCommunityIcons
+                name='arrow-left'
                 size={25}
                 color='#0038A8'
                 onPress={() => nav.dispatch( navigation.goBack() )}
             />
             
-            <Text
-                style={{ fontSize: 18, color: '#0038A8' }}
-                className='font-bold'
-            >
-                Feedback
-            </Text>
+            <Text size='lg' className='font-bold text-custom-secondary'>Feedback</Text>
 
             <Menu
                 className='bg-custom-primary'
@@ -72,15 +77,15 @@ function Header({ navigation } : any) {
                 trigger={({ ...triggerProps }) => {
                     return (
                         <Button {...triggerProps} className='bg-transparent'>
-                            <Ionicons name='ellipsis-vertical' size={25} color='#0038A8' />
+                            <MaterialCommunityIcons name='dots-vertical' size={25} color='#0038A8' />
                         </Button>
                     )
                 }}
             >
                 <MenuItem key='1' textValue='Open in Browser'
                     onPress={() => {
-                        Linking.openURL('https://www.safetravelph.org/get-involved')
-                        .catch((err) => console.error('An error occurred', err));
+                        Linking.openURL(getUrl)
+                        .catch((err) => alert(`An error occurred: ${err}`));
                     }}
                 >
                     <MenuItemLabel>Open in Browser</MenuItemLabel>

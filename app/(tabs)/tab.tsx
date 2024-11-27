@@ -1,12 +1,13 @@
 import '@/global.css';
+// react native
 import React, { useEffect, useState } from 'react';
-
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation, NavigationContainer } from '@react-navigation/native';
-
+// expo
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+// gluestack
 
 import TripScreen from './(trip)/trip';
 import FleetScreen from './(fleet)/fleet';
@@ -81,15 +82,17 @@ export default function TabScreen() {
                     const iconSize = focused ? 30 : 24;
 
                     if (route.name === 'Commute') {
-                        return <MaterialIcons name='navigation' size={iconSize} color={color} />
+                        return <MaterialCommunityIcons name='navigation' size={iconSize} color={color} />
                     } else if (route.name === 'Fleet') {
-                        return <MaterialIcons name='directions-bus' size={iconSize} color={color} />
-                    } else if (route.name === 'Report') {
-                        return <MaterialIcons name='warning' size={iconSize} color={color} />
-                    } else if (route.name === 'Road Safety') {
+                        return <MaterialCommunityIcons name='bus' size={iconSize} color={color} />
+                    }
+                    // else if (route.name === 'Report') {
+                        //return <MaterialCommunityIcons name='warning' size={iconSize} color={color} />
+                    //}
+                    else if (route.name === 'Road Safety') {
                         return <MaterialCommunityIcons name='steering' size={iconSize} color={color} />
                     } else if (route.name === 'Profile') {
-                        return <MaterialIcons name='person' size={iconSize} color={color} />
+                        return <MaterialCommunityIcons name='account' size={iconSize} color={color} />
                     }
                 },
                 tabBarLabel: ({ focused }) => {
