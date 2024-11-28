@@ -84,6 +84,7 @@ function Screen() {
 
     const [location, setLocation] = useState<any|null>(null);
     const [route, setRoute] = useState<{latitude: number, longitude: number}[]>([]);
+    const [originLocation, setOriginLocation] = useState<any|null>(null);
     const [originName, setOriginName] = useState<string|null>('');
     const [originLat, setOriginLat] = useState(0);
     const [originLng, setOriginLng] = useState(0);
@@ -95,7 +96,7 @@ function Screen() {
     const [vehicleId, setVehicleId] = useState('');
     const [vehicleDescription, setVehicleDescription] = useState('');
 
-    const mapRef = useRef<MapView>(null);
+    // const mapRef = useRef<MapView>(null);
     let locationSubscription = useRef<Location.LocationSubscription | null>(null);
 
     useEffect(() => {
@@ -106,7 +107,7 @@ function Screen() {
         });
     }, []);
 
-    const startTracking = async () => {
+    const startCommuteTracking = async () => {
         locationSubscription.current = await Location.watchPositionAsync({
             accuracy: Location.Accuracy.High,
             timeInterval: 1000,
@@ -116,13 +117,12 @@ function Screen() {
                 latitude: newLocation.coords.latitude,
                 longitude: newLocation.coords.longitude
             };
-            
-            console.warn(newCoord);
+
             return newCoord;
         })
     }
 
-    const stopTracking = async () => {
+    const stopCommuteTracking = async () => {
         if (locationSubscription.current) {
             locationSubscription.current.remove();
             locationSubscription.current = null;
@@ -144,16 +144,15 @@ function Screen() {
 
         setOriginLat(location.coords.latitude);
         setOriginLng(location.coords.longitude);
-        console.log(`ORIGIN: ${location.coords.latitude}, ${location.coords.longitude}; ${originName}`);
 
         getCommuteDetails().then((response) => {
             setVehicleId(response.vehicleId);
             setVehicleDescription(response.vehicleDescription);
         });
 
-        startTracking().then(({response}: any) => {
-            setLocation(response);
+        startCommuteTracking().then(({response}: any) => {
             setRoute(prevRoute => [...prevRoute, response]);
+            console.log(response);
         })
     }
 
@@ -296,7 +295,7 @@ function Screen() {
                                 vehicleDescription: vehicleDescription
                             })
 
-                            await stopTracking();
+                            stopCommuteTracking();
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -356,7 +355,7 @@ function Screen() {
                                         location && (
                                             isCommuteStart ? (
                                                 <MapView
-                                                    ref={mapRef}
+                                                    // ref={mapRef}
                                                     style={StyleSheet.absoluteFillObject}
                                                     initialRegion={{
                                                         latitude: location.coords.latitude,
@@ -367,8 +366,8 @@ function Screen() {
                                                 >
                                                     <MapMarker
                                                         coordinate={{
-                                                            latitude: location.coords.latitude,
-                                                            longitude: location.coords.longitude
+                                                            latitude: originLat,
+                                                            longitude: originLng
                                                         }}
                                                     />
                                                 </MapView>

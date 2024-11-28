@@ -1,11 +1,10 @@
 // react native
-import React, { useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
 import * as Location from "expo-location";
 // gluestack
 
-export const startTracking = async () => {
+export const startCommuteTracking = async () => {
     try {
         await Location.watchPositionAsync({
             accuracy: Location.Accuracy.High,
