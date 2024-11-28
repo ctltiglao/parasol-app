@@ -1,9 +1,9 @@
 import '@/global.css';
 // react native
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import MapView, { MapMarker, PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView, { MapMarker, MapPolyline, Marker, Polyline, PROVIDER_GOOGLE} from 'react-native-maps';
 import { StyleSheet } from 'react-native';
 // expo
 import { MaterialIcons } from "@expo/vector-icons";
@@ -30,7 +30,7 @@ import TripSettingsScreen from './(settings)/settings';
 
 import { getCommuteDetails, setCommuteRecord } from './tripViewModel';
 import { modeOptions } from '@/assets/values/strings';
-import { getLocationName, getLocationPermission } from '../tabViewModel';
+import { getLocation, getLocationName, getLocationPermission } from '../tabViewModel';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -76,12 +76,14 @@ function DrawerNavigator() {
     );
 }
 
+
 function Screen() {
     const [selectedMode, setSelectedMode] = useState<string | null>(null);
     const [showModalSelect, setShowModalSelect] = useState(false);
     const [showModalSwitch, setShowModalSwitch] = useState(false);
 
     const [location, setLocation] = useState<any|null>(null);
+    const [route, setRoute] = useState<{latitude: number, longitude: number}[]>([]);
     const [originName, setOriginName] = useState<string|null>('');
     const [originLat, setOriginLat] = useState(0);
     const [originLng, setOriginLng] = useState(0);
@@ -93,29 +95,66 @@ function Screen() {
     const [vehicleId, setVehicleId] = useState('');
     const [vehicleDescription, setVehicleDescription] = useState('');
 
-    useEffect(() => {
-        let getLocation;
+    const mapRef = useRef<MapView>(null);
+    let locationSubscription = useRef<Location.LocationSubscription | null>(null);
 
+    useEffect(() => {
         getLocationPermission();
 
-        getLocation = async () => {
-            // const loc = await Location.getCurrentPositionAsync({});
-            const loc = await Location.watchPositionAsync({
-                accuracy: Location.Accuracy.High,
-                timeInterval: 1000,
-                distanceInterval: 1
-            },
-            (newLocation) => {
-                setLocation(newLocation);
-            }
-        );}
-
-        getLocation();
+        getLocation().then((loc) => {
+            setLocation(loc);
+        });
     }, []);
+
+    const startTracking = async () => {
+        locationSubscription.current = await Location.watchPositionAsync({
+            accuracy: Location.Accuracy.High,
+            timeInterval: 1000,
+            distanceInterval: 1
+        }, (newLocation) => {
+            const newCoord = {
+                latitude: newLocation.coords.latitude,
+                longitude: newLocation.coords.longitude
+            };
+            
+            console.warn(newCoord);
+            return newCoord;
+        })
+    }
+
+    const stopTracking = async () => {
+        if (locationSubscription.current) {
+            locationSubscription.current.remove();
+            locationSubscription.current = null;
+        }
+    }
 
     const modeSelectChange = (value: any) => {
         setSelectedMode(value);
         setShowModalSelect(false);
+
+        setCommuteStart(true);
+
+        getLocationName({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude
+        }).then((response) => {
+            setOriginName(response);
+        });
+
+        setOriginLat(location.coords.latitude);
+        setOriginLng(location.coords.longitude);
+        console.log(`ORIGIN: ${location.coords.latitude}, ${location.coords.longitude}; ${originName}`);
+
+        getCommuteDetails().then((response) => {
+            setVehicleId(response.vehicleId);
+            setVehicleDescription(response.vehicleDescription);
+        });
+
+        startTracking().then(({response}: any) => {
+            setLocation(response);
+            setRoute(prevRoute => [...prevRoute, response]);
+        })
     }
 
     const modeSelectSwitchChange = (value: any) => {
@@ -257,7 +296,7 @@ function Screen() {
                                 vehicleDescription: vehicleDescription
                             })
 
-                            console.warn(CommuteRecord);
+                            await stopTracking();
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -267,30 +306,29 @@ function Screen() {
                 ) : (
                     <Button className='bg-custom-secondary h-fit rounded-none p-4'
                         onPress={() => {
-                            setCommuteStart(true);
                             setShowModalSelect(true)
+                            // setCommuteStart(true);
 
-                            // const origin = async () => await getLocationName({
-                            //     latitutde: location.coords.latitude,
-                            //     longitude: location.coords.longitude                      
+                            // getLocationName({
+                            //     latitude: location.coords.latitude,
+                            //     longitude: location.coords.longitude
+                            // }).then((response) => {
+                            //     setOriginName(response);
                             // })
-                            // setOriginName(origin());
-                            getLocationName({
-                                latitude: location.coords.latitude,
-                                longitude: location.coords.longitude
-                            }).then((response) => {
-                                setOriginName(response);
-                            })
-                            setOriginLat(location.coords.latitude);
-                            setOriginLng(location.coords.longitude);
+                            // setOriginLat(location.coords.latitude);
+                            // setOriginLng(location.coords.longitude);
 
-                            console.log(`ORIGIN: ${location.coords.latitude}, ${location.coords.longitude}; ${originName}`);
+                            // console.log(`ORIGIN: ${location.coords.latitude}, ${location.coords.longitude}; ${originName}`);
 
-                            getCommuteDetails().then((response) => {
-                                setVehicleId(response.vehicleId);
-                                setVehicleDescription(response.vehicleDescription);
-                                console.log(response);
-                            })
+                            // getCommuteDetails().then((response) => {
+                            //     setVehicleId(response.vehicleId);
+                            //     setVehicleDescription(response.vehicleDescription);
+                            // })
+
+                            // startTracking().then(({response}: any) => {
+                            //     setLocation(response);
+                            //     setRoute(prevRoute => [...prevRoute, response]);
+                            // })
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -318,8 +356,8 @@ function Screen() {
                                         location && (
                                             isCommuteStart ? (
                                                 <MapView
+                                                    ref={mapRef}
                                                     style={StyleSheet.absoluteFillObject}
-                                                    showsUserLocation={true}
                                                     initialRegion={{
                                                         latitude: location.coords.latitude,
                                                         longitude: location.coords.longitude,

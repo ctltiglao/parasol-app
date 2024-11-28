@@ -3,6 +3,10 @@
 import * as Location from "expo-location";
 // gluestack
 
+export const getLocation = async () => {
+    return await Location.getCurrentPositionAsync({})
+}
+
 // location permission
 export const getLocationPermission = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();

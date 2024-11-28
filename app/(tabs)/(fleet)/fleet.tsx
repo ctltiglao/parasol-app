@@ -99,6 +99,7 @@ function Screen() {
         }
 
         getLocation();
+    // }, []);
 
         if (location && mapRef.current) {
             mapRef.current.animateToRegion({
@@ -173,7 +174,7 @@ function Screen() {
                     <FleetInfo handleAction={toggleOverlayInfo} />
                 ) : (
                     <Box className='flex-1 w-full h-full'>
-                        <VStack className='z-10 bg-white w-fit absolute p-2'>
+                        <VStack className='z-10 bg-white w-fit absolute p-1'>
                             <HStack>
                                 <Text>Route Info:</Text>
                                 <Text>{route}</Text>
@@ -191,7 +192,6 @@ function Screen() {
                                         <MapView
                                             ref={mapRef}
                                             style={StyleSheet.absoluteFillObject}
-                                            showsUserLocation={true}
                                             initialRegion={{
                                                 latitude: location.coords.latitude,
                                                 longitude: location.coords.longitude,

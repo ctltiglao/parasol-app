@@ -1,8 +1,29 @@
 // react native
+import React, { useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
 import * as Location from "expo-location";
 // gluestack
+
+export const startTracking = async () => {
+    try {
+        await Location.watchPositionAsync({
+            accuracy: Location.Accuracy.High,
+            timeInterval: 1000,
+            distanceInterval: 1
+        }, (newLocation) => {
+            const newCoord = {
+                latitude: newLocation.coords.latitude,
+                longitude: newLocation.coords.longitude
+            };
+    
+            console.warn(newCoord);
+            return newCoord;
+        })
+    } catch(e) {
+        alert(`Failed to start tracking: ${e}`);
+    }
+}
 
 export const getCommuteDetails = async () => {
     try {
@@ -43,7 +64,7 @@ export const setCommuteRecord = async ({
         commuteDate: currentDate,
     }
 
-    console.log(CommuteRecord);
+    // console.log(CommuteRecord);
 
     try {
         await AsyncStorage.removeItem('CommuteDetails');
