@@ -341,8 +341,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.safetravelph.parasol;
-				PRODUCT_NAME = parasolapp;
+				PRODUCT_BUNDLE_IDENTIFIER = ".safetravelph.parasol";
+				PRODUCT_NAME = "ParasolFleet";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -370,8 +370,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.safetravelph.parasol;
-				PRODUCT_NAME = parasolapp;
+				PRODUCT_BUNDLE_IDENTIFIER = ".safetravelph.parasol";
+				PRODUCT_NAME = "ParasolFleet";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";

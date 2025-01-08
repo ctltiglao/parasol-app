@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@expo/browser-polyfill": "^1.0.1",
+    "@expo/config-plugins": "^9.0.12",
     "@expo/html-elements": "^0.4.2",
     "@expo/vector-icons": "^14.0.4",
     "@gluestack-ui/accordion": "^1.0.8",
@@ -75,7 +76,6 @@
     "mqtt": "^5.10.3",
     "nativewind": "^4.0.36",
     "paho-mqtt": "^1.1.0",
-    "patch-package": "^8.0.0",
     "protobufjs": "^7.4.0",
     "react": "18.3.1",
     "react-native": "0.76.5",
@@ -108,6 +108,7 @@
     "@types/base-64": "^1.0.2",
     "@types/react": "~18.3.12",
     "jscodeshift": "^0.15.2",
+    "patch-package": "^8.0.0",
     "typescript": "~5.3.3"
   },
   "private": true
