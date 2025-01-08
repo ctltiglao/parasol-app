@@ -1,18 +1,20 @@
-import { useEffect, useState } from 'react';
 import '@/global.css';
+// react native
+import { useEffect, useState } from 'react';
+import { Linking } from 'react-native';
+import { WebView, WebViewNavigation } from 'react-native-webview';
+import { useNavigation } from "@react-navigation/native";
+import { createDrawerNavigator } from '@react-navigation/drawer';
+// expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+// gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
+import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 
-import { Text, Linking } from 'react-native';
-import WebView from 'react-native-webview';
-import { useNavigation } from "@react-navigation/native";
-import { createDrawerNavigator } from '@react-navigation/drawer';
-
-import { Ionicons } from '@expo/vector-icons';
-
-import { getUserState } from './surveyViewModel';
+import { getUserState } from '@/app/(drawer)/drawerViewModel';
 
 const Drawer = createDrawerNavigator();
 
@@ -41,48 +43,59 @@ function DrawerSurveyNavigator() {
 }
 
 function Survey() {
-    const [currentUrl, setCurrentUrl] = useState('');
     const [username, setUsername] = useState('');
     const [userType, setUserType] = useState('');
 
     useEffect(() => {
         getUserState().then((response) => {
             setUsername(response.username);
-            // setRealmRoles(response.realmRoles);
-
+            
             if (response.realmRoles.includes('government')) {
                 setUserType('government');
+                getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
             } else if (response.realmRoles.includes('ngo')) {
                 setUserType('ngo');
+                getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
             } else {
                 setUserType('resident');
+                getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
             }
 
             return response;
         });
     }, []);
 
-    const handleNavigationStateChange = (navState: any) => {
-        if (navState.url.includes('jotform.com')) {
-            let navStateUrl = `${navState.url}?guest_user_id=${username}`;
-            setCurrentUrl(navStateUrl);
-            getUrl = navStateUrl;
-            
-            console.warn(currentUrl);
-        } else {
-            setCurrentUrl(navState.url)
-            getUrl = navState.url;
+    const handleNavigation = (event: WebViewNavigation) => {
+        console.log(event.url);
 
-            console.warn(currentUrl);
+        if (event.url.includes('jotform.com') || event.url.includes('safetravel.ph')) {
+            return true;
         }
-    };
+
+        return false;
+    }
+
+    const handleUrlChange = (navState: any) => {
+        console.log(navState.url);
+        
+        if (navState.url.includes('jotform.com')) {
+            let navStateUrl = `${navState.url}?guest_user_id=${username}`
+            getUrl = navStateUrl;
+        } else {
+            getUrl = navState.url;
+        }
+    }
 
     return (
         <GluestackUIProvider mode='light'>
             <Box className='flex-1 w-full h-full mb-5'>
                 <WebView
                     source={{ uri: `https://safetravel.ph/surveyapp/?user_type=${userType}` }}
-                    onNavigationStateChange={handleNavigationStateChange}
+                    onNavigationStateChange={handleUrlChange}
+                    onShouldStartLoadWithRequest={handleNavigation}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    startInLoadingState={true}
                 />
             </Box>
         </GluestackUIProvider>
@@ -96,19 +109,14 @@ function Header({ navigation } : any) {
         <Box 
             style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
             className='items-center bg-custom-primary p-5'>
-            <Ionicons
-                name='arrow-back'
+            <MaterialCommunityIcons
+                name='arrow-left'
                 size={25}
                 color='#0038A8'
                 onPress={() => nav.dispatch( navigation.goBack() )}
             />
             
-            <Text
-                style={{ fontSize: 18, color: '#0038A8' }}
-                className='font-bold'
-            >
-                PIVE Survey App
-            </Text>
+            <Text size='lg' className='font-bold text-custom-secondary'>PIVE Survey App</Text>
 
             <Menu
                 className='bg-custom-primary'
@@ -116,7 +124,7 @@ function Header({ navigation } : any) {
                 trigger={({ ...triggerProps }) => {
                     return (
                         <Button {...triggerProps} className='bg-transparent'>
-                            <Ionicons name='ellipsis-vertical' size={25} color='#0038A8' />
+                            <MaterialCommunityIcons name='dots-vertical' size={25} color='#0038A8' />
                         </Button>
                     )
                 }}

@@ -1,51 +1,102 @@
-import { useEffect, useRef, useState } from 'react';
 import '@/global.css';
+// react native
+import React from 'react';
+import { useCallback, useEffect, useRef, useState, createContext } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import MapView, { MapMarker, Polyline, PROVIDER_GOOGLE, PROVIDER_DEFAULT} from 'react-native-maps';
+import { StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import WebView from 'react-native-webview';
+// expo
+import { MaterialIcons } from "@expo/vector-icons";
+import * as Location from 'expo-location';
+import * as Device from 'expo-device';
+// gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Select, SelectItem } from '@/components/ui/select';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Heading } from '@/components/ui/heading';
+import { Checkbox, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
 
-import CustomDrawer from '@/components/_drawer/customDrawer';
+import DrawerScreen from '@/app/(drawer)/drawer';
 import TripHeader from '@/components/_drawer/_headers/tripHeader';
-
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-import { MaterialIcons } from "@expo/vector-icons";
-import * as Location from 'expo-location';
-import MapView, { Marker, PROVIDER_GOOGLE} from 'react-native-maps';
-
 import { SubFab } from '@/components/customFab';
+
 import TripInfo from './(info)/info';
 import TripAlert from './(alert)/alert';
 import TripRate from './(rate)/rate';
 import TripFeed from './(feed)/feed';
 import TripHistoryScreen from './(history)/history';
-import QuickTourScreen from './(tour)/tour';
 import TripSettingsScreen from './(settings)/settings';
+
+import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './tripViewModel';
+import { modeOptions } from '@/assets/values/strings';
+import { getLocationName, getLocationPermission, getUserState } from '../tabViewModel';
+// import { onMqttDisconnect } from '@/app/service/mqtt/mqtt';
+// import { onMqttConnect } from '@/app/service/mqtt/mqtt';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
+const LocationContext = createContext({});
 
-export default function TripScreen() {
-    return (
-        <GluestackUIProvider mode='light'>
-            <DrawerNavigator />
-        </GluestackUIProvider>
-    );
+interface Coordinate {
+    latitude: number;
+    longitude: number;
 }
 
-function DrawerNavigator() {
+export default function TripScreen() {
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedCheckboxes, setSelectedCheckboxes] = useState(false);
+
+    const openModal = () => setModalVisible(true);
+    const closeModal = async () => {
+        if (selectedCheckboxes === true) {
+            try {
+                await AsyncStorage.setItem('quickTour', '1');
+            } catch (e) {
+                console.log(e);
+            }
+        } else if (selectedCheckboxes === false) {
+            try {
+                await AsyncStorage.setItem('quickTour', '0');
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+        setModalVisible(false);
+    }
+
+    const toggleCheckbox = () => setSelectedCheckboxes(!selectedCheckboxes);
+    const checkQuickTour = () => {
+        getQuickTourPref().then((res) => {
+            if (res === '0') {
+                openModal();
+                setSelectedCheckboxes(false);
+            } else {
+                setSelectedCheckboxes(true);
+            }
+        })
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            checkQuickTour();
+        }, [])
+    );
+
     return (
-        <>
+        <GluestackUIProvider mode='light'>
             <Drawer.Navigator
                 initialRouteName='Main'
-                drawerContent={props => <CustomDrawer {...props} />}
+                drawerContent={props => <DrawerScreen {...props} />}
 
                 screenOptions={{
-                    header: (props) => <TripHeader {...props} />
+                    header: (props) => <TripHeader {...props} openModal={openModal}/>
                 }}
             >
                 <Drawer.Screen name='Main' component={Screen} />
@@ -56,153 +107,277 @@ function DrawerNavigator() {
                     options={{ headerShown: false }}
                 />
                 <Stack.Screen
-                    name='Tour'
-                    component={QuickTourScreen}
-                    options={{ headerShown: false }}
-                />
-                <Stack.Screen
                     name='Settings'
                     component={TripSettingsScreen}
                     options={{ headerShown: false }}
                 />
             </Drawer.Navigator>
-        </>
+
+            {/* ========== QUICK TOUR ========== */}
+            <Modal
+                className='h-screen pt-16 pe-8 pb-14 ps-8'
+                isOpen={modalVisible}
+                onClose={closeModal}
+            >
+                <ModalContent className='w-full h-full rounded-sm p-0'>
+                    {/* <ModalBody className='flex-1 w-full h-full mb-5'> */}
+                        {/* <WebView className='w-full h-full' source={{ uri: 'https://form.jotform.com/233414239585056' }}/> */}
+
+                        {/* <Box className='flex-1 w-full h-full mb-5'> */}
+                            {/* <WebView
+                                source={{ uri: 'https://form.jotform.com/233414239585056' }}
+                            /> */}
+                        {/* </Box> */}
+                    {/* </ModalBody> */}
+
+                    <WebView
+                        source={{ uri: 'https://form.jotform.com/233414239585056' }}
+                    />
+                    <ModalFooter className='p-4'>
+                        <Checkbox size='md'
+                            className='absolute left-0'
+                            value='Do not show again'
+                            onChange={() => toggleCheckbox()}
+                        >
+                            <CheckboxIndicator size='md'
+                                className='border-zinc-300 bg-transparent border-1 rounded-md'
+                            >
+                                {
+                                    selectedCheckboxes ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
+                            </CheckboxIndicator>
+                            <CheckboxLabel size='md' className='text-black font-medium'>
+                                Do not show again
+                            </CheckboxLabel>
+                        </Checkbox>
+
+                        <Button className='bg-zinc-300 rounded-md p-2'
+                            onPress={() => {
+                                closeModal();
+                            }}
+                        >
+                            <ButtonText className='text-black'>CANCEL</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </GluestackUIProvider>
     );
 }
 
-type LocationType = {
-    latitude: number;
-    longitude: number;
-} | null;
-
-type RegionType = {
-    latitude: number;
-    longitude: number;
-    latitudeDelta: number;
-    longitudeDelta: number;
-} | null;
-
 function Screen() {
-    const [location, setLocation] = useState<LocationType>(null);
-    const [region, setRegion] = useState<RegionType>(null);
-    const mapRef = useRef<MapView | null>(null);
-
-    const [showModalSelect, setShowModalSelect] = useState(false);
+    const mapRef = useRef<MapView>(null);
     const [selectedMode, setSelectedMode] = useState<string | null>(null);
+    const [showModalSelect, setShowModalSelect] = useState(false);
     const [showModalSwitch, setShowModalSwitch] = useState(false);
-    const [selectedModeSwitch, setSelectedModeSwitch] = useState<string | null>(null);
+
+    const [location, setLocation] = useState<any|null>(null);
+    const [isCommuteStart, setCommuteStart] = useState(false);
+    const [isCommuteStop, setCommuteStop] = useState(false);
+
+    // let locationSubscription = useRef<Location.LocationSubscription|null>(null);
+    const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
+    const [ routeCoordinates, setRouteCoordinates ] = useState<Coordinate[]>([]);
+    const [ startTime, setStartTime ] = useState<any|null>(null);
+    const [ vehicleId, setVehicleId ] = useState('');
+    const [ vehicleDescription, setVehicleDescription ] = useState('');
+    const [ username, setUsername ] = useState('');
 
     const [ isOverlayInfoVisible, setOverlayInfoVisible ] = useState(false);
     const [ isOverlayAlertVisible, setOverlayAlertVisible ] = useState(false);
     const [ isOverlayRateVisible, setOverlayRateVisible ] = useState(false);
     const [ isOverlayFeedVisible, setOverlayFeedVisible ] = useState(false);
 
-    const toggleOverlayInfo = () => setOverlayInfoVisible(!isOverlayInfoVisible);
+    const toggleOverlayInfo = () => {
+        setOverlayInfoVisible(!isOverlayInfoVisible);
+
+        getCommuteDetails().then((response) => {
+            setVehicleId(response.vehicleId);
+            setVehicleDescription(response.vehicleDescription);
+        });
+    };
     const toggleOverlayAlert = () => setOverlayAlertVisible(!isOverlayAlertVisible);
     const toggleOverlayRate = () => setOverlayRateVisible(!isOverlayRateVisible);
     const toggleOverlayFeed = () => setOverlayFeedVisible(!isOverlayFeedVisible);
 
+    const getLocation = async () => {
+        const loc = await Location.getCurrentPositionAsync({});
+        setLocation(loc);
+    }
+
     useEffect(() => {
-        (async () => {
-            let userLocation = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-            const { latitude, longitude } = userLocation.coords;
+        getUserState().then((response) => {
+            setUsername(response.username);
+        })
 
-            console.warn(userLocation.coords);
+        getLocationPermission();
+    }, []);
 
-            setLocation({ latitude, longitude });
-            setRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 });
+    // refresh tab
+    useFocusEffect(
+        useCallback(() => {
+            getLocation();
 
-            if (mapRef.current) {
-                mapRef.current.animateToRegion({ latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 1000);
-            }
-        });
-    }, [location, region]);
+            setSelectedMode(null);
+            setShowModalSelect(false);
+            setShowModalSwitch(false);
+            // locationSubscription.current?.remove();
+            // locationSubscription.current = null;
+            locationSubscription?.remove();
+            setLocationSubscription(null);
+            setRouteCoordinates([]);
+            setStartTime(null);
+            setVehicleId('');
+            setVehicleDescription('');
 
-    const modeSelectChange = (value: any) => {
+            setCommuteStart(false);
+            setCommuteStop(false);
+
+            setOverlayInfoVisible(false);
+            setOverlayAlertVisible(false);
+            setOverlayRateVisible(false);
+            setOverlayFeedVisible(false);
+
+            (async () => {
+                await AsyncStorage.removeItem('CommuteVehicle');
+            })
+        }, [])
+    );
+
+    const startCommuteTracking = async () => {
+        const time = new Date().toISOString();
+        setStartTime(time);
+        if (!locationSubscription) {
+            const locSubscription = await Location.watchPositionAsync({
+                accuracy: Location.Accuracy.High,
+                timeInterval: 1000,
+                distanceInterval: 1
+            }, (newLocation) => {
+                mapRef.current?.animateToRegion(
+                    {
+                        latitude: newLocation.coords.latitude,
+                        longitude: newLocation.coords.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01
+                    },
+                    1000
+                );
+    
+                setRouteCoordinates((prevCoords) => [
+                    ...prevCoords,
+                    { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude }
+                ])
+    
+                const message = {
+                    deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                    lat: newLocation.coords.latitude,
+                    lng: newLocation.coords.longitude,
+                    timestamp: new Date().toISOString(),
+                    userId: username,
+                    vehicleId: vehicleId,
+                    vehicleDetails: vehicleDescription,
+                    passengerId: '',
+                    passengerDetails: '',
+                    altitude: newLocation.coords.altitude,
+                    accuracy: newLocation.coords.accuracy
+                }
+                mqttBroker(message);
+                
+                setLocation(newLocation);
+            })
+
+            setLocationSubscription(locSubscription);
+        }
+    }
+
+    const stopCommuteTracking = () => {
+        // locationSubscription.current?.remove();
+        // locationSubscription.current = null;
+        locationSubscription?.remove();
+        setLocationSubscription(null);
+
+        // setCommuteStart(false);
+        // setCommuteStop(true);
+        handleCommuteStart(false);
+        handleCommuteStop(true);
+
+        modeSelectChange(null);
+        modeSelectSwitchChange(null);
+
+        // onMqttDisconnect();
+        mqttBroker('#');
+
+        setVehicleId('');
+        setVehicleDescription('');
+    }
+
+    const modeSelectChange = async (value: any) => {
         setSelectedMode(value);
-        setShowModalSelect(false)
-        console.warn(value)
+        setShowModalSelect(false);
+
+        handleCommuteStart(true);
+        isCommuteStop === true && handleCommuteStop(false);
+
+        await startCommuteTracking()
     }
 
     const modeSelectSwitchChange = (value: any) => {
-        setSelectedModeSwitch(value);
-        setShowModalSwitch(false)
-        console.warn(value)
+        setSelectedMode(value);
+        setShowModalSwitch(false);
     }
 
-    const handleInfoAction = () => {
-        toggleOverlayInfo();
-    }
-
-    const handleAlertAction = () => {
-        toggleOverlayAlert();
-    }
-
-    const handleRateAction = () => {
-        toggleOverlayRate();
-    }
-
-    const handleFeedAction = () => {
-        toggleOverlayFeed();
-    }
-
-    const modeOptions = [
-        { id: 1, label: 'Car', value: '1' },
-        { id: 2, label: 'Truck', value: '2' },
-        { id: 3, label: 'Boat', value: '3' },
-        { id: 4, label: 'PUB', value: '4' },
-        { id: 5, label: 'Modern PUJ', value: '5' },
-        { id: 6, label: 'Traditional PUJ', value: '6' },
-        { id: 7, label: 'UV Express', value: '7' },
-        { id: 8, label: 'Ride Hailed Car Taxi', value: '8' },
-        { id: 9, label: 'Ordinary Taxi', value: '9' },
-        { id: 10, label: 'Tricycle', value: '10' },
-        { id: 11, label: 'Ride Hailed Motor Taxi', value: '11' },
-        { id: 12, label: 'P2P', value: '12' },
-        { id: 13, label: 'Tourist Transport Service', value: '13' },
-        { id: 14, label: 'Filcab', value: '14' },
-        { id: 15, label: 'Minibus', value: '15' },
-        { id: 16, label: 'Walk', value: '16' },
-        { id: 17, label: 'Bike', value: '17' },
-        { id: 18, label: 'Company Service', value: '18' },
-        { id: 19, label: 'Others', value: '19' }
-    ]
+    const handleCommuteStart = (i: boolean) => setCommuteStart(i);
+    const handleCommuteStop = (i: boolean) => setCommuteStop(i);
 
     const CustomTripFab = () => {
-        const [ expanded, setExpanded ] = useState(false);
-        const toggleSubFab = () => setExpanded(!expanded);
-    
         return (
             <Box className="absolute p-3 items-center">
-                { expanded &&(
-                    <>
-                        <SubFab iconName='directions' onPress={() => handleInfoAction()} />
-                        <SubFab iconName='notifications' onPress={() => handleAlertAction()} />
-                        <SubFab iconName='tag-faces' onPress={() => handleRateAction()} />
-                        <SubFab iconName='comment' onPress={() => handleFeedAction()} />
-                    </>
-                )}
-    
-                <Button
-                    className="p-3 bg-custom-secondary shadow-soft-4 border-1 rounded-full"
-                    onPress={toggleSubFab}
-                >
-                    <MaterialIcons name={ expanded ? "close" : "add" } size={25} color="white" />
-                </Button>
+                {
+                    selectedMode ? (
+                        <>
+                            <SubFab iconName='emoticon' onPress={() => toggleOverlayRate()}/>
+                            <Button
+                                onPress={() => setShowModalSwitch(true)}
+                                className="p-2 bg-custom-secondary shadow-soft-4 border-1 rounded-full"
+                            >
+                                <MaterialIcons name="swap-horiz" size={30} color="white" />
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <SubFab iconName='directions' onPress={() => toggleOverlayInfo()} />
+                            <SubFab iconName='bell' onPress={() => toggleOverlayAlert()} />
+                            <SubFab iconName='comment-text' onPress={() => toggleOverlayFeed()} />
+                            {
+                                selectedMode && (
+                                    <Button
+                                        onPress={() => setShowModalSwitch(true)}
+                                        className="p-2 bg-custom-secondary shadow-soft-4 border-1 rounded-full"
+                                    >
+                                        <MaterialIcons name="swap-horiz" size={30} color="white" />
+                                    </Button>
+                                )
+                            }
+                        </>
+                    )
+                }
             </Box>
         )
     }
 
     const SwitchMode = () => {
         return (
-            <Box className="absolute p-3 right-0">
-                <Button
-                    onPress={() => setShowModalSwitch(true)}
-                    className="p-2 bg-custom-secondary shadow-soft-4 border-1 rounded-full"
-                >
-                    <MaterialIcons name="swap-horiz" size={30} color="white" />
-                </Button>
-
+            <Box className="absolute left-0 p-3">
                 <Modal
                     className='p-6'
                     isOpen={showModalSwitch}
@@ -215,7 +390,6 @@ function Screen() {
                                     Select Vehicle Type
                                 </Heading>
                             </ModalHeader>
-                            <ModalBackdrop />
                             <ModalBody className='h-full w-full'>
                                 <Select>
                                     {modeOptions.map((option) => (
@@ -253,9 +427,22 @@ function Screen() {
             {
                 selectedMode ? (
                     <Button className='p-4 bg-custom-customRed'
-                        onPress={() => {
-                            modeSelectChange(null);
-                            modeSelectSwitchChange(null);
+                        onPress={async () => {
+                            stopCommuteTracking();
+
+                            // setCommuteRecord({
+                            //     origin: await getLocationName(routeCoordinates[0]),
+                            //     originLat: routeCoordinates[0].latitude,
+                            //     originLng: routeCoordinates[0].longitude,
+                            //     destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                            //     destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                            //     destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                            //     mode: selectedMode,
+                            //     purpose: '',
+                            //     vehicle_id: vehicleId,
+                            //     vehicle_details: vehicleDescription,
+                            //     commute_date: startTime
+                            // })
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -263,11 +450,13 @@ function Screen() {
                         </ButtonText>
                     </Button>
                 ) : (
-                    <Button className='p-4 bg-custom-secondary'
-                        onPress={() => setShowModalSelect(true)}
+                    <Button className='bg-custom-secondary h-fit rounded-none p-4'
+                        onPress={() => {
+                            setShowModalSelect(true)
+                        }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
-                            START TRIP TRACKING
+                            START COMMUTE TRACKING
                         </ButtonText>
                     </Button>
                 )
@@ -276,32 +465,77 @@ function Screen() {
             <Box className='flex-1 w-full h-full'>
                 {(() => {
                     if (isOverlayInfoVisible) {
-                        return <TripInfo handleAction={handleInfoAction} />
+                        return <TripInfo handleAction={toggleOverlayInfo} />
                     } else if (isOverlayAlertVisible) {
-                        return <TripAlert handleAction={handleAlertAction} />
+                        return <TripAlert handleAction={toggleOverlayAlert} />
                     } else if (isOverlayRateVisible) {
-                        return <TripRate handleAction={handleRateAction} />
+                        return <TripRate handleAction={toggleOverlayRate} location={location} />
                     } else if (isOverlayFeedVisible) {
-                        return <TripFeed handleAction={handleFeedAction} />
+                        return <TripFeed handleAction={toggleOverlayFeed} />
                     } else {
                         return (
-                            <Box className='flex-1 w-full h-full'>
-                                <Box className='flex-1 h-full'>
-                                    <MapView
-                                        style={{ flex: 1 }}
-                                        // provider={PROVIDER_GOOGLE}
-                                        showsUserLocation={true}
-                                        onRegionChangeComplete={(region) => setRegion(region)}
-                                    >
-                                        {
-                                            location && (
-                                                <Marker coordinate={location} />
+                            <>
+                                <LocationContext.Provider value={ location }>
+                                    {
+                                        location && (
+                                            isCommuteStart === false ? (
+                                                <MapView
+                                                    ref={mapRef}
+                                                    // provider={PROVIDER_GOOGLE}
+                                                    style={StyleSheet.absoluteFillObject}
+                                                    showsUserLocation={true}
+                                                    initialRegion={{
+                                                        latitude: location.coords.latitude,
+                                                        longitude: location.coords.longitude,
+                                                        latitudeDelta: 0.01,
+                                                        longitudeDelta: 0.01
+                                                    }}
+                                                >
+                                                    {
+                                                        isCommuteStop && (
+                                                            <Polyline
+                                                                coordinates={routeCoordinates}
+                                                                strokeColor='blue'
+                                                                strokeWidth={5}
+                                                            />
+                                                        )
+                                                    }
+                                                </MapView>
+                                            ) : (
+                                                <MapView
+                                                    ref={mapRef}
+                                                    style={StyleSheet.absoluteFillObject}
+                                                    initialRegion={{
+                                                        latitude: location.coords.latitude,
+                                                        longitude: location.coords.longitude,
+                                                        latitudeDelta: 0.0922,
+                                                        longitudeDelta: 0.0421
+                                                    }}
+                                                >
+                                                    <MapMarker
+                                                        coordinate={{
+                                                            latitude: location.coords.latitude,
+                                                            longitude: location.coords.longitude
+                                                        }}
+                                                        flat={true}
+                                                        anchor={{ x: 0.5, y: 0.5 }}
+                                                    />
+                                                    {
+                                                        isCommuteStart === true && (
+                                                            <Polyline
+                                                                coordinates={routeCoordinates}
+                                                                strokeColor='blue'
+                                                                strokeWidth={5}
+                                                            />
+                                                        )
+                                                    }
+                                                </MapView>
                                             )
-                                        }
-                                    </MapView>
-                                </Box>
+                                        )
+                                    }
+                                </LocationContext.Provider>
 
-                                <Box className='z-5 justify-between bottom-1/2'>
+                                <Box className='absolute justify-between bottom-1/2'>
                                     <Box className='justify-center'>
                                         <CustomTripFab />
                                     </Box>
@@ -314,7 +548,7 @@ function Screen() {
                                         )
                                     }
                                 </Box>
-                            </Box>
+                            </>
                         )
                     }
                 })()}
@@ -332,7 +566,6 @@ function Screen() {
                                 Select Vehicle Type
                             </Heading>
                         </ModalHeader>
-                        <ModalBackdrop />
                         <ModalBody className='h-full w-full'>
                             <Select>
                                 {modeOptions.map((option) => (

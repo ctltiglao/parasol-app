@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+message Tracking {
+    string deviceId = 1;
+    string lat = 2;
+    string lng = 3;
+    string timestamp = 4;
+    string userId = 5;
+    string vehicleId = 6;
+    string vehicleDetails = 7;
+    string passengerId = 8;
+    string passengerDetails = 9;
+    string altitude = 10;
+    string accuracy = 11;
+}

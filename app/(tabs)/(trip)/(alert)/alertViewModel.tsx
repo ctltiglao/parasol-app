@@ -1,12 +1,9 @@
-import * as Device from 'expo-device';
+// react native
+// expo
+// gluestack
 
-// import mqtt, { MqttProtocol } from "mqtt/dist/mqtt";
-
-import { MQTT_HOST, MQTT_PASSWORD, MQTT_PORT, MQTT_USERNAME } from "@/assets/values/strings";
-// import { TripAlert } from '@/src/(proto)/AlertTripProto';
-
-const deviceId = Device.osBuildId ?? Device.osInternalBuildId ?? '';
-// console.warn(clientId)
+import { Alert } from '@/app/service/mqtt/proto/Trip.proto.js';
+import { onMqttConnect } from "@/app/service/mqtt/mqtt";
 
 export const handleAlert = ({
     selectedCheckboxes
@@ -40,6 +37,9 @@ export const handleAlert = ({
     if (selectedCheckboxes.overload) {
         alertString.push('Overloading');
     }
+    if (selectedCheckboxes.line) {
+        alertString.push('Out-of-line operation');
+    }
     if (selectedCheckboxes.crash) {
         alertString.push('Road crash');
     }
@@ -49,52 +49,28 @@ export const handleAlert = ({
 
     const description = alertString.join(',');
 
-    // const proto = TripAlert.create({
-    //     deviceID: deviceId,
-    //     lat: 14.6631671,
-    //     lng: 121.0719874,
-    //     timestamp: timestamp,
-    //     userID: 'guest_turtle',
-    //     descriptionP: description,
-    //     vehicleID: 'vehicleId',
-    //     vehicleDetails: 'vehicleDetails'
-    // });
-    // const buffer = TripAlert.encode(proto).finish();
-    // console.warn(buffer);
-
     return description;
 }
 
-// export const AlertMqttClient = ({ message } : any) => {
-//     const clientId = Device.osBuildId ?? Device.osInternalBuildId ?? '';
-//     console.warn(clientId);
+export const publishAlert = async(message: any) => {
+    try {
+        const alertData = {
+            deviceId: message.deviceId,
+            lat: message.lat,
+            lng: message.lng,
+            timestamp: message.timestamp,
+            userId: message.userId,
+            description: message.description,
+            vehicleId: message.vehicleId,
+            vehicleDetails: message.vehicleDetails
+        }
 
-//     const options = {
-//         clientId: clientId,
-//         username: MQTT_USERNAME,
-//         password: MQTT_PASSWORD,
-//     }
+        const buffer = Alert.encode(alertData).finish();
 
-//     console.warn(message);
+        onMqttConnect('alerts', buffer);
 
-//     const client = mqtt.connect(`${MQTT_HOST}:${MQTT_PORT}`, options);
-
-//     client.on('connect', () => {
-//         console.warn('Connected to MQTT broker');
-//         client.subscribe('alert');
-//     });
-
-//     client.on('message', (topic, message) => {
-//         console.warn(`Received message on topic ${topic}: ${message}`);    
-//     });
-
-//     client.on('error', (error) => {
-//         console.warn(`MQTT error: ${error}`);
-//     });
-// }
-
-// export const handleAlertMqttPublish = ({ message } : any) => {
-//     const client = mqtt.connect(`mqtts://${MQTT_HOST}:${MQTT_PORT}`);
-//     client.publish('alert', message);
-//     console.warn(`Published message on topic alert: ${message}`);
-// }
+        return true;
+    } catch (error) {
+        console.error(error);
+    }
+}

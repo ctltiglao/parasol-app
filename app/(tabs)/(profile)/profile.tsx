@@ -6,7 +6,7 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
-import CustomDrawer from '@/components/_drawer/customDrawer';
+import DrawerScreen from '@/app/(drawer)/drawer';
 import CustomHeader from '@/components/_drawer/_headers/customHeader';
 
 const Drawer = createDrawerNavigator();
@@ -23,7 +23,7 @@ function DrawerNavigator() {
     return (
         <Drawer.Navigator
             initialRouteName='Main'
-            drawerContent={props => <CustomDrawer {...props} />}
+            drawerContent={props => <DrawerScreen {...props} />}
 
             screenOptions={{
                 header: (props) => <CustomHeader {...props} />

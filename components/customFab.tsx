@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, ButtonIcon } from "./ui/button";
 import { Box } from "./ui/box";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 
 interface FabProps {
     onFabPress: () => void;
@@ -12,7 +12,7 @@ export function CustomFleetFab({ onFabPress }: FabProps) {
     const toggleSubFab = () => setExpanded(!expanded);
 
     return (
-        <Box className="absolute p-3 items-center">
+        <Box className="absolute right-0 p-3">
             { expanded &&(
                 <>
                     <SubFab iconName='directions' onPress={() => onFabPress()} />
@@ -39,13 +39,10 @@ interface SubFabProps {
 export const SubFab: React.FC<SubFabProps> = ({ iconName, onPress }) => {
     return (
         <Button
-            style={{ borderRadius: 50, marginBottom: 10 }}
-            className="flex-row items-center p-4 bg-white"
+            className="bg-white w-fit h-fit items-center rounded-full mb-8 p-3"
             onPress={onPress}
         >
-            <Box className="shadow-soft-4">
-                <MaterialIcons name={iconName} size={30} color="#0038A8" />
-            </Box>
+            <MaterialCommunityIcons name={iconName} size={30} color="#0038A8" />
         </Button>
     )
 }

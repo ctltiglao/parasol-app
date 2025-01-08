@@ -1,27 +1,21 @@
-import React, { useEffect, useState } from 'react';
 import '@/global.css';
+// react native
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView } from 'react-native';
+// expo
+import { MaterialIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import * as Device from 'expo-device';
+// gluestack
 import { Box } from '@/components/ui/box';
+import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Checkbox, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
 
-import { Alert, Image, ScrollView } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import * as Device from 'expo-device';
-// import Paho, { Client } from 'paho-mqtt';
-
-import { handleAlert } from './alertViewModel';
-// import UseMqttClient from '@/src/_connection/mqttConnection';
-// import { handleAlertMqttPublish } from './alertViewModel';
-
-import { MQTT_HOST, MQTT_PASSWORD, MQTT_PORT, MQTT_USERNAME } from "@/assets/values/strings";
-
-const num = Math.random() * 100;
-
-// const client = new Paho.Client(
-//     MQTT_HOST,
-//     Number(MQTT_PORT),
-//     `mqtt-async-test-${num}`
-// )
+import { handleAlert, publishAlert } from './alertViewModel';
+import { getUserState } from '../../tabViewModel';
+import { getCommuteDetails } from '../tripViewModel';
 
 export default function TripAlert({ handleAction } : any) {
     const [selectedCheckboxes, setSelectedCheckboxes] = useState({
@@ -38,28 +32,44 @@ export default function TripAlert({ handleAction } : any) {
         crime: false
     });
 
+    const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
+    const [location, setLocation] = useState<any|null>(null);
+    const [ vehicleId, setVehicleId ] = useState('');
+    const [ vehicleDescription, setVehicleDescription ] = useState('');
+    const [ username, setUsername ] = useState('');
+
     const toggleCheckbox = (name : any) => {
         setSelectedCheckboxes((prev : any) => ({
             ...prev, [name]: !prev[name]
         }));
     }
 
-    // function handleAlertMqttPublish({ description } : any) {
-    //     client.connect({
-    //         onSuccess: () => {
-    //             Alert.alert('MQTT', 'Connected!');
+    const getLocation = async() => {
+        if (!locationSubscription) {
+            const locSubscription = await Location.watchPositionAsync({
+                accuracy: Location.Accuracy.High,
+                timeInterval: 1000,
+                distanceInterval: 1
+            }, (newLocation) => {
+                setLocation(newLocation);
+            });
 
-    //             client.subscribe('alert');
-    //             const message = new Paho.Message(description);
-    //             message.destinationName = 'alert';
-    //             client.send(message);
-    //         },
-    //         onFailure: (error) => {
-    //             console.warn(error);
-    //             Alert.alert('MQTT', 'Failed to connect!');
-    //         }
-    //     });
-    // }
+            setLocationSubscription(locSubscription);
+        }
+    }
+
+    useEffect(() => {
+        getUserState().then((response) => {
+            setUsername(response.username);
+        });
+
+        getCommuteDetails().then((response) => {
+            setVehicleId(response.vehicleId);
+            setVehicleDescription(response.vehicleDescription);
+        })
+
+        getLocation();
+    }, [])
 
     return (
         <Box className='p-4 bg-white'>
@@ -74,236 +84,366 @@ export default function TripAlert({ handleAction } : any) {
                 </Button>
             </Box>
 
-            <Box className='flex-col mt-4'>
+            <VStack className='flex-col mt-4'>
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    <Checkbox onChange={() => toggleCheckbox('lack')} className='bg-white border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
+                    <Checkbox size='md'
+                        className='bg-white border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('lack')}
+                    >
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
+                                <CheckboxIndicator size='md'
+                                    className='border-zinc-300 bg-transparent border-1 rounded-md'
+                                >
                                     {
                                         selectedCheckboxes.lack ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Lack of public transport
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_nopt.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('violation')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('violation')}
+                    >
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.violation ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Violation of minimum health standards
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_covid19.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('fare')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('fare')}
+                    >
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.fare ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Fare overpricing
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_overpricing.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('smoke')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('smoke')}
+                    >
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.smoke ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Smoke belching
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_co2.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('overspeed')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('overspeed')}
+                    >
+                        <HStack className='flex-row w-full justify-between'>
+                            <HStack className='flex-row w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.overspeed ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Overspeeding
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_overspeeding.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('quality')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('quality')}
+                    >
+                        <HStack className='flex-row w-full justify-between'>
+                            <HStack className='flex-row w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.quality ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Poor vehicle quality
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_repair.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('unpro')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('unpro')}
+                    >
+                        <HStack className='flex-row w-full justify-between'>
+                            <HStack className='flex-row w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.unpro ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Unprofessional driver
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_driver.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('overload')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('overload')}
+                    >
+                        <HStack className='flex-row w-full justify-between'>
+                            <HStack className='flex-row w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.overload ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
                                 </CheckboxIndicator>
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Overloading
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_flattire.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('line')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('line')}
+                    >
+                        <HStack className='flex-row w-full justify-between'>
+                            <HStack className='flex-row w-fit h-fit items-center'>
                                     {
                                         selectedCheckboxes.line ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Out-of-line operation
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_route.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('crash')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('crash')}
+                    >
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
                                     {
                                         selectedCheckboxes.crash ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Road crash
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_crash.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Checkbox onChange={() => toggleCheckbox('crime')} className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2' size='md' value='Lack of public transport'>
-                        <Box className='flex-row w-full justify-between'>
-                            <Box className='flex-row w-fit h-fit items-center'>
+                    <Checkbox size='md'
+                        className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
+                        value='Lack of public transport'
+                        onChange={() => toggleCheckbox('crime')}
+                    >
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
                                     {
                                         selectedCheckboxes.crime ? (
-                                            <MaterialIcons color='#0038A8' name='check-box' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='#0038A8'
+                                                name='check-box'
+                                            />
                                         ) : (
-                                            <MaterialIcons color='gray' name='check-box-outline-blank' size={24} />
+                                            <MaterialIcons size={24}
+                                                color='gray'
+                                                name='check-box-outline-blank'
+                                            />
                                         )
                                     }
-                                <CheckboxLabel className='text-black text-lg font-medium'>
+                                <CheckboxLabel size='md' className='text-black font-medium'>
                                     Crime event
                                 </CheckboxLabel>
-                            </Box>
+                            </HStack>
                             <Image source={(require('@/assets/icons/ic_police.png'))} alt='logo' />
-                        </Box>
+                        </HStack>
                     </Checkbox>
 
-                    <Button
+                    <Button className='bg-custom-secondary h-fit mt-5 mb-20 ms-20 me-20 p-4'
                         onPress={() => {
-                            const message = handleAlert({ selectedCheckboxes });
+                            if (vehicleId !== '') {
+                                const description = handleAlert({ selectedCheckboxes });
+                                const message = {
+                                    deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                                    lat: location.coords.latitude,
+                                    lng: location.coords.longitude,
+                                    timestamp: new Date().toISOString(),
+                                    userId: username,
+                                    description: description,
+                                    vehicleId: vehicleId,
+                                    vehicleDetails: vehicleDescription
+                                }
 
-                            // handleAlertMqttPublish(client);
+                                publishAlert(message).then((response) => {
+                                    if (response) {
+                                        locationSubscription?.remove();
+                                        setLocationSubscription(null);
+                                    }
+                                });
+                            } else {
+                                alert('Please set commute information');
+                            }
                         }}
-                        className='p-4 bg-custom-secondary mt-5 mb-20 ms-20 me-20'
                     >
                         <ButtonText className='text-white text-lg font-bold'>
                             SEND ALERT
                         </ButtonText>
                     </Button>
                 </ScrollView>
-            </Box>
+            </VStack>
         </Box>
     )
 }

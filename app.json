@@ -1,32 +1,35 @@
 {
   "expo": {
-    "name": "parasol-app",
+    "name": "Parasol Fleet",
     "slug": "parasol-app",
+    "scheme": "parasol-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icons/stph_72.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/icons/stph_1200.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FCD116"
     },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "For a better, experience, your device will need to use Location Accuracy",
         "NSLocationAlwaysUsageDescription": "For a better, experience, your device will need to use Location Accuracy",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "For a better, experience, your device will need to use Location Accuracy"
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "For a better, experience, your device will need to use Location Accuracy",
+        "NSPhotoLibraryUsageDescription": "We need access to save files to your photo library",
+        "NSPhotoLibraryAddUsageDescription": "We need access to save files to your photo library"
       },
-      "bundleIdentifier": "com.safetravelph.parasol",
+      "bundleIdentifier": ".safetravelph.parasol",
       "config": {
-        "googleMapsApiKey" : "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
+        "googleMapsApiKey": "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icons/stph_72.png",
         "backgroundColor": "#ffffff"
       },
       "config": {
@@ -49,6 +52,10 @@
         "projectId": "5958cfd3-998c-4a2a-96e6-f3790561425d"
       },
       "googleMapsApiKey": "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
-    }
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-router"
+    ]
   }
 }

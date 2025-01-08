@@ -1,14 +1,15 @@
 import '@/global.css';
+// react native
+import { useNavigation } from "@react-navigation/native";
+import { createDrawerNavigator } from '@react-navigation/drawer';
+// expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+// gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
+import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
-
-import { Text } from 'react-native';
-import { useNavigation } from "@react-navigation/native";
-import { createDrawerNavigator } from '@react-navigation/drawer';
-
-import { Ionicons } from '@expo/vector-icons';
 
 const Drawer = createDrawerNavigator();
 
@@ -37,9 +38,7 @@ function DrawerChatbotNavigator() {
 function Chatbot() {
     return (
         <GluestackUIProvider mode='light'>
-            <Box className='flex-1 w-full h-full items justify-center'>
-                <Text>Chatbot</Text>
-            </Box>
+            <Box className='flex-1 w-full h-full items justify-center'/>
         </GluestackUIProvider>
     );
 }
@@ -51,19 +50,14 @@ function Header({ navigation } : any) {
         <Box 
             style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
             className='items-center bg-custom-primary p-5'>
-            <Ionicons
-                name='arrow-back'
+            <MaterialCommunityIcons
+                name='arrow-left'
                 size={25}
                 color='#0038A8'
                 onPress={() => nav.dispatch( navigation.goBack() )}
             />
             
-            <Text
-                style={{ fontSize: 18, color: '#0038A8' }}
-                className='font-bold'
-            >
-                Chatbot App
-            </Text>
+            <Text size='lg' className='font-bold text-custom-secondary'>Chat App</Text>
 
             <Menu
                 className='bg-custom-primary'
@@ -71,7 +65,7 @@ function Header({ navigation } : any) {
                 trigger={({ ...triggerProps }) => {
                     return (
                         <Button {...triggerProps} className='bg-transparent'>
-                            <Ionicons name='ellipsis-vertical' size={25} color='#0038A8' />
+                            <MaterialCommunityIcons name='dots-vertical' size={25} color='#0038A8' />
                         </Button>
                     )
                 }}
