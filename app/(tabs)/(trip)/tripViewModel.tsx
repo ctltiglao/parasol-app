@@ -1,32 +1,31 @@
 // react native
+import { useRef } from "react";
+import MapView from "react-native-maps";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
 import * as Location from "expo-location";
 // gluestack
 
-export const startCommuteTracking = async () => {
+import protobuf from "protobufjs";
+// const protobuf = require("protobufjs");
+
+import { addCommuteRecord, onCreate } from "@/app/service/sql/tripHistoryDBHelper";
+import { Tracking } from "@/app/service/mqtt/proto/Tracking.proto.js";
+import { onMqttConnect } from "@/app/service/mqtt/mqtt";
+
+export const getQuickTourPref = async () => {
     try {
-        await Location.watchPositionAsync({
-            accuracy: Location.Accuracy.High,
-            timeInterval: 1000,
-            distanceInterval: 1
-        }, (newLocation) => {
-            const newCoord = {
-                latitude: newLocation.coords.latitude,
-                longitude: newLocation.coords.longitude
-            };
-    
-            console.warn(newCoord);
-            return newCoord;
-        })
-    } catch(e) {
-        alert(`Failed to start tracking: ${e}`);
+        const data = await AsyncStorage.getItem('quickTour');
+        // return json != null ? JSON.parse(json) : null;
+        return data;
+    } catch (error) {
+        console.error(error);
     }
 }
 
 export const getCommuteDetails = async () => {
     try {
-        const json = await AsyncStorage.getItem('CommuteVehicle');
+        const json = await AsyncStorage.getItem('CommuteDetails');
         return json != null ? JSON.parse(json) : null;
     } catch (error) {
         alert(`Failed to fetch commute details ${error}`);
@@ -34,42 +33,73 @@ export const getCommuteDetails = async () => {
 }
 
 export const setCommuteRecord = async ({
-    id,
     origin,
     originLat,
     originLng,
     destination,
     destinationLat,
     destinationLng,
-    selectMode,
-    selectPurpose,
-    vehicleId,
-    vehicleDescription
+    mode,
+    purpose,
+    vehicle_id,
+    vehicle_details,
+    commute_date
 }: any) => {
-    const currentDate = new Date().toISOString();
-
-    const CommuteRecord = {
-        id: id,
-        origin: origin,
-        originLat: originLat,
-        originLng: originLng,
-        destination: destination,
-        destinationLat: destinationLat,
-        destinationLng: destinationLng,
-        mode: selectMode,
-        purpose: selectPurpose,
-        vehicleId: vehicleId,
-        vehicleDetails: vehicleDescription,
-        commuteDate: currentDate,
-    }
-
-    // console.log(CommuteRecord);
-
     try {
         await AsyncStorage.removeItem('CommuteDetails');
-        return CommuteRecord;
+        // return CommuteRecord;
+
+        console.log(commute_date);
+
+        await onCreate().then(async () => {
+            addCommuteRecord({
+                origin: origin,
+                origin_lat: originLat,
+                origin_lng: originLng,
+                destination: destination,
+                destination_lat: destinationLat,
+                destination_lng: destinationLng,
+                mode: mode,
+                purpose: purpose,
+                vehicle_id: vehicle_id,
+                vehicle_details: vehicle_details,
+                commute_date: commute_date
+            })
+        })
+
+        return true;
     } catch (error) {
         alert(`Failed to stop commute tracking ${error}`);
         return false;
+    }
+}
+
+export const mqttBroker = async(message: any) => {
+    // console.log(message);
+
+    try {
+        const trackingData = {
+            deviceId: message.deviceId,
+            lat: message.lat,
+            lng: message.lng,
+            timestamp: message.timestamp,
+            userId: message.userId,
+            vehicleId: message.vehicleId,
+            vehicleDetails: message.vehicleDetails,
+            passengerId: message.passengerId,
+            passengerDetails: message.passengerDetails,
+            altitude: message.altitude,
+            accuracy: message.accuracy
+        }
+
+        const buffer = Tracking.encode(trackingData).finish();
+        // console.warn(buffer);
+
+        // const decoded = TripInfo.decode(buffer);
+        // console.warn(decoded);
+
+        onMqttConnect('route_puv_vehicle_app_feeds', buffer);
+    } catch (error) {
+        console.error(error);
     }
 }

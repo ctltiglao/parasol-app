@@ -21,7 +21,7 @@ import DataScreen from '../(drawer)/(data)/data';
 import FeedbackScreen from '../(drawer)/(feedback)/feedback';
 import AboutScreen from '../(drawer)/(about)/about';
 import SettingsScreen from '../(drawer)/(settings)/settings';
-import LoginScreen from '../(login)/login';
+import LoginScreen from '../(main)/main';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();

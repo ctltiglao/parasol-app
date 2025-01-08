@@ -83,7 +83,7 @@ export const continueAsGuest = async() => {
     // return user state object
     try {
         AsyncStorage.setItem('UserState', JSON.stringify(UserState));
-        console.warn(UserState);
+        // console.warn(UserState);
         return true;
     } catch (e) {
         return false;

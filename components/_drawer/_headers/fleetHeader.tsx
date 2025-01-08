@@ -68,7 +68,7 @@ export default function FleetHeader({ navigation, route, options } : any) {
             >
                 { fleetOptions.map((options: any) => (
                     <MenuItem key={options.id} textValue={options.value}>
-                        <MenuItemLabel onPress={options.onPress}>{options.label}</MenuItemLabel>
+                        <MenuItemLabel bold={true} onPress={options.onPress}>{options.label}</MenuItemLabel>
                     </MenuItem>
                 ))}
             </Menu>

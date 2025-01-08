@@ -1,9 +1,11 @@
 import '@/global.css';
 // react native
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ScrollView } from 'react-native';
 // expo
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import * as Device from 'expo-device';
 // gluestack
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
@@ -11,9 +13,11 @@ import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { RadioGroup, RadioIndicator, Radio, RadioLabel } from '@/components/ui/radio';
 
-import { handleRating } from './rateViewModel';
+import { handleRating, publishRating } from './rateViewModel';
+import { getUserState } from '../../tabViewModel';
+import { getCommuteDetails } from '../tripViewModel';
 
-export default function TripRate({ handleAction } : any) {
+export default function TripRate({ handleAction, location } : any) {
     const smileys = [
         { id: 1, name: 'sentiment-very-dissatisfied', value: 'Terrible', colorSelect: '#CC5500', colorUnselect: 'gray' },
         { id: 2, name: 'sentiment-dissatisfied', value: 'Bad', colorSelect: '#FCD116', colorUnselect: 'gray' },
@@ -31,6 +35,12 @@ export default function TripRate({ handleAction } : any) {
     const [isSelectedRoute, setIsSelectedRoute] = useState(null);
     const [isSelectedOverall, setIsSelectedOverall] = useState(null);
 
+    // const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
+    // const [ location, setLocation ] = useState<any|null>(null);
+    const [ vehicleId, setVehicleId ] = useState('');
+    const [ vehicleDescription, setVehicleDescription ] = useState('');
+    const [ username, setUsername ] = useState('');
+
     const toggleSelectedCondition = (value: any) => setIsSelectedCondition(value);
     const toggleSelectedComfort = (value: any) => setIsSelectedComfort(value);
     const toggleSelectedAdequacy = (value: any) => setIsSelectedAdequacy(value);
@@ -39,6 +49,33 @@ export default function TripRate({ handleAction } : any) {
     const toggleSelectedAvailable = (value: any) => setIsSelectedAvailable(value);
     const toggleSelectedRoute = (value: any) => setIsSelectedRoute(value);
     const toggleSelectedOverall = (value: any) => setIsSelectedOverall(value);
+
+    // const getLocation = async() => {
+    //     if (!locationSubscription) {
+    //         const locSubscription = await Location.watchPositionAsync({
+    //             accuracy: Location.Accuracy.High,
+    //             timeInterval: 1000,
+    //             distanceInterval: 1
+    //         }, (newLocation) => {
+    //             setLocation(newLocation);
+    //         });
+    
+    //         setLocationSubscription(locSubscription);
+    //     }
+    // }
+    
+    useEffect(() => {
+        getUserState().then((response) => {
+            setUsername(response.username);
+        });
+    
+        getCommuteDetails().then((response) => {
+            setVehicleId(response.vehicleId);
+            setVehicleDescription(response.vehicleDescription);
+        })
+
+        // getLocation();
+    }, [])
 
     return (
         <Box className='p-4'>
@@ -220,20 +257,35 @@ export default function TripRate({ handleAction } : any) {
                         <Button
                             className='w-1/2 p-4 bg-custom-secondary'
                             onPress={() => {
-                                const description = handleRating({
-                                    isSelectedCondition,
-                                    isSelectedComfort,
-                                    isSelectedAdequacy,
-                                    isSelectedStop,
-                                    isSelectedInfo,
-                                    isSelectedAvailable,
-                                    isSelectedRoute,
-                                    isSelectedOverall
-                                });
+                                if (vehicleId !== '') {
+                                    const description = handleRating({
+                                        isSelectedCondition,
+                                        isSelectedComfort,
+                                        isSelectedAdequacy,
+                                        isSelectedStop,
+                                        isSelectedInfo,
+                                        isSelectedAvailable,
+                                        isSelectedRoute,
+                                        isSelectedOverall
+                                    });
 
-                                console.warn(description);
+                                    console.log(location);
 
-                                alert(description);
+                                    const message = {
+                                        deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                                        lat: location.coords.latitude,
+                                        lng: location.coords.longitude,
+                                        timestamp: new Date().toISOString(),
+                                        userId: username,
+                                        description: description,
+                                        vehicleId: vehicleId,
+                                        vehicleDetails: vehicleDescription
+                                    }
+                                    
+                                    publishRating(message);
+                                } else {
+                                    alert('Please set commute information');
+                                }
                             }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>

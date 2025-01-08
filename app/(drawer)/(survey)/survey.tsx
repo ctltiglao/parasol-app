@@ -2,7 +2,7 @@ import '@/global.css';
 // react native
 import { useEffect, useState } from 'react';
 import { Linking } from 'react-native';
-import WebView from 'react-native-webview';
+import { WebView, WebViewNavigation } from 'react-native-webview';
 import { useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
 // expo
@@ -65,7 +65,19 @@ function Survey() {
         });
     }, []);
 
+    const handleNavigation = (event: WebViewNavigation) => {
+        console.log(event.url);
+
+        if (event.url.includes('jotform.com') || event.url.includes('safetravel.ph')) {
+            return true;
+        }
+
+        return false;
+    }
+
     const handleUrlChange = (navState: any) => {
+        console.log(navState.url);
+        
         if (navState.url.includes('jotform.com')) {
             let navStateUrl = `${navState.url}?guest_user_id=${username}`
             getUrl = navStateUrl;
@@ -80,6 +92,10 @@ function Survey() {
                 <WebView
                     source={{ uri: `https://safetravel.ph/surveyapp/?user_type=${userType}` }}
                     onNavigationStateChange={handleUrlChange}
+                    onShouldStartLoadWithRequest={handleNavigation}
+                    javaScriptEnabled={true}
+                    domStorageEnabled={true}
+                    startInLoadingState={true}
                 />
             </Box>
         </GluestackUIProvider>

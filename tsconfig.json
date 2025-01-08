@@ -9,6 +9,8 @@
       "tailwind.config": [
         "./tailwind.config.js"
       ]
-    }
-  }
+    },
+    "allowJs": true
+  },
+  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
 }

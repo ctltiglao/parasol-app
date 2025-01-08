@@ -15,10 +15,12 @@ export const clearSelection = ({
     setInputDescription('');
 }
 
-export const saveFleetDetails = async ({route, vehicleId}: any) => {
+export const saveFleetDetails = async ({route, vehicleId, vehicleDetails, capacity}: any) => {
     const fleetDetails = {
         route: route,
-        vehicleId: vehicleId
+        vehicleId: vehicleId,
+        vehicleDetails: vehicleDetails,
+        capacity: capacity
     }
 
     try {

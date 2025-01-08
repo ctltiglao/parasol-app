@@ -1,9 +1,11 @@
 import '@/global.css';
 // react native
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 // expo
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import * as Device from 'expo-device';
 // gluestack
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -11,7 +13,9 @@ import { VStack } from '@/components/ui/vstack';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Checkbox, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
 
-import { handleAlert } from './alertViewModel';
+import { handleAlert, publishAlert } from './alertViewModel';
+import { getUserState } from '../../tabViewModel';
+import { getCommuteDetails } from '../tripViewModel';
 
 export default function TripAlert({ handleAction } : any) {
     const [selectedCheckboxes, setSelectedCheckboxes] = useState({
@@ -28,11 +32,44 @@ export default function TripAlert({ handleAction } : any) {
         crime: false
     });
 
+    const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
+    const [location, setLocation] = useState<any|null>(null);
+    const [ vehicleId, setVehicleId ] = useState('');
+    const [ vehicleDescription, setVehicleDescription ] = useState('');
+    const [ username, setUsername ] = useState('');
+
     const toggleCheckbox = (name : any) => {
         setSelectedCheckboxes((prev : any) => ({
             ...prev, [name]: !prev[name]
         }));
     }
+
+    const getLocation = async() => {
+        if (!locationSubscription) {
+            const locSubscription = await Location.watchPositionAsync({
+                accuracy: Location.Accuracy.High,
+                timeInterval: 1000,
+                distanceInterval: 1
+            }, (newLocation) => {
+                setLocation(newLocation);
+            });
+
+            setLocationSubscription(locSubscription);
+        }
+    }
+
+    useEffect(() => {
+        getUserState().then((response) => {
+            setUsername(response.username);
+        });
+
+        getCommuteDetails().then((response) => {
+            setVehicleId(response.vehicleId);
+            setVehicleDescription(response.vehicleDescription);
+        })
+
+        getLocation();
+    }, [])
 
     return (
         <Box className='p-4 bg-white'>
@@ -377,8 +414,28 @@ export default function TripAlert({ handleAction } : any) {
 
                     <Button className='bg-custom-secondary h-fit mt-5 mb-20 ms-20 me-20 p-4'
                         onPress={() => {
-                            const message = handleAlert({ selectedCheckboxes });
-                            alert(message);
+                            if (vehicleId !== '') {
+                                const description = handleAlert({ selectedCheckboxes });
+                                const message = {
+                                    deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                                    lat: location.coords.latitude,
+                                    lng: location.coords.longitude,
+                                    timestamp: new Date().toISOString(),
+                                    userId: username,
+                                    description: description,
+                                    vehicleId: vehicleId,
+                                    vehicleDetails: vehicleDescription
+                                }
+
+                                publishAlert(message).then((response) => {
+                                    if (response) {
+                                        locationSubscription?.remove();
+                                        setLocationSubscription(null);
+                                    }
+                                });
+                            } else {
+                                alert('Please set commute information');
+                            }
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>

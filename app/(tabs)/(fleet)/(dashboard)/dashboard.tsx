@@ -1,12 +1,14 @@
 import '@/global.css';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { Box } from '@/components/ui/box';
-
+// react native
+import { useEffect } from 'react';
 import { Text } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
-
-import { Ionicons } from '@expo/vector-icons';
+// expo
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+// gluestack
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { Box } from '@/components/ui/box';
 
 const Drawer = createDrawerNavigator();
 
@@ -21,18 +23,18 @@ export default function DashboardMonitorScreen() {
 function DrawerHistorybotNavigator() {
     return (
         <Drawer.Navigator
-            initialRouteName='ChatbotMain'
+            initialRouteName='DashboardMain'
 
             screenOptions={{
                 header: (props) => <Header {...props} />
             }}
         >
-            <Drawer.Screen name='ChatbotMain' component={History} />
+            <Drawer.Screen name='DashboardMain' component={Screen} />
         </Drawer.Navigator>
     );
 }
 
-function History() {
+function Screen() {
     return (
         <GluestackUIProvider mode='light'>
             <Box className='flex-1 w-full h-full items justify-center'>
@@ -49,8 +51,8 @@ function Header({ navigation } : any) {
         <Box 
             style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
             className='items-center bg-custom-primary p-5'>
-            <Ionicons
-                name='arrow-back'
+            <MaterialCommunityIcons
+                name='arrow-left'
                 size={25}
                 color='#0038A8'
                 onPress={() => nav.dispatch( navigation.goBack() )}

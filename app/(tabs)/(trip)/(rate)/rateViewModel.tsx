@@ -1,3 +1,10 @@
+// react native
+// expo
+// gluestack
+
+import { onMqttConnect } from "@/app/service/mqtt/mqtt";
+import { Rating } from "@/app/service/mqtt/proto/Trip.proto.js";
+
 export const handleRating = ({
     isSelectedCondition,
     isSelectedComfort,
@@ -60,4 +67,27 @@ export const handleRating = ({
     }
 
     return rateString.join(',');
+}
+
+export const publishRating = async(message: any) => {
+    try {
+            const ratingData = {
+                deviceId: message.deviceId,
+                lat: message.lat,
+                lng: message.lng,
+                timestamp: message.timestamp,
+                userId: message.userId,
+                description: message.description,
+                vehicleId: message.vehicleId,
+                vehicleDetails: message.vehicleDetails
+            }
+
+            const buffer = Rating.encode(ratingData).finish();
+
+            onMqttConnect('ratings', buffer);
+    
+            // return true;
+        } catch (error) {
+            console.error(error);
+        }
 }

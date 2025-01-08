@@ -1,6 +1,6 @@
 import '@/global.css';
 // react native
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';

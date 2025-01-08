@@ -49,10 +49,8 @@ export const saveCommuteDetails = async ({vehicleId, vehicleDescription}: any) =
         vehicleDescription: vehicleDescription
     }
 
-    console.log(commuteDetails);
-
     try {
-        await AsyncStorage.setItem('CommuteVehicle', JSON.stringify(commuteDetails));
+        await AsyncStorage.setItem('CommuteDetails', JSON.stringify(commuteDetails));
         return true;
     } catch (e) {
         alert(`Failed to save commute details: ${e}`);

@@ -1,7 +1,7 @@
 import '@/global.css';
 // react native
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 // expo
 import { CameraView } from 'expo-camera';
 // gluestack
@@ -22,6 +22,8 @@ export default function FleetInfo({handleAction} : any) {
     const [inputId, setInputId] = useState('');
     const [inputDescription, setInputDescription] = useState('');
 
+    const [capacity, setCapacity] = useState(null);
+
     // camera permission
     getCameraPermissions();
 
@@ -36,10 +38,12 @@ export default function FleetInfo({handleAction} : any) {
         const patternRoute = /Route:(.*?)\*\*\*/;
         const patternOperator = /Operator:(.*?)\*\*\*/;
         const patternPlate = /Plate:(.*?)\*\*\*/;
+        const patternCapacity = /\*\*\*Capacity:(.*?)/;
         
         const matchRoute = data.match(patternRoute);
         const matchOperator = data.match(patternOperator);
         const matchPlate = data.match(patternPlate);
+        const matchCapacity = data.match(patternCapacity);
 
         if (matchRoute) {
             const extractedText = matchRoute[1];
@@ -54,6 +58,11 @@ export default function FleetInfo({handleAction} : any) {
                 const extractedText = `${extractedOperator}/${extractedPlate}`;
                 setInputId(extractedText);
             }
+        }
+
+        if (matchCapacity) {
+            const extractedText = matchCapacity[1];
+            setCapacity(extractedText);
         }
 
         setInputDescription(data);
@@ -159,10 +168,12 @@ export default function FleetInfo({handleAction} : any) {
                             onPress={async () => {
                                 const res = await saveFleetDetails({
                                     route: inputRoute,
-                                    vehicleId: inputId
+                                    vehicleId: inputId,
+                                    vehicleDetails: inputDescription,
+                                    capacity: capacity
                                 })
 
-                                res && handleAction();
+                                res && Alert.alert('', 'Connected');
                             }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>
