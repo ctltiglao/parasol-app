@@ -90,10 +90,10 @@ export const mqttBroker = async(message: any) => {
             accuracy: message.accuracy
         }
 
-        console.log('Tracking data', trackingData)
+        // console.log('Tracking data', trackingData)
 
         const buffer = Tracking.encode(trackingData).finish();
-        console.warn(buffer);
+        // console.warn(buffer);
 
         // const decoded = TripInfo.decode(buffer);
         // console.warn(decoded);
