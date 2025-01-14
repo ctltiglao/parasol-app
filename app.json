@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "scheme": "parasol-app",
+    "scheme": "parasol",
     "splash": {
       "image": "./assets/icons/stph_72.png",
       "resizeMode": "contain",

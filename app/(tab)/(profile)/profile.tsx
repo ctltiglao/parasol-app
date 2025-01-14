@@ -103,7 +103,7 @@ function Screen() {
                         <Text className='text-zinc-500 text-lg'>
                             Manage Account
                         </Text>
-                        <Button className='bg-custom-secondary w-full p-2 mt-1'>
+                        <Button className='h-fit w-full bg-custom-secondary p-2 mt-1'>
                             <ButtonText className='text-white text-lg'>
                                 MANAGE ACCOUNT
                             </ButtonText>

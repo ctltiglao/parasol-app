@@ -22,7 +22,6 @@ export default function CrashDiagramScreen() {
                 <VStack>
                     <Text size='lg' className='text-zinc-500'>Crash Type</Text>
                     <Select
-                        className='ms-4'
                         onValueChange={setSelectCrash}
                         selectedValue={selectCrash}
                     >

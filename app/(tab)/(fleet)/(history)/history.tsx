@@ -70,13 +70,13 @@ function Screen() {
 
     return (
         <GluestackUIProvider mode='light'>
-            <ScrollView className='bg-gray-200 flex-1 w-full h-full p-4'>
+            <ScrollView className='bg-gray-200 flex-1 w-screen h-full p-4'>
                 {
                     fleetRecord.map((res, index) => (
-                        <Box key={index} className='bg-white w-full flex-col rounded-md mb-4 p-4'>
-                            <Box className='flex-row w-fit justify-between mb-2'>
+                        <Box key={index} className='bg-white flex-col rounded-md mb-4 p-4'>
+                            <Box className='flex-row justify-between mb-2'>
                                 <Image size='sm' alt='logo'
-                                    className='bg-gray-200 w-20 h-20 rounded-full'
+                                    className='bg-gray-200 w-16 h-16 rounded-full'
                                     source={require('@/assets/icons/jeepney.png')}
                                 />
 
@@ -98,7 +98,7 @@ function Screen() {
                                     </Box>
                                 </Box>
                                 
-                                <Box className='w-4'>
+                                <Box className='w-fit'>
                                     <SqlMenu
                                         id={res.id}
                                         consumption={res.consumption}
@@ -185,7 +185,7 @@ function SqlMenu({
                 offset={5}
                 trigger={({ ...triggerProps }) => {
                     return (
-                        <Button {...triggerProps} onPress={openMenu} className='bg-transparent absolute top-0'>
+                        <Button {...triggerProps} onPress={openMenu} className='bg-transparent absolute top-0 right-0'>
                             <MaterialCommunityIcons name='dots-vertical' size={25} color='gray' />
                         </Button>
                     )
@@ -235,7 +235,7 @@ function SqlMenu({
                                     onValueChange={setInputConsumptionUnit}
                                     selectedValue={inputConsumptionUnit}
                                 >
-                                    <SelectTrigger className='bg-white border-2 mt-2 mb-4'>
+                                    <SelectTrigger className='bg-white h-fit border-2 mt-2 mb-4'>
                                         <SelectInput/>
                                         <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
                                     </SelectTrigger>
@@ -306,30 +306,12 @@ function SqlMenu({
     );
 }
 
-interface FleetRecord {
-    destination_lat: string;
-    destination_lng: string;
-    travel_distance: string;
-    start_time: string;
-    end_time: string;
-    travel_time: string;
-    type: string;
-    capacity: string;
-    vehicle_id: string;
-    vehicle_details: string;
-    trip_date: string;
-}
-
 function Header({ navigation } : any) {
     const [menuVisible, setMenuVisible] = useState(false);
     const nav: any = useNavigation();
 
     const openMenu = () => setMenuVisible(true);
     const closeMenu = () => setMenuVisible(false);
-
-    const handleMenuItemClick = () => {
-        closeMenu();
-    };
 
     const exportFleetCSV = async () => {
         await onCreate().then(async () => {

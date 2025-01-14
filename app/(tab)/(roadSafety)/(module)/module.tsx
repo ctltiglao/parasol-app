@@ -6,6 +6,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 // expo
 import { StatusBar } from 'expo-status-bar';
 // gluestack
@@ -23,7 +24,9 @@ const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
-export default function RoadModuleScreen() {
+export default function RoadModuleScreen({ navigation }: any) {
+    const nav: any = useNavigation();
+
     const [ isOverlayIncident, setOverlayIncident ] = useState(true);
     const [ isOverlayNotes, setOverlayNotes ] = useState(false);
     const [ isOverlayCrash, setOverlayCrash ] = useState(false);
@@ -64,29 +67,29 @@ export default function RoadModuleScreen() {
                         showsHorizontalScrollIndicator={false}
                     >
                         <Button className={ isOverlayIncident
-                            ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                            : 'bg-white p-4'
+                            ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                            : 'h-fit bg-white p-4'
                         }
                         onPress={() =>  toggleOverIncident()}>
                             <ButtonText className='text-black'>INCIDENT DETAILS</ButtonText>
                         </Button>
                         <Button className={ isOverlayNotes
-                            ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                            : 'bg-white p-4'
+                            ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                            : 'h-fit bg-white p-4'
                         }
                         onPress={() => toggleOverNotes()}>
                             <ButtonText className='text-black'>NOTES</ButtonText>
                         </Button>
                         <Button className={ isOverlayCrash
-                            ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                            : 'bg-white p-4'
+                            ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                            : 'h-fit bg-white p-4'
                         }
                         onPress={() => toggleOverCrash()}>
                             <ButtonText className='text-black'>CRASH DIAGRAM</ButtonText>
                         </Button>
                         <Button className={ isOverlayParties
-                            ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                            : 'bg-white p-4'
+                            ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                            : 'h-fit bg-white p-4'
                         }
                         onPress={() => toggleOverParties()}>
                             <ButtonText className='text-black'>PARTIES</ButtonText>
@@ -109,10 +112,13 @@ export default function RoadModuleScreen() {
                 </Box>
 
                 <HStack space='md' className=' relative bottom-0 p-4'>
-                    <Button className='bg-zinc-300 p-3 rounded-sm me-4'>
+                    <Button className='h-fit bg-zinc-300 p-3 rounded-sm me-4'>
                         <ButtonText className='text-black'>SUBMIT</ButtonText>
                     </Button>
-                    <Button className='bg-zinc-300 p-3 rounded-sm'>
+                    <Button
+                        className='h-fit bg-zinc-300 p-3 rounded-sm'
+                        onPress={() => nav.dispatch(navigation.goBack())}
+                    >
                         <ButtonText className='text-black'>CLOSE</ButtonText>
                     </Button>
                 </HStack>

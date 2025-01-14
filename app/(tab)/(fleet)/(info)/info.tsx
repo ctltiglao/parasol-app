@@ -164,7 +164,7 @@ export default function FleetInfo({handleAction} : any) {
                             />
                         </Textarea>
 
-                        <Button className='p-4 bg-custom-secondary mt-5'
+                        <Button className='h-fit p-4 bg-custom-secondary mt-5'
                             onPress={async () => {
                                 const res = await saveFleetDetails({
                                     route: inputRoute,

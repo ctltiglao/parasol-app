@@ -348,7 +348,7 @@ function Screen() {
                             <SubFab iconName='emoticon' onPress={() => toggleOverlayRate()}/>
                             <Button
                                 onPress={() => setShowModalSwitch(true)}
-                                className="p-2 bg-custom-secondary shadow-soft-4 border-1 rounded-full"
+                                className="h-fit p-2 bg-custom-secondary shadow-soft-4 border-1 rounded-full"
                             >
                                 <MaterialIcons name="swap-horiz" size={30} color="white" />
                             </Button>
@@ -426,7 +426,7 @@ function Screen() {
         <GluestackUIProvider mode='light'>
             {
                 selectedMode ? (
-                    <Button className='p-4 bg-custom-customRed'
+                    <Button className='h-fit p-4 bg-custom-customRed'
                         onPress={async () => {
                             stopCommuteTracking();
 

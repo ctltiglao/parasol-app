@@ -65,7 +65,7 @@ export default function PartiesScreen() {
                             isButton.map((label, index) => (
                                 <Button
                                     key={index}
-                                    className='bg-white justify-start p-4'
+                                    className='h-fit bg-white justify-start p-4'
                                     onPress={() => openModal()}
                                 >
                                     <ButtonText className='text-zinc-500'>{label}</ButtonText>
@@ -74,7 +74,7 @@ export default function PartiesScreen() {
                         )
                     }
                 </Box>
-                <Button className='bg-zinc-300 p-4' onPress={addButton}>
+                <Button className='h-fit bg-zinc-300 p-4' onPress={addButton}>
                     <ButtonText className='text-black'>
                         ADD A PARTY
                     </ButtonText>
@@ -88,32 +88,32 @@ export default function PartiesScreen() {
                     <ModalContent className='bg-white w-full h-full p-0 rounded-none'>
                         <ModalHeader className='bg-white w-full'>
                             <Button className={ isOverlayOverview
-                                ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                                : 'bg-white p-4'
+                                ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                                : 'h-fit bg-white p-4'
                             }
                             onPress={() => toggleOverlayOverview()}>
                                 <ButtonText className='text-black'>OVERVIEW</ButtonText>
                             </Button>
 
                             <Button className={ isOverlayAdults
-                                ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                                : 'bg-white p-4'
+                                ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                                : 'h-fit bg-white p-4'
                             }
                             onPress={() => toggleOverlayAdults()}>
                                 <ButtonText className='text-black'>ADULTS</ButtonText>
                             </Button>
 
                             <Button className={ isOverlayMinors
-                                ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                                : 'bg-white p-4'
+                                ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                                : 'h-fit bg-white p-4'
                             }
                             onPress={() => toggleOverlayMinors()}>
                                 <ButtonText className='text-black'>MINORS</ButtonText>
                             </Button>
 
                             <Button className={ isOverlayPhotos
-                                ? 'bg-white p-4 border-b-2 border-custom-secondary'
-                                : 'bg-white p-4'
+                                ? 'h-fit bg-white p-4 border-b-2 border-custom-secondary'
+                                : 'h-fit bg-white p-4'
                             }
                             onPress={() => toggleOverlayPhotos()}>
                                 <ButtonText className='text-black'>PHOTOS</ButtonText>
@@ -134,7 +134,7 @@ export default function PartiesScreen() {
                         </ModalBody>
                         <ModalFooter className='bg-white p-4'>
                             <Button
-                                className='bg-zinc-300 p-3 rounded-sm'
+                                className='h-fit bg-zinc-300 p-3 rounded-sm'
                                 onPress={() => closeModal()}
                             >
                                 <ButtonText className='text-black'>CLOSE</ButtonText>

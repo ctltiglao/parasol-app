@@ -114,7 +114,7 @@ function Screen() {
     // let locationSubscription = useRef<Location.LocationSubscription|null>(null);
     const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
     const [ routeCoordinates, setRouteCoordinates ] = useState<Coordinate[]>([]);
-    const [ startTime, setStartTime ] = useState<any|null>(null);
+    const [ speedStartTime, setSpeedStartTime ] = useState<any|null>(null);
     const [ originTime, setOriginTime ] = useState<string|null>(null);
 
     const openModal = () => setPaxModalVisible(true);
@@ -173,7 +173,7 @@ function Screen() {
             locationSubscription?.remove();
             setLocationSubscription(null);
             setRouteCoordinates([]);
-            setStartTime(null);
+            setSpeedStartTime(null);
             setOriginTime(null);
 
             closeModal();
@@ -217,7 +217,7 @@ function Screen() {
                     const speedInMeterPerSecond = inMeter / timeDelta;
                     // start time
                     setOriginTime(new Date().toISOString());
-                    setStartTime(new Date().getTime());
+                    setSpeedStartTime(new Date().getTime());
     
                     if (speedInMeterPerSecond > 0) {
                         setTrackingTime((prevTravelTime) => prevTravelTime + timeDelta);
@@ -266,7 +266,7 @@ function Screen() {
         setRoute('');
         setVehicleId('');
 
-        let aveSpeed = getAveSpeed(distance, startTime);
+        let aveSpeed = getAveSpeed(distance, speedStartTime);
         setAveSpeed(aveSpeed);
 
         setTravelTime(formatTravelTime(trackingTime));
@@ -324,7 +324,7 @@ function Screen() {
                             
                             closeModal();
                             stopFleetTracking();
-                        }} className='p-4 bg-custom-customRed'>
+                        }} className='h-fit p-4 bg-custom-customRed'>
                             <ButtonText className='text-white text-lg font-bold'>
                                 STOP FLEET TRACKING
                             </ButtonText>
@@ -332,7 +332,7 @@ function Screen() {
 
                         {
                             isFleetPause ? (
-                                <Button  className='p-4 bg-warning-500'
+                                <Button  className='h-fit p-4 bg-warning-500'
                                     onPress={() => handleFleetPause(false)}
                                 >
                                     <ButtonText className='text-white text-lg font-bold'>
@@ -340,11 +340,11 @@ function Screen() {
                                     </ButtonText>
                                 </Button>
                             ) : (
-                                <Button className='p-4 bg-warning-500'
+                                <Button className='h-fit p-4 bg-warning-500'
                                     onPress={() => {
                                         handleFleetPause(true);
 
-                                        let aveSpeed = getAveSpeed(distance, startTime);
+                                        let aveSpeed = getAveSpeed(distance, speedStartTime);
                                         setAveSpeed(aveSpeed);
 
                                         setTravelTime(formatTravelTime(trackingTime));
@@ -366,7 +366,7 @@ function Screen() {
                         }
                     </Box>
                 ) : (
-                    <Button className='p-4 bg-custom-secondary'
+                    <Button className='h-fit p-4 bg-custom-secondary'
                         onPress={async () => {
                             handleFleetStart(true);
                             isFleetStop === true && handleFleetStop(false);
@@ -578,24 +578,28 @@ function Screen() {
                             isFleetPause && (
                                 <Box className='bg-white pb-4 ps-4 pe-4 w-full'>
                                     <Box className='bg-gray-700 p-4 w-full border-0 rounded-lg'>
-                                        <Text className='text-white'>Summary of Previous Fleet:</Text>
+                                        <Text className='text-white'>Summary of Previous PUV Tracking:</Text>
                                         <Box className='flex-row justify-between'>
                                             <Box className='flex-col'>
                                                 <Text className='text-white text-sm'>Ave. Speed (kph):</Text>
                                                 <Text className='text-white text-sm'>Max. Speed (kph):</Text>
+                                                <Text className='text-white text-sm'>Travel Time (hrd):</Text>
                                             </Box>
                                             <Box className='flex-col'>
                                                 <Text className='text-white text-sm'>{aveSpeed}</Text>
                                                 <Text className='text-white text-sm'>{maxSpeed.toFixed(2)}</Text>
+                                                <Text className='text-white text-sm'>{travelTime}</Text>
                                             </Box>
 
                                             <Box className='flex-col'>
-                                                <Text className='text-white text-sm'>Travel Time (hrd):</Text>
                                                 <Text className='text-white text-sm'>Max Pax Onboard:</Text>
+                                                <Text className='text-white text-sm'>Total Trip Ridership:</Text>
+                                                <Text className='text-white text-sm'>Trip Start Time (hrd):</Text>
                                             </Box>
                                             <Box className='flex-col'>
-                                                <Text className='text-white text-sm'>{travelTime}</Text>
                                                 <Text className='text-white text-sm'>{maxOnBoard}</Text>
+                                                <Text className='text-white text-sm'>0</Text>
+                                                <Text className='text-white text-sm'>0</Text>
                                             </Box>
                                         </Box>
                                     </Box>
@@ -652,24 +656,29 @@ function Screen() {
                 isFleetStop && (
                     <Box className='bg-white p-4 w-full'>
                         <Box className='bg-gray-700 p-4 w-full border-0 rounded-lg'>
-                            <Text className='text-white'>Summary of Previous Fleet:</Text>
+                            <Text className='text-white'>Summary of Previous PUV Tracking:</Text>
+                            
                             <Box className='flex-row justify-between'>
                                 <Box className='flex-col'>
                                     <Text className='text-white text-sm'>Ave. Speed (kph):</Text>
                                     <Text className='text-white text-sm'>Max. Speed (kph):</Text>
+                                    <Text className='text-white text-sm'>Travel Time (hrd):</Text>
                                 </Box>
                                 <Box className='flex-col'>
                                     <Text className='text-white text-sm'>{aveSpeed}</Text>
                                     <Text className='text-white text-sm'>{maxSpeed.toFixed(2)}</Text>
+                                    <Text className='text-white text-sm'>{travelTime}</Text>
                                 </Box>
 
                                 <Box className='flex-col'>
-                                    <Text className='text-white text-sm'>Travel Time (hrd):</Text>
                                     <Text className='text-white text-sm'>Max Pax Onboard:</Text>
+                                    <Text className='text-white text-sm'>Total Trip Ridership:</Text>
+                                    <Text className='text-white text-sm'>Trip Start Time (hrd):</Text>
                                 </Box>
                                 <Box className='flex-col'>
-                                    <Text className='text-white text-sm'>{travelTime}</Text>
                                     <Text className='text-white text-sm'>{maxOnBoard}</Text>
+                                    <Text className='text-white text-sm'>0</Text>
+                                    <Text className='text-white text-sm'>0</Text>
                                 </Box>
                             </Box>
                         </Box>

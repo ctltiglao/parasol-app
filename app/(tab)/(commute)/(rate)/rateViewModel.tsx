@@ -13,7 +13,8 @@ export const handleRating = ({
     isSelectedInfo,
     isSelectedAvailable,
     isSelectedRoute,
-    isSelectedOverall
+    isSelectedOverall,
+    inputComment
 } : any) => {
 
     let rateString : string[] = [];
@@ -64,6 +65,12 @@ export const handleRating = ({
         rateString.push(isSelectedOverall);
     } else {
         rateString.push('0');
+    }
+
+    if (inputComment !== '') {
+        rateString.push(inputComment);
+    } else {
+        rateString.push('');
     }
 
     return rateString.join(',');

@@ -39,7 +39,7 @@ export default function PhotoScreen() {
             <ScrollView automaticallyAdjustKeyboardInsets={true}>
                 <Box className='w-full h-fit'>
                     <Button
-                        className='bg-zinc-300 w-1/2 p-4 rounded-sm'
+                        className='h-fit bg-zinc-300 w-1/2 p-4 rounded-sm'
                         onPress={() => getPhoto()}
                     >
                         <ButtonText className='text-black'>

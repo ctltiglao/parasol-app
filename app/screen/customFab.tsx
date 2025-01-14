@@ -24,7 +24,7 @@ export function CustomFleetFab({ onFabPress }: FabProps) {
 
             <Button
                 style={{ borderRadius: 50 }}
-                className="p-3 bg-custom-secondary shadow-soft-4"
+                className="h-fit p-3 bg-custom-secondary shadow-soft-4"
                 onPress={toggleSubFab}
             >
                 <MaterialIcons name={ expanded ? "close" : "add" } size={24} color="white" />

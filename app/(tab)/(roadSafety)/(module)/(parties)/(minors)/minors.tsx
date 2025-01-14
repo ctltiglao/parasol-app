@@ -74,7 +74,6 @@ export default function MinorsScreen() {
                                             <VStack>
                                                 <Text size='xl' className='text-zinc-500'>Grade Level</Text>
                                                 <Select
-                                                    className='ms-4'
                                                     onValueChange={setSelectGrade}
                                                     selectedValue={selectGrade}
                                                 >
@@ -100,7 +99,6 @@ export default function MinorsScreen() {
                                             <VStack className='mt-4'>
                                                 <Text size='xl' className='text-zinc-500'>Involvement</Text>
                                                 <Select
-                                                    className='ms-4'
                                                     onValueChange={setSelectInvolvement}
                                                     selectedValue={selectInvolvement}
                                                 >
@@ -182,7 +180,6 @@ export default function MinorsScreen() {
                                             <VStack className='mt-4'>
                                                 <Text size='xl' className='text-zinc-500'>Gender</Text>
                                                 <Select
-                                                    className='ms-4'
                                                     onValueChange={setSelectGender}
                                                     selectedValue={selectGender}
                                                 >
@@ -237,7 +234,6 @@ export default function MinorsScreen() {
                                             <VStack className='mt-4'>
                                                 <Text size='xl' className='text-zinc-500'>Driver Error</Text>
                                                 <Select
-                                                    className='ms-4'
                                                     onValueChange={setSelectDriverErr}
                                                     selectedValue={selectDriverErr}
                                                 >
@@ -263,7 +259,6 @@ export default function MinorsScreen() {
                                             <VStack className='mt-4'>
                                                 <Text size='xl' className='text-zinc-500'>Injury</Text>
                                                 <Select
-                                                    className='ms-4'
                                                     onValueChange={setSelectInjury}
                                                     selectedValue={selectInjury}
                                                 >
@@ -347,7 +342,6 @@ export default function MinorsScreen() {
                                             <VStack className='mt-4'>
                                                 <Text size='xl' className='text-zinc-500'>Seatbelt State</Text>
                                                 <Select
-                                                    className='ms-4'
                                                     onValueChange={setSelectSeatbelt}
                                                     selectedValue={selectSeatbelt}
                                                 >
@@ -373,7 +367,6 @@ export default function MinorsScreen() {
                                             <VStack className='mt-4'>
                                                 <Text size='xl' className='text-zinc-500'>Helment State</Text>
                                                 <Select
-                                                    className='ms-4'
                                                     onValueChange={setSelectHelment}
                                                     selectedValue={selectHelment}
                                                 >
@@ -417,7 +410,7 @@ export default function MinorsScreen() {
                     }
                 </Box>
 
-                <Button className='bg-zinc-300 p-4' onPress={addButton}>
+                <Button className='h-fit bg-zinc-300 p-4' onPress={addButton}>
                     <ButtonText className='text-black'>
                         ADD A MINOR
                     </ButtonText>

@@ -119,7 +119,7 @@ export const mqttBroker = async(message: any) => {
 
         const trackingBuffer = Tracking.encode(trackingData).finish();
 
-        // onMqttConnect('route_puv_vehicle_app_feeds', trackingBuffer);
+        onMqttConnect('route_puv_vehicle_app_feeds', trackingBuffer);
     } catch (error) {
         console.error(error);
     }

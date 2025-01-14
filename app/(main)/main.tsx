@@ -30,7 +30,7 @@ export default function MainScreen({ navigation } : { navigation: NavigationProp
       clientSecret: 'Ej37vQTHv5RH3SUREM4vCNnLz4du21Oq',
       responseType: ResponseType.Code,
       redirectUri: makeRedirectUri({
-        scheme: 'com.safetravelph.parasol',
+        scheme: 'exp',
       }),
       scopes: ['openid', 'profile', 'email'],
       usePKCE: true,

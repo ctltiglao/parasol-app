@@ -11,6 +11,7 @@ import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
 import { RadioGroup, RadioIndicator, Radio, RadioLabel } from '@/components/ui/radio';
 
 import { handleRating, publishRating } from './rateViewModel';
@@ -34,6 +35,7 @@ export default function TripRate({ handleAction, location } : any) {
     const [isSelectedAvailable, setIsSelectedAvailable] = useState(null);
     const [isSelectedRoute, setIsSelectedRoute] = useState(null);
     const [isSelectedOverall, setIsSelectedOverall] = useState(null);
+    const [inputComment, setInputComment] = useState('');
 
     // const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
     // const [ location, setLocation ] = useState<any|null>(null);
@@ -82,7 +84,7 @@ export default function TripRate({ handleAction, location } : any) {
             <Box className='flex-row w-full justify-between'>
                 <Text className='text-xl font-medium'>Please rate your trip.</Text>
                 <Button
-                    className='bg-typography-gray p-2 left-0 border-1 rounded-md'
+                    className='h-fit bg-typography-gray p-2 left-0 border-1 rounded-md'
                     onPress={handleAction}
                 >
                     <ButtonText className='text-black text-lg font-medium'>
@@ -99,7 +101,7 @@ export default function TripRate({ handleAction, location } : any) {
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <VStack>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedCondition === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -119,7 +121,7 @@ export default function TripRate({ handleAction, location } : any) {
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <VStack>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedComfort === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -139,7 +141,7 @@ export default function TripRate({ handleAction, location } : any) {
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <VStack>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedAdequacy === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -159,7 +161,7 @@ export default function TripRate({ handleAction, location } : any) {
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <Box>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedStop === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -179,7 +181,7 @@ export default function TripRate({ handleAction, location } : any) {
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <VStack>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedInfo === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -199,7 +201,7 @@ export default function TripRate({ handleAction, location } : any) {
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <VStack>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedAvailable === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -219,7 +221,7 @@ export default function TripRate({ handleAction, location } : any) {
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <VStack>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedRoute === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -233,13 +235,28 @@ export default function TripRate({ handleAction, location } : any) {
                         </RadioGroup>
                     </VStack>
 
-                    <VStack className='mt-6 items-center'>
+                    {/* <VStack className='mt-2'>
+                        <Text size='md'>Comments and suggestions:</Text>
+                        <Textarea isDisabled={true}
+                            className='bg-white mt-3 border-2 border-custom-secondary rounded-md h-[30%]'
+                        >
+                            <TextareaInput
+                                value={inputComment}
+                                onChangeText={setInputComment}
+                                className={'text-lg font-medium p-2' +
+                                    inputComment ? 'text-black' : 'text-zinc-700'}
+                                placeholder='Comments and suggestions'
+                            />
+                        </Textarea>
+                    </VStack> */}
+
+                    <VStack className='mt-4 items-center'>
                         <Text size='lg' className='font-medium'>What is your overall rating?</Text>
                         <RadioGroup onChange={toggleSelectedOverall} className='w-full flex-row justify-between pl-4 pr-4'>
                             { smileys.map((smiley) => (
                                 <Radio key={smiley.id} value={smiley.value} size='lg'>
                                     <VStack>
-                                        <RadioIndicator className='border-transparent bg-transparent border-1'>
+                                        <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
                                             <MaterialIcons
                                                 color={ isSelectedOverall === smiley.value ? smiley.colorSelect : smiley.colorUnselect }
                                                 name={smiley.name as "sentiment-very-dissatisfied" | "sentiment-dissatisfied" | "sentiment-neutral" | "sentiment-satisfied-alt" | "sentiment-very-satisfied"}
@@ -252,10 +269,23 @@ export default function TripRate({ handleAction, location } : any) {
                             ))}
                         </RadioGroup>
                     </VStack>
+                
+                    <VStack className='mt-4 mb-20 items-center' space='md'>
+                        <Text size='md'>Comments and suggestions:</Text>
+                        <Textarea isDisabled={false}
+                            className='bg-white border-2 border-custom-secondary rounded-md h-[30%]'
+                        >
+                            <TextareaInput
+                                value={inputComment}
+                                onChangeText={setInputComment}
+                                className={'text-lg font-medium p-2' +
+                                    inputComment ? 'text-black' : 'text-zinc-700'}
+                                placeholder='Comments and suggestions'
+                            />
+                        </Textarea>
 
-                    <Box className='items-center mt-5'>
                         <Button
-                            className='w-1/2 p-4 bg-custom-secondary'
+                            className='w-1/2 h-fit p-4 bg-custom-secondary'
                             onPress={() => {
                                 if (vehicleId !== '') {
                                     const description = handleRating({
@@ -266,10 +296,11 @@ export default function TripRate({ handleAction, location } : any) {
                                         isSelectedInfo,
                                         isSelectedAvailable,
                                         isSelectedRoute,
-                                        isSelectedOverall
+                                        isSelectedOverall,
+                                        inputComment
                                     });
 
-                                    console.log(location);
+                                    console.log(description);
 
                                     const message = {
                                         deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
@@ -281,7 +312,7 @@ export default function TripRate({ handleAction, location } : any) {
                                         vehicleId: vehicleId,
                                         vehicleDetails: vehicleDescription
                                     }
-                                    
+                                        
                                     publishRating(message);
                                 } else {
                                     alert('Please set commute information');
@@ -292,7 +323,7 @@ export default function TripRate({ handleAction, location } : any) {
                                 RATE YOUR TRIP
                             </ButtonText>
                         </Button>
-                    </Box>
+                    </VStack>
                 </ScrollView>
             </Box>
         </Box>
