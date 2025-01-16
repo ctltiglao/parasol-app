@@ -369,9 +369,7 @@ function Header({ navigation } : any) {
     }
 
     return (
-        <Box 
-            style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
-            className='items-center bg-custom-primary p-5'>
+        <Box className='flex-row bg-custom-primary justify-between items-center pt-14 ps-4 pb-4'>
             <MaterialCommunityIcons
                 name='arrow-left'
                 size={25}
@@ -379,12 +377,9 @@ function Header({ navigation } : any) {
                 onPress={() => nav.dispatch( navigation.goBack() )}
             />
             
-            <Text
-                style={{ fontSize: 18, color: '#0038A8' }}
-                className='font-bold'
-            >
-                History
-            </Text>
+            <Heading className='text-custom-secondary'>
+                Fleet History
+            </Heading>
 
             <Menu
                 isOpen={menuVisible}

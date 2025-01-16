@@ -29,9 +29,11 @@ export default function App() {
     prefixes: ['parasol-app://'],
     config: {
       screens: {
-        Tab1: 'trip',
+        Register: 'register',
+        Tab: 'tab',
+        Tab1: 'commute',
         Tab2: 'fleet',
-        Tab3: 'driver',
+        Tab3: 'roadSafety',
         Tab4: 'profile',
         Redirect: 'redirect'
       }

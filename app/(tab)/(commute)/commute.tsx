@@ -30,8 +30,8 @@ import TripInfo from './(info)/info';
 import TripAlert from './(alert)/alert';
 import TripRate from './(rate)/rate';
 import TripFeed from './(feed)/feed';
-import TripHistoryScreen from './(history)/history';
-import TripSettingsScreen from './(settings)/settings';
+import CommuteHistoryScreen from './(history)/history';
+import CommuteSettingsScreen from './(settings)/settings';
 
 import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './commuteViewModel';
 import { modeOptions } from '@/assets/values/strings';
@@ -41,7 +41,7 @@ import { getLocationName, getLocationPermission, getUserState } from '../tabView
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
-const LocationContext = createContext({});
+// const LocationContext = createContext({});
 
 interface Coordinate {
     latitude: number;
@@ -103,19 +103,19 @@ export default function CommuteScreen() {
 
                 <Stack.Screen
                     name='History'
-                    component={TripHistoryScreen}
+                    component={CommuteHistoryScreen}
                     options={{ headerShown: false }}
                 />
                 <Stack.Screen
                     name='Settings'
-                    component={TripSettingsScreen}
+                    component={CommuteSettingsScreen}
                     options={{ headerShown: false }}
                 />
             </Drawer.Navigator>
 
             {/* ========== QUICK TOUR ========== */}
             <Modal
-                className='h-screen pt-16 pe-8 pb-14 ps-8'
+                className='h-screen pt-32 pe-8 pb-32 ps-8'
                 isOpen={modalVisible}
                 onClose={closeModal}
             >
@@ -291,7 +291,7 @@ function Screen() {
                     altitude: newLocation.coords.altitude,
                     accuracy: newLocation.coords.accuracy
                 }
-                mqttBroker(message);
+                // mqttBroker(message);
                 
                 setLocation(newLocation);
             })
@@ -426,23 +426,23 @@ function Screen() {
         <GluestackUIProvider mode='light'>
             {
                 selectedMode ? (
-                    <Button className='h-fit p-4 bg-custom-customRed'
+                    <Button className='h-fit p-4 bg-custom-customRed rounded-none'
                         onPress={async () => {
                             stopCommuteTracking();
 
-                            setCommuteRecord({
-                                origin: await getLocationName(routeCoordinates[0]),
-                                originLat: routeCoordinates[0].latitude,
-                                originLng: routeCoordinates[0].longitude,
-                                destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
-                                destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
-                                destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
-                                mode: selectedMode,
-                                purpose: '',
-                                vehicle_id: vehicleId,
-                                vehicle_details: vehicleDescription,
-                                commute_date: startTime
-                            })
+                            // setCommuteRecord({
+                            //     origin: await getLocationName(routeCoordinates[0]),
+                            //     originLat: routeCoordinates[0].latitude,
+                            //     originLng: routeCoordinates[0].longitude,
+                            //     destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                            //     destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                            //     destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                            //     mode: selectedMode,
+                            //     purpose: '',
+                            //     vehicle_id: vehicleId,
+                            //     vehicle_details: vehicleDescription,
+                            //     commute_date: startTime
+                            // })
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -475,43 +475,22 @@ function Screen() {
                     } else {
                         return (
                             <>
-                                <LocationContext.Provider value={ location }>
+                                {/* <LocationContext.Provider value={ location }> */}
                                     {
                                         location && (
-                                            isCommuteStart === false ? (
-                                                <MapView
-                                                    ref={mapRef}
-                                                    // provider={PROVIDER_GOOGLE}
-                                                    style={StyleSheet.absoluteFillObject}
-                                                    showsUserLocation={true}
-                                                    initialRegion={{
-                                                        latitude: location.coords.latitude,
-                                                        longitude: location.coords.longitude,
-                                                        latitudeDelta: 0.01,
-                                                        longitudeDelta: 0.01
-                                                    }}
-                                                >
-                                                    {
-                                                        isCommuteStop && (
-                                                            <Polyline
-                                                                coordinates={routeCoordinates}
-                                                                strokeColor='blue'
-                                                                strokeWidth={5}
-                                                            />
-                                                        )
-                                                    }
-                                                </MapView>
-                                            ) : (
-                                                <MapView
-                                                    ref={mapRef}
-                                                    style={StyleSheet.absoluteFillObject}
-                                                    initialRegion={{
-                                                        latitude: location.coords.latitude,
-                                                        longitude: location.coords.longitude,
-                                                        latitudeDelta: 0.0922,
-                                                        longitudeDelta: 0.0421
-                                                    }}
-                                                >
+                                            <MapView
+                                                ref={mapRef}
+                                                // provider={PROVIDER_GOOGLE}
+                                                style={StyleSheet.absoluteFillObject}
+                                                showsUserLocation={!isCommuteStart}
+                                                initialRegion={{
+                                                    latitude: location.coords.latitude,
+                                                    longitude: location.coords.longitude,
+                                                    latitudeDelta: isCommuteStart ? 0.0922 : 0.01,
+                                                    longitudeDelta: isCommuteStart ? 0.0421 : 0.01
+                                                }}
+                                            >
+                                                { isCommuteStart && (
                                                     <MapMarker
                                                         coordinate={{
                                                             latitude: location.coords.latitude,
@@ -520,20 +499,18 @@ function Screen() {
                                                         flat={true}
                                                         anchor={{ x: 0.5, y: 0.5 }}
                                                     />
-                                                    {
-                                                        isCommuteStart === true && (
-                                                            <Polyline
-                                                                coordinates={routeCoordinates}
-                                                                strokeColor='blue'
-                                                                strokeWidth={5}
-                                                            />
-                                                        )
-                                                    }
-                                                </MapView>
-                                            )
+                                                )}
+                                                {( isCommuteStop || isCommuteStart ) && (
+                                                    <Polyline
+                                                        coordinates={routeCoordinates}
+                                                        strokeColor='blue'
+                                                        strokeWidth={5}
+                                                    />
+                                                )}
+                                            </MapView>
                                         )
                                     }
-                                </LocationContext.Provider>
+                                {/* </LocationContext.Provider> */}
 
                                 <Box className='absolute justify-between bottom-1/2'>
                                     <Box className='justify-center'>
@@ -560,7 +537,7 @@ function Screen() {
                 onClose={() => setShowModalSelect(false)}
             >
                 <Box className='flex-1 w-full h-full mb-40'>
-                    <ModalContent className='w-full pt-0 pb-0'>
+                    <ModalContent className='w-full'>
                         <ModalHeader>
                             <Heading>
                                 Select Vehicle Type

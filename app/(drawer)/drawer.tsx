@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Linking } from 'react-native';
 // expo
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -20,6 +21,23 @@ export default function DrawerScreen(props: any) {
     const navigation: any = useNavigation();
 
     const [username, setUsername] = useState('');
+
+    const openFbApp = async () => {
+        const url = 'fb://';
+
+        try {
+            const supported = await Linking.canOpenURL(url);
+
+            if (supported) {
+                await Linking.openURL(url);
+            } else {
+                await Linking.openURL('https://www.facebook.com/');
+            }
+        } catch (error) {
+            console.error(error);
+            alert(`Cannot open facebook app: ${error}`);
+        }
+    }
 
     useEffect(() => {
         getUserState().then((response) => {
@@ -61,7 +79,7 @@ export default function DrawerScreen(props: any) {
                     )}
                     labelStyle={{ color: '#0038A8' }}
                     label='Chatbot'
-                    onPress={() => navigation.navigate('Chatbot')}
+                    onPress={openFbApp}
                 />
 
                 <Divider />
@@ -73,7 +91,7 @@ export default function DrawerScreen(props: any) {
                     )}
                     labelStyle={{ color: '#0038A8' }}
                     label='Share'
-                    onPress={() => navigation.navigate('Share')}
+                    onPress={() => {}}
                 />
 
                 <Divider />
@@ -114,7 +132,7 @@ export default function DrawerScreen(props: any) {
                     )}
                     labelStyle={{ color: '#0038A8' }}
                     label='Settings'
-                    onPress={() => navigation.navigate('Settings')}
+                    onPress={() => {}}
                 />
 
                 <DrawerItem

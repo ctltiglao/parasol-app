@@ -7,14 +7,11 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ScrollView } from 'react-native-gesture-handler';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
-import * as Sharing from 'expo-sharing';
-import { StorageAccessFramework } from 'expo-file-system';
 // gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
+import { Heading } from '@/components/ui/heading';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
 import { Button } from '@/components/ui/button';
 
@@ -26,7 +23,7 @@ import { createAndroidCSV, createiOSCSV } from './historyViewModel';
 
 const Drawer = createDrawerNavigator();
 
-export default function TripHistoryScreen() {
+export default function CommuteHistoryScreen() {
     return (
         <GluestackUIProvider mode='light'>
             <DrawerHistorybotNavigator />
@@ -130,9 +127,7 @@ function Header({ navigation } : any) {
     }
 
     return (
-        <Box 
-            style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
-            className='items-center bg-custom-primary p-5'>
+        <Box className='flex-row bg-custom-primary justify-between items-center pt-14 ps-4 pb-4'>
             <MaterialCommunityIcons
                 name='arrow-left'
                 size={25}
@@ -140,12 +135,9 @@ function Header({ navigation } : any) {
                 onPress={() => nav.dispatch( navigation.goBack() )}
             />
             
-            <Text
-                style={{ fontSize: 18, color: '#0038A8' }}
-                className='font-bold'
-            >
-                Trip History
-            </Text>
+            <Heading className='text-custom-secondary'>
+                Commute History
+            </Heading>
 
             <Menu
                 isOpen={menuVisible}

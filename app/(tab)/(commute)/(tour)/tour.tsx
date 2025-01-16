@@ -27,7 +27,7 @@ export default function QuickTourScreen() {
     return (
         <GluestackUIProvider mode='light'>
             <Modal
-                className='h-screen p-14'
+                className='h-screen'
                 isOpen={modalVisible}
                 onClose={closeModal}
             >

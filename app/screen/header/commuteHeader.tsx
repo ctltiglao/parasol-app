@@ -8,7 +8,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 // gluestack
 import { Box } from '@/components/ui/box';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
-import { Text } from '@/components/ui/text';
+import { Heading } from '@/components/ui/heading';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Modal, ModalBody, ModalContent, ModalFooter } from '@/components/ui/modal';
 import { Checkbox, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
@@ -40,9 +40,7 @@ export default function CommuteHeader({ navigation, route, options, openModal } 
     ]
     
     return(
-        <Box
-            style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
-            className='items-center bg-custom-primary p-5 pt-'>
+        <Box className='flex-row bg-custom-primary justify-between items-center pt-14 ps-4 pb-4'>
             <Ionicons
                 name='menu'
                 size={25}
@@ -50,9 +48,9 @@ export default function CommuteHeader({ navigation, route, options, openModal } 
                 onPress={() => nav.dispatch(DrawerActions.toggleDrawer())}
             />
             
-            <Text className='font-bold text-custom-customBluegray'>
+            <Heading className='text-custom-secondary'>
                 Parasol Fleet
-            </Text>
+            </Heading>
 
             <Menu
                 isOpen={menuVisible}
@@ -68,8 +66,8 @@ export default function CommuteHeader({ navigation, route, options, openModal } 
                 }}
             >
                 { tripOptions.map((options: any) => (
-                    <MenuItem key={options.id} textValue={options.value}>
-                        <MenuItemLabel bold={true} onPress={options.onPress}>{options.label}</MenuItemLabel>
+                    <MenuItem key={options.id} textValue={options.value} onPress={options.onPress}>
+                        <MenuItemLabel bold={true}>{options.label}</MenuItemLabel>
                     </MenuItem>
                 ))}
             </Menu>

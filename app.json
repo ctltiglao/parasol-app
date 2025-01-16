@@ -4,7 +4,7 @@
     "slug": "parasol-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icons/stph_72.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "parasol",
@@ -45,7 +45,7 @@
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icons/stph_72.png"
     },
     "plugins": [
       "expo-router",

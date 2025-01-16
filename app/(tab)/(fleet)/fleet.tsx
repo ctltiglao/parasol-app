@@ -52,6 +52,10 @@ export default function FleetScreen() {
 }
 
 function DrawerNavigator() {
+    const [ isOverlayDashboardVisible, setIsOverlayDashboardVisible ] = useState(false);
+
+    const toggleOverlayDashboard = () => setIsOverlayDashboardVisible(!isOverlayDashboardVisible);
+
     return (
         <Drawer.Navigator
             initialRouteName='Main'
@@ -121,6 +125,7 @@ function Screen() {
     const closeModal = () => setPaxModalVisible(false);
 
     const [ isOverlayInfoVisible, setIsOverlayInfoVisible ] = useState(false);
+
     const toggleOverlayInfo = () => {
         setIsOverlayInfoVisible(!isOverlayInfoVisible);
 
@@ -246,7 +251,7 @@ function Screen() {
                     altitude: newLocation.coords.altitude,
                     accuracy: newLocation.coords.accuracy
                 }
-                mqttBroker(message);
+                // mqttBroker(message);
 
                 setLocation(newLocation);
             })
@@ -299,32 +304,32 @@ function Screen() {
 
                             console.log(paxOnBoard);
 
-                            setFleetRecord({
-                                route: route,
-                                origin: await getLocationName(routeCoordinates[0]),
-                                origin_lat: routeCoordinates[0].latitude,
-                                origin_lng: routeCoordinates[0].longitude,
-                                destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
-                                destination_lat: routeCoordinates[routeCoordinates.length - 1].latitude,
-                                destination_lng: routeCoordinates[routeCoordinates.length - 1].longitude,
-                                travel_distance: distance,
-                                start_time: originTime,
-                                end_time: new Date().toISOString,
-                                travel_time: travelTime,
-                                type: '',
-                                capacity: capacity, 
-                                vehicle_id: vehicleId,
-                                vehicle_details: vehicleDetails,
-                                trip_date: new Date().toISOString,
-                                consumption: '0.0',
-                                consumption_unit: 'L',
-                                start_odometer: '0.0',
-                                end_odometer: '0.0'
-                            });
+                            // setFleetRecord({
+                            //     route: route,
+                            //     origin: await getLocationName(routeCoordinates[0]),
+                            //     origin_lat: routeCoordinates[0].latitude,
+                            //     origin_lng: routeCoordinates[0].longitude,
+                            //     destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                            //     destination_lat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                            //     destination_lng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                            //     travel_distance: distance,
+                            //     start_time: originTime,
+                            //     end_time: new Date().toISOString,
+                            //     travel_time: travelTime,
+                            //     type: '',
+                            //     capacity: capacity, 
+                            //     vehicle_id: vehicleId,
+                            //     vehicle_details: vehicleDetails,
+                            //     trip_date: new Date().toISOString,
+                            //     consumption: '0.0',
+                            //     consumption_unit: 'L',
+                            //     start_odometer: '0.0',
+                            //     end_odometer: '0.0'
+                            // });
                             
                             closeModal();
                             stopFleetTracking();
-                        }} className='h-fit p-4 bg-custom-customRed'>
+                        }} className='h-fit p-4 bg-custom-customRed rounded-none'>
                             <ButtonText className='text-white text-lg font-bold'>
                                 STOP FLEET TRACKING
                             </ButtonText>
@@ -332,7 +337,7 @@ function Screen() {
 
                         {
                             isFleetPause ? (
-                                <Button  className='h-fit p-4 bg-warning-500'
+                                <Button  className='h-fit p-4 bg-warning-500 rounded-none'
                                     onPress={() => handleFleetPause(false)}
                                 >
                                     <ButtonText className='text-white text-lg font-bold'>
@@ -340,7 +345,7 @@ function Screen() {
                                     </ButtonText>
                                 </Button>
                             ) : (
-                                <Button className='h-fit p-4 bg-warning-500'
+                                <Button className='h-fit p-4 bg-warning-500 rounded-none'
                                     onPress={() => {
                                         handleFleetPause(true);
 
@@ -366,7 +371,7 @@ function Screen() {
                         }
                     </Box>
                 ) : (
-                    <Button className='h-fit p-4 bg-custom-secondary'
+                    <Button className='h-fit p-4 bg-custom-secondary rounded-none'
                         onPress={async () => {
                             handleFleetStart(true);
                             isFleetStop === true && handleFleetStop(false);
@@ -386,199 +391,223 @@ function Screen() {
                     <FleetInfo handleAction={toggleOverlayInfo} />
                 ) : (
                     <Box className='flex-1 w-full h-full'>
-                        <VStack className='z-10 bg-white w-fit absolute p-1'>
-                            <HStack>
-                                <Text>Route Info:</Text>
-                                <Text>{route}</Text>
-                            </HStack>
-                            <HStack>
-                                <Text>Vehicle Info:</Text>
-                                <Text>{vehicleId}</Text>
-                            </HStack>
-                        </VStack>
+                        <Box className='flex-1 w-full h-full'>
+                            <VStack className='z-10 bg-white w-fit absolute p-1'>
+                                <HStack>
+                                    <Text>Route Info:</Text>
+                                    <Text>{route}</Text>
+                                </HStack>
+                                <HStack>
+                                    <Text>Vehicle Info:</Text>
+                                    <Text>{vehicleId}</Text>
+                                </HStack>
+                            </VStack>
 
-                        <Box className='flex-1 h-full'>
-                            {
-                                location && (
-                                    isFleetStart === false || isFleetPause === true ? (
+                            <Box className='flex-1 h-full'>
+                                {
+                                    location && (
                                         <MapView
                                             ref={mapRef}
                                             style={StyleSheet.absoluteFillObject}
-                                            showsUserLocation={true}
+                                            showsUserLocation={isFleetStart === false || isFleetPause === true}
                                             initialRegion={{
                                                 latitude: location.coords.latitude,
                                                 longitude: location.coords.longitude,
-                                                latitudeDelta: 0.01,
-                                                longitudeDelta: 0.01
+                                                latitudeDelta: isFleetStart === false || isFleetPause === true ? 0.01 : 0.0922,
+                                                longitudeDelta: isFleetStart === false || isFleetPause === true ? 0.01 : 0.0421
                                             }}
                                         >
-                                            {
-                                                isFleetStop && (
-                                                    <Polyline
-                                                        coordinates={routeCoordinates}
-                                                        strokeColor='blue'
-                                                        strokeWidth={5}
-                                                    />
-                                                )
-                                            }
-                                        </MapView>
-                                    ) : (
-                                        <MapView
-                                            ref={mapRef}
-                                            style={StyleSheet.absoluteFillObject}
-                                            initialRegion={{
-                                                latitude: location.coords.latitude,
-                                                longitude: location.coords.longitude,
-                                                latitudeDelta: 0.0922,
-                                                longitudeDelta: 0.0421
-                                            }}
-                                        >
-                                            <MapMarker
-                                                coordinate={{
-                                                    latitude: location.coords.latitude,
-                                                    longitude: location.coords.longitude
-                                                }}
-                                                flat={true}
-                                                anchor={{ x: 0.5, y: 0.5 }}
-                                            />
+                                            {(( isFleetStart === false || isFleetPause === true ) && isFleetStop) && (
+                                                <Polyline
+                                                    coordinates={routeCoordinates}
+                                                    strokeColor='blue'
+                                                    strokeWidth={5}
+                                                />
+                                            )}
+                                            {( isFleetStart === true || isFleetPause === false ) && (
+                                                <MapMarker
+                                                    coordinate={{
+                                                        latitude: location.coords.latitude,
+                                                        longitude: location.coords.longitude
+                                                    }}
+                                                    flat={true}
+                                                    anchor={{ x: 0.5, y: 0.5 }}
+                                                />
+                                            )}
                                         </MapView>
                                     )
+                                }
+                            </Box>
+
+                            {
+                                isFleetStart === false && (
+                                    <Box className='justify-center bottom-1/2'>
+                                        <CustomFleetFab onFabPress={() => {
+                                            toggleOverlayInfo();
+                                            handleFleetStop(false);
+                                        }} />
+                                    </Box>
                                 )
                             }
                         </Box>
 
+                        {/*  */}
                         {
-                            isFleetStart === false && (
-                                <Box className='justify-center bottom-1/2'>
-                                    <CustomFleetFab onFabPress={() => {
-                                        toggleOverlayInfo();
-                                        handleFleetStop(false);
-                                    }} />
+                            isFleetStart && (
+                                <Box className='flex-col absolute bottom-0 h-fit w-full'>
+                                    <Box className='p-2'>
+                                        <Text bold={true} size='6xl' className={
+                                            speed > 60 ? 'text-custom-customRed' : 'text-custom-primary'
+                                        }>
+                                            {speed.toFixed(0)} kph
+                                        </Text>
+                                        <Text size='3xl' className='text-black'>{distance} km</Text>
+                                        <Box className='flex-row justify-between'>
+                                            <Text size='3xl' className='text-black'>{formatTravelTime(trackingTime)}</Text>
+                                            <Text bold={true} size='3xl' className={
+                                                speed > 60 ? 'text-custom-customRed' : 'text-custom-primary'
+                                            }>
+                                                { speed > 60 ? 'Overspeeding' : 'Normal'}
+                                            </Text>
+                                        </Box>
+                                    </Box>
+
+                                    <Box className='bg-white flex-row justify-between'>
+                                        <Box className='bg-white flex-col justify-center items-center p-4'>
+                                            <Text className='text-custom-customGreen text-xl font-medium'>Boarding</Text>
+                                            <Button className='bg-custom-customGreen w-16 h-16 p-3 boarder-1 rounded-full m-2'
+                                                onPress={() => {
+                                                    const curBoard = board;
+                                                    setBoard(curBoard + 1);
+
+                                                    const curPax = paxOnBoard + 1;
+                                                    setPaxOnBoard(curPax);
+
+                                                    const message = {
+                                                        deviceId: deviceId,
+                                                        lat: location.coords.latitude,
+                                                        lng: location.coords.longitude,
+                                                        timestamp: new Date().toISOString(),
+                                                        userId: username,
+                                                        vehicleId: vehicleId,
+                                                        vehicleDetails: vehicleDetails,
+                                                        passengerId: '',
+                                                        passengerDetails: '',
+                                                        altitude: location.coords.altitude,
+                                                        accuracy: location.coords.accuracy
+                                                    }
+                                                    publishBA('boardings', message);
+                                                }}
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name='plus'
+                                                    size={35}
+                                                    color='white'
+                                                />
+                                            </Button>
+                                        </Box>
+
+                                        <Box className='justify-center'>
+                                            <Text className='text-custom-customGreen text-3xl'>{board}</Text>
+                                        </Box>
+
+                                        <Box className='bg-white flex-col justify-center items-center p-4'>
+                                            <Text
+                                                className='text-black text-xl font-medium'
+                                                onPress={() => openModal()}
+                                            >
+                                                Pax Onboard
+                                            </Text>
+                                            <Text
+                                                className='text-black text-6xl m-2'
+                                                onPress={() => openModal()}    
+                                            >
+                                                {paxOnBoard}
+                                            </Text>
+                                        </Box>
+
+                                        <Box className='justify-center'>
+                                            <Text className='text-custom-customRed text-3xl'>{alight}</Text>
+                                        </Box>
+
+                                        <Box className='bg-white flex-col justify-center items-center p-4'>
+                                            <Text className='text-custom-customRed text-xl font-medium'>Alighting</Text>
+                                            <Button className='bg-custom-customRed w-16 h-16 p-3 boarder-1 rounded-full m-2'
+                                                onPress={() => {
+                                                    const curAlight = alight;
+                                                    setAlight(curAlight + 1);
+
+                                                    const curPax = paxOnBoard - 1;
+                                                    setPaxOnBoard(curPax);
+
+                                                    const message = {
+                                                        deviceId: deviceId,
+                                                        lat: location.coords.latitude,
+                                                        lng: location.coords.longitude,
+                                                        timestamp: new Date().toISOString(),
+                                                        userId: username,
+                                                        vehicleId: vehicleId,
+                                                        vehicleDetails: vehicleDetails,
+                                                        passengerId: '',
+                                                        passengerDetails: '',
+                                                        altitude: location.coords.altitude,
+                                                        accuracy: location.coords.accuracy
+                                                    }
+                                                    publishBA('alightings', message);
+                                                }}
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name='close'
+                                                    size={35}
+                                                    color='white'
+                                                />
+                                            </Button>
+                                        </Box>
+                                    </Box>
+
+                                    {
+                                        isFleetPause && (
+                                            <Box className='bg-white pb-4 ps-4 pe-4 w-full'>
+                                                <Box className='bg-gray-700 p-4 w-full border-0 rounded-lg'>
+                                                    <Text className='text-white'>Summary of Previous PUV Tracking:</Text>
+                                                    <Box className='flex-row justify-between'>
+                                                        <Box className='flex-col'>
+                                                            <Text className='text-white text-sm'>Ave. Speed (kph):</Text>
+                                                            <Text className='text-white text-sm'>Max. Speed (kph):</Text>
+                                                            <Text className='text-white text-sm'>Travel Time (hrd):</Text>
+                                                        </Box>
+                                                        <Box className='flex-col'>
+                                                            <Text className='text-white text-sm'>{aveSpeed}</Text>
+                                                            <Text className='text-white text-sm'>{maxSpeed.toFixed(2)}</Text>
+                                                            <Text className='text-white text-sm'>{travelTime}</Text>
+                                                        </Box>
+
+                                                        <Box className='flex-col'>
+                                                            <Text className='text-white text-sm'>Max Pax Onboard:</Text>
+                                                            <Text className='text-white text-sm'>Total Trip Ridership:</Text>
+                                                            <Text className='text-white text-sm'>Trip Start Time (hrd):</Text>
+                                                        </Box>
+                                                        <Box className='flex-col'>
+                                                            <Text className='text-white text-sm'>{maxOnBoard}</Text>
+                                                            <Text className='text-white text-sm'>0</Text>
+                                                            <Text className='text-white text-sm'>0</Text>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        )
+                                    }
                                 </Box>
                             )
                         }
-                    </Box>
-                )}
-            </Box>
 
-            {
-                isFleetStart && (
-                    <Box className='flex-col absolute bottom-0 h-fit w-full'>
-                        <Box className='p-2'>
-                            <Text bold={true} size='6xl' className={
-                                speed > 60 ? 'text-custom-customRed' : 'text-custom-primary'
-                            }>
-                                {speed.toFixed(0)} kph
-                            </Text>
-                            <Text size='3xl' className='text-black'>{distance} km</Text>
-                            <Box className='flex-row justify-between'>
-                                <Text size='3xl' className='text-black'>{formatTravelTime(trackingTime)}</Text>
-                                <Text bold={true} size='3xl' className={
-                                    speed > 60 ? 'text-custom-customRed' : 'text-custom-primary'
-                                }>
-                                    { speed > 60 ? 'Overspeeding' : 'Normal'}
-                                </Text>
-                            </Box>
-                        </Box>
-
-                        <Box className='bg-white flex-row justify-between'>
-                            <Box className='bg-white flex-col justify-center items-center p-4'>
-                                <Text className='text-custom-customGreen text-xl font-medium'>Boarding</Text>
-                                <Button className='bg-custom-customGreen w-16 h-16 p-3 boarder-1 rounded-full m-2'
-                                    onPress={() => {
-                                        const curBoard = board;
-                                        setBoard(curBoard + 1);
-
-                                        const curPax = paxOnBoard + 1;
-                                        setPaxOnBoard(curPax);
-
-                                        const message = {
-                                            deviceId: deviceId,
-                                            lat: location.coords.latitude,
-                                            lng: location.coords.longitude,
-                                            timestamp: new Date().toISOString(),
-                                            userId: username,
-                                            vehicleId: vehicleId,
-                                            vehicleDetails: vehicleDetails,
-                                            passengerId: '',
-                                            passengerDetails: '',
-                                            altitude: location.coords.altitude,
-                                            accuracy: location.coords.accuracy
-                                        }
-                                        publishBA('boardings', message);
-                                    }}
-                                >
-                                    <MaterialCommunityIcons
-                                        name='plus'
-                                        size={35}
-                                        color='white'
-                                    />
-                                </Button>
-                            </Box>
-
-                            <Box className='justify-center'>
-                                <Text className='text-custom-customGreen text-3xl'>{board}</Text>
-                            </Box>
-
-                            <Box className='bg-white flex-col justify-center items-center p-4'>
-                                <Text
-                                    className='text-black text-xl font-medium'
-                                    onPress={() => openModal()}
-                                >
-                                    Pax Onboard
-                                </Text>
-                                <Text
-                                    className='text-black text-6xl m-2'
-                                    onPress={() => openModal()}    
-                                >
-                                    {paxOnBoard}
-                                </Text>
-                            </Box>
-
-                            <Box className='justify-center'>
-                                <Text className='text-custom-customRed text-3xl'>{alight}</Text>
-                            </Box>
-
-                            <Box className='bg-white flex-col justify-center items-center p-4'>
-                                <Text className='text-custom-customRed text-xl font-medium'>Alighting</Text>
-                                <Button className='bg-custom-customRed w-16 h-16 p-3 boarder-1 rounded-full m-2'
-                                    onPress={() => {
-                                        const curAlight = alight;
-                                        setAlight(curAlight + 1);
-
-                                        const curPax = paxOnBoard - 1;
-                                        setPaxOnBoard(curPax);
-
-                                        const message = {
-                                            deviceId: deviceId,
-                                            lat: location.coords.latitude,
-                                            lng: location.coords.longitude,
-                                            timestamp: new Date().toISOString(),
-                                            userId: username,
-                                            vehicleId: vehicleId,
-                                            vehicleDetails: vehicleDetails,
-                                            passengerId: '',
-                                            passengerDetails: '',
-                                            altitude: location.coords.altitude,
-                                            accuracy: location.coords.accuracy
-                                        }
-                                        publishBA('alightings', message);
-                                    }}
-                                >
-                                    <MaterialCommunityIcons
-                                        name='close'
-                                        size={35}
-                                        color='white'
-                                    />
-                                </Button>
-                            </Box>
-                        </Box>
-
+                        {/*  */}
                         {
-                            isFleetPause && (
-                                <Box className='bg-white pb-4 ps-4 pe-4 w-full'>
+                            isFleetStop && (
+                                <Box className='bg-white p-4 w-full'>
                                     <Box className='bg-gray-700 p-4 w-full border-0 rounded-lg'>
                                         <Text className='text-white'>Summary of Previous PUV Tracking:</Text>
+                                        
                                         <Box className='flex-row justify-between'>
                                             <Box className='flex-col'>
                                                 <Text className='text-white text-sm'>Ave. Speed (kph):</Text>
@@ -607,8 +636,10 @@ function Screen() {
                             )
                         }
                     </Box>
-                )
-            }
+                )}
+            </Box>
+
+            
             
             <Modal
                 className='p-4'
@@ -651,40 +682,6 @@ function Screen() {
                     </ModalFooter>
                 </ModalContent>
             </Modal>
-
-            {
-                isFleetStop && (
-                    <Box className='bg-white p-4 w-full'>
-                        <Box className='bg-gray-700 p-4 w-full border-0 rounded-lg'>
-                            <Text className='text-white'>Summary of Previous PUV Tracking:</Text>
-                            
-                            <Box className='flex-row justify-between'>
-                                <Box className='flex-col'>
-                                    <Text className='text-white text-sm'>Ave. Speed (kph):</Text>
-                                    <Text className='text-white text-sm'>Max. Speed (kph):</Text>
-                                    <Text className='text-white text-sm'>Travel Time (hrd):</Text>
-                                </Box>
-                                <Box className='flex-col'>
-                                    <Text className='text-white text-sm'>{aveSpeed}</Text>
-                                    <Text className='text-white text-sm'>{maxSpeed.toFixed(2)}</Text>
-                                    <Text className='text-white text-sm'>{travelTime}</Text>
-                                </Box>
-
-                                <Box className='flex-col'>
-                                    <Text className='text-white text-sm'>Max Pax Onboard:</Text>
-                                    <Text className='text-white text-sm'>Total Trip Ridership:</Text>
-                                    <Text className='text-white text-sm'>Trip Start Time (hrd):</Text>
-                                </Box>
-                                <Box className='flex-col'>
-                                    <Text className='text-white text-sm'>{maxOnBoard}</Text>
-                                    <Text className='text-white text-sm'>0</Text>
-                                    <Text className='text-white text-sm'>0</Text>
-                                </Box>
-                            </Box>
-                        </Box>
-                    </Box>
-                )
-            }
         </GluestackUIProvider>
     );
 }

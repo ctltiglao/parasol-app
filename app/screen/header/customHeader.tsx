@@ -6,15 +6,13 @@ import { DrawerActions, useNavigation } from "@react-navigation/native";
 import { Ionicons } from '@expo/vector-icons';
 // gluestack
 import { Box } from '@/components/ui/box';
-import { Text } from '@/components/ui/text';
+import { Heading } from '@/components/ui/heading';
 
 export default function CustomHeader({ navigation, route, options } : any) {
     const nav: any = useNavigation();
     
     return(
-        <Box 
-            style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
-            className='items-center bg-custom-primary p-5'>
+        <Box className='flex-row bg-custom-primary justify-between items-center pt-14 ps-4 pb-4'>
             <Ionicons
                 name='menu'
                 size={25}
@@ -22,9 +20,9 @@ export default function CustomHeader({ navigation, route, options } : any) {
                 onPress={() => nav.dispatch(DrawerActions.toggleDrawer())}
             />
             
-            <Text className='font-bold text-custom-customBluegray'>
+            <Heading className='text-custom-secondary'>
                 Parasol Fleet
-            </Text>
+            </Heading>
 
             <Box/>
         </Box>

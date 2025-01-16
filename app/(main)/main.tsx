@@ -17,7 +17,7 @@ import { continueAsGuest, getPermissions, useViewModel } from './mainViewModel';
 
 const viewModel = useViewModel();
 
-export default function MainScreen({ navigation } : { navigation: NavigationProp<any> }) {
+export default function MainScreen({ navigation } : any) {
   // const { signIn, signOut, state } = useContext(AuthContext);
   const loginDiscovery = useAutoDiscovery('https://staging-iam.safetravel.ph/realms/safetravelph-cpa');
   const discovery = {
@@ -30,7 +30,7 @@ export default function MainScreen({ navigation } : { navigation: NavigationProp
       clientSecret: 'Ej37vQTHv5RH3SUREM4vCNnLz4du21Oq',
       responseType: ResponseType.Code,
       redirectUri: makeRedirectUri({
-        scheme: 'exp',
+        scheme: 'parasol',
       }),
       scopes: ['openid', 'profile', 'email'],
       usePKCE: true,

@@ -57,7 +57,7 @@ function Header({ navigation } : any) {
                 onPress={() => nav.dispatch( navigation.goBack() )}
             />
             
-            <Text size='lg' className='font-bold text-custom-secondary'>Settings</Text>
+            <Text size='2xl' bold={true} className='text-custom-secondary'>Settings</Text>
 
             <Menu
                 className='bg-custom-primary'
