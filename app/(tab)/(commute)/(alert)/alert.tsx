@@ -300,11 +300,11 @@ export default function TripAlert({ handleAction } : any) {
 
                     <Checkbox size='md'
                         className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
-                        value='Lack of public transport'
+                        value='Overloading'
                         onChange={() => toggleCheckbox('overload')}
                     >
-                        <HStack className='flex-row w-full justify-between'>
-                            <HStack className='flex-row w-fit h-fit items-center'>
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
                                 <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
                                     {
                                         selectedCheckboxes.overload ? (
@@ -330,11 +330,11 @@ export default function TripAlert({ handleAction } : any) {
 
                     <Checkbox size='md'
                         className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
-                        value='Lack of public transport'
+                        value='Out-of-line operation'
                         onChange={() => toggleCheckbox('line')}
                     >
-                        <HStack className='flex-row w-full justify-between'>
-                            <HStack className='flex-row w-fit h-fit items-center'>
+                        <HStack className='w-full justify-between'>
+                            <HStack className='w-fit h-fit items-center'>
                                     {
                                         selectedCheckboxes.line ? (
                                             <MaterialIcons size={24}
@@ -358,7 +358,7 @@ export default function TripAlert({ handleAction } : any) {
 
                     <Checkbox size='md'
                         className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
-                        value='Lack of public transport'
+                        value='Road crash'
                         onChange={() => toggleCheckbox('crash')}
                     >
                         <HStack className='w-full justify-between'>
@@ -386,7 +386,7 @@ export default function TripAlert({ handleAction } : any) {
 
                     <Checkbox size='md'
                         className='bg-white mt-3 border-custom-secondary border-2 rounded-md p-2'
-                        value='Lack of public transport'
+                        value='Crime event'
                         onChange={() => toggleCheckbox('crime')}
                     >
                         <HStack className='w-full justify-between'>

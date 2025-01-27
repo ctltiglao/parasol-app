@@ -4,11 +4,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // gluestack
 
 import { Double } from "react-native/Libraries/Types/CodegenTypes";
+import moment from "moment";
 
 import { addFleetRecord, onCreate } from "@/app/service/sql/fleetHistoryDBHelper";
 import { Tracking } from '@/app/service/mqtt/proto/Tracking.proto.js';
 import { Alighting, Boarding } from '@/app/service/mqtt/proto/Fleet.proto.js';
-import { onMqttConnect, onPublishMqtt } from "@/app/service/mqtt/mqtt";
+import { onMqttConnect } from "@/app/service/mqtt/mqtt";
 
 export const formatTravelTime = (totalSeconds : any) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -52,7 +53,6 @@ export const setFleetRecord = async({
     destination_lng,
     travel_distance,
     start_time,
-    end_time,
     travel_time,
     type,
     capacity,
@@ -64,12 +64,12 @@ export const setFleetRecord = async({
     start_odometer,
     end_odometer
 }: any) => {
-    const currentDate = new Date().toISOString();
+    const currentDate = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
 
     try {
         await AsyncStorage.removeItem('FleetVehicle');
 
-        await onCreate().then(() => {
+        await onCreate().then(async () => {
             addFleetRecord({
                 route: route,
                 origin: origin,
@@ -91,12 +91,12 @@ export const setFleetRecord = async({
                 consumption_unit: consumption_unit,
                 start_odometer: start_odometer,
                 end_odometer: end_odometer
-            });
-        });
+            })
+        })
 
         return true;
     } catch (error) {
-        alert(`Failed to stop commute tracking ${error}`);
+        alert(`Failed to stop fleet tracking ${error}`);
         return false;
     }
 }
@@ -143,7 +143,7 @@ export const publishBA = async(topic: any, message: any) => {
 
         const buffer = Boarding.encode(data).finish();
 
-        onPublishMqtt(topic, buffer);
+        onMqttConnect(topic, buffer);
     } catch (error) {
         console.error(error);
     }

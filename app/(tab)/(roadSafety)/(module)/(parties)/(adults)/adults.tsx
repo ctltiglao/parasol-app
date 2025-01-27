@@ -80,7 +80,7 @@ export default function AdultsScreen() {
                                                         <SelectInput placeholder={ involvementOptions[0].label } placeholderTextColor={'#000'} />
                                                         <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
                                                     </SelectTrigger>
-                                                    <SelectPortal>
+                                                    <SelectPortal className='h-1/3'>
                                                         <SelectContent className='shadow-soft-3'>
                                                             { involvementOptions.map((option) => (
                                                                 <SelectItem
@@ -161,7 +161,7 @@ export default function AdultsScreen() {
                                                         <SelectInput placeholder={ genderOptions[0].label } placeholderTextColor={'#000'} />
                                                         <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
                                                     </SelectTrigger>
-                                                    <SelectPortal>
+                                                    <SelectPortal className='h-1/3 absolute top-1/4'>
                                                         <SelectContent className='shadow-soft-3'>
                                                             { genderOptions.map((option) => (
                                                                 <SelectItem

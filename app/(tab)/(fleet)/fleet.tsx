@@ -19,8 +19,10 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField } from '@/components/ui/input';
+import { Modal, ModalBody, ModalContent, ModalFooter } from '@/components/ui/modal';
 
 import * as geolib from 'geolib';
+import moment from 'moment';
 
 import { CustomFleetFab } from '@/app/screen/customFab';
 import DrawerScreen from '@/app/(drawer)/drawer';
@@ -29,11 +31,10 @@ import FleetHeader from '@/app/screen/header/fleetHeader';
 import FleetInfo from './(info)/info';
 import DashboardMonitorScreen from './(dashboard)/dashboard';
 import FleetHistoryScreen from './(history)/history';
+import FuelLogsScreen from './(fuel)/fuel';
 import FleetSettingsScreen from './(settings)/settings';
 import { getLocationName, getLocationPermission, getUserState } from '../tabViewModel';
 import { formatTravelTime, getAveSpeed, getFleetDetails, mqttBroker, publishBA, setFleetRecord } from './fleetViewModel';
-import { Modal, ModalBody, ModalContent, ModalFooter } from '@/components/ui/modal';
-
 
 interface Coordinate {
     latitude: number;
@@ -68,13 +69,13 @@ function DrawerNavigator() {
             <Drawer.Screen name='Main' component={Screen} />
             
             <Stack.Screen
-                name='Dashboard'
-                component={DashboardMonitorScreen}
+                name='History'
+                component={FleetHistoryScreen}
                 options={{ headerShown: false }}
             />
             <Stack.Screen
-                name='History'
-                component={FleetHistoryScreen}
+                name='Fuel'
+                component={FuelLogsScreen}
                 options={{ headerShown: false }}
             />
             <Stack.Screen
@@ -135,7 +136,7 @@ function Screen() {
             setVehicleDetails(response.vehicleDetails);
             setCapacity(response.capacity);
 
-            // console.log(capacity);
+            console.log(capacity);
         })
     }
 
@@ -251,7 +252,7 @@ function Screen() {
                     altitude: newLocation.coords.altitude,
                     accuracy: newLocation.coords.accuracy
                 }
-                // mqttBroker(message);
+                mqttBroker(message);
 
                 setLocation(newLocation);
             })
@@ -304,28 +305,27 @@ function Screen() {
 
                             console.log(paxOnBoard);
 
-                            // setFleetRecord({
-                            //     route: route,
-                            //     origin: await getLocationName(routeCoordinates[0]),
-                            //     origin_lat: routeCoordinates[0].latitude,
-                            //     origin_lng: routeCoordinates[0].longitude,
-                            //     destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
-                            //     destination_lat: routeCoordinates[routeCoordinates.length - 1].latitude,
-                            //     destination_lng: routeCoordinates[routeCoordinates.length - 1].longitude,
-                            //     travel_distance: distance,
-                            //     start_time: originTime,
-                            //     end_time: new Date().toISOString,
-                            //     travel_time: travelTime,
-                            //     type: '',
-                            //     capacity: capacity, 
-                            //     vehicle_id: vehicleId,
-                            //     vehicle_details: vehicleDetails,
-                            //     trip_date: new Date().toISOString,
-                            //     consumption: '0.0',
-                            //     consumption_unit: 'L',
-                            //     start_odometer: '0.0',
-                            //     end_odometer: '0.0'
-                            // });
+                            setFleetRecord({
+                                route: route,
+                                origin: await getLocationName(routeCoordinates[0]),
+                                origin_lat: routeCoordinates[0].latitude,
+                                origin_lng: routeCoordinates[0].longitude,
+                                destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                                destination_lat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                                destination_lng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                                travel_distance: distance,
+                                start_time: moment(originTime).format('YYYY-MM-DD HH:mm:ss'),
+                                travel_time: travelTime,
+                                type: '',
+                                capacity: capacity,
+                                vehicle_id: vehicleId,
+                                vehicle_details: vehicleDetails,
+                                trip_date: moment(new Date()).format('YYYY-MM-DD'),
+                                consumption: '0.0',
+                                consumption_unit: 'liters',
+                                start_odometer: '0.0',
+                                end_odometer: '0.0'
+                            });
                             
                             closeModal();
                             stopFleetTracking();
@@ -590,7 +590,7 @@ function Screen() {
                                                         <Box className='flex-col'>
                                                             <Text className='text-white text-sm'>{maxOnBoard}</Text>
                                                             <Text className='text-white text-sm'>0</Text>
-                                                            <Text className='text-white text-sm'>0</Text>
+                                                            <Text className='text-white text-sm'>{moment(originTime).format('HH:mm:ss')}</Text>
                                                         </Box>
                                                     </Box>
                                                 </Box>
@@ -638,8 +638,6 @@ function Screen() {
                     </Box>
                 )}
             </Box>
-
-            
             
             <Modal
                 className='p-4'

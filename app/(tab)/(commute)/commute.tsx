@@ -221,6 +221,7 @@ function Screen() {
         })
 
         getLocationPermission();
+        console.log('1', location);
     }, []);
 
     // refresh tab
@@ -291,9 +292,10 @@ function Screen() {
                     altitude: newLocation.coords.altitude,
                     accuracy: newLocation.coords.accuracy
                 }
-                // mqttBroker(message);
+                mqttBroker(message);
                 
                 setLocation(newLocation);
+                // console.log('COMMUTE ', location);
             })
 
             setLocationSubscription(locSubscription);
@@ -430,19 +432,19 @@ function Screen() {
                         onPress={async () => {
                             stopCommuteTracking();
 
-                            // setCommuteRecord({
-                            //     origin: await getLocationName(routeCoordinates[0]),
-                            //     originLat: routeCoordinates[0].latitude,
-                            //     originLng: routeCoordinates[0].longitude,
-                            //     destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
-                            //     destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
-                            //     destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
-                            //     mode: selectedMode,
-                            //     purpose: '',
-                            //     vehicle_id: vehicleId,
-                            //     vehicle_details: vehicleDescription,
-                            //     commute_date: startTime
-                            // })
+                            setCommuteRecord({
+                                origin: await getLocationName(routeCoordinates[0]),
+                                originLat: routeCoordinates[0].latitude,
+                                originLng: routeCoordinates[0].longitude,
+                                destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                                destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                                destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                                mode: selectedMode,
+                                purpose: '',
+                                vehicle_id: vehicleId,
+                                vehicle_details: vehicleDescription,
+                                commute_date: startTime
+                            })
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>

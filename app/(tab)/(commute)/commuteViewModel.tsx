@@ -63,7 +63,7 @@ export const setCommuteRecord = async ({
 
         return true;
     } catch (error) {
-        alert(`Failed to stop commute tracking ${error}`);
+        alert(`Failed to Stop Commute Tracking ${error}`);
         return false;
     }
 }

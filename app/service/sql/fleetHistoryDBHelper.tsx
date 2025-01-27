@@ -22,7 +22,7 @@ const createDb = async () => {
         `)
         // console.log(`Table created successfully`);
     } catch (error) {
-        // console.log('Error creating table ', error);
+        alert(`Error creating table ${error}`);
     }
 };
 
@@ -80,6 +80,9 @@ export const addFleetRecord = async ({
             alert('Fleet record added successfully');
         }
     } catch (error) {
+        if (!db) throw new Error('Database not initialized');
+
+        console.error(error);
         alert(`Failed to add fleet record ${error}`);
     }
 }

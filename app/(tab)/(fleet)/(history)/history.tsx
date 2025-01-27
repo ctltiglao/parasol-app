@@ -30,12 +30,12 @@ const Drawer = createDrawerNavigator();
 export default function FleetHistoryScreen() {
     return (
         <GluestackUIProvider mode='light'>
-            <DrawerHistorybotNavigator />
+            <DrawerHistoryNavigator />
         </GluestackUIProvider>
     );
 }
 
-function DrawerHistorybotNavigator() {
+function DrawerHistoryNavigator() {
     return (
         <Drawer.Navigator
             initialRouteName='HistoryMain'
@@ -124,14 +124,19 @@ function Screen() {
 
                                 <Box className='flex-col items-center'>
                                     <MaterialCommunityIcons name='circle' size={35} color='gray' />
-                                    <Text size='sm'>Duration</Text>
-                                    <Text bold={true} size='sm'>Not Set</Text>
+                                    <Text size='sm'>Consumption</Text>
+                                    <Text bold={true} size='sm'>
+                                        {
+                                            res.consumption
+                                            ? `${res.consumption} ${ res.consumption_unit === 'liters' ? 'L' : 'kWh' }`
+                                            : 'Not Set'
+                                        }</Text>
                                 </Box>
 
                                 <Box className='flex-col items-center'>
                                     <MaterialCommunityIcons name='circle' size={35} color='gray' />
-                                    <Text size='sm'>Duration</Text>
-                                    <Text bold={true} size='sm'>Not Set</Text>
+                                    <Text size='sm'>Odometer</Text>
+                                    <Text bold={true} size='sm'>{res.end_odometer ? `${res.end_odometer} km` : 'Not Set'}</Text>
                                 </Box>
                             </Box>
                         </Box>
@@ -149,10 +154,10 @@ function SqlMenu({
     start_odometer,
     end_odometer
 }: any) {
-    const [inputConsumption, setInputConsumption] = useState('');
+    const [inputConsumption, setInputConsumption] = useState(0);
     const [inputConsumptionUnit, setInputConsumptionUnit] = useState('');
-    const [inputStartOdometer, setInputStartOdometer] = useState('');
-    const [inputEndOdometer, setInputEndOdometer] = useState('');
+    const [inputStartOdometer, setInputStartOdometer] = useState(0);
+    const [inputEndOdometer, setInputEndOdometer] = useState(0);
 
     const [menuVisible, setMenuVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
@@ -164,17 +169,19 @@ function SqlMenu({
         console.log(id, consumption, consumption_unit, start_odometer, end_odometer);
 
         setInputConsumption(consumption);
-        setInputConsumptionUnit(consumption_unit);
+        if (consumption_unit === 'liters') {
+            setInputConsumptionUnit('Diesel (Liters)');
+        } else if (consumption_unit === 'kWh') {
+            setInputConsumptionUnit('Electricity (kWh)');
+        } else {
+            setInputConsumptionUnit('');
+        }
         setInputStartOdometer(start_odometer);
         setInputEndOdometer(end_odometer);
 
         setModalVisible(true);
     }
     const closeModal = () => setModalVisible(false);
-
-    const selectConsumptionUnit = (value: string) => {
-        setInputConsumptionUnit(value);
-    }
 
     return (
         <Box>
@@ -212,96 +219,98 @@ function SqlMenu({
                 </MenuItem>
             </Menu>
             
-            {/* <Center> */}
-                <Modal className='h-fit p-4' isOpen={modalVisible} onClose={closeModal}>
-                    <ScrollView automaticallyAdjustKeyboardInsets={true}>
-                        <ModalContent className='w-full h-fit'>
-                            <Heading>Edit Fleet Record</Heading>
-                            <ModalBody>
-                                <Text bold={true} size='md'>Consumption</Text>
-                                <Input
-                                    className='w-full bg-white border-2 mt-2 mb-4'
-                                    variant='underlined'
-                                >
-                                    <InputField
-                                        onChangeText={setInputConsumption}
-                                        value={inputConsumption}
-                                        placeholder={inputConsumption.toString()}
-                                    />
-                                </Input>
+            <Modal className='h-full p-8 justify-center items-center' isOpen={modalVisible} onClose={closeModal}>
+                <ModalContent className='w-full h-fit'>
+                    <Heading>Edit Fleet Record</Heading>
+                    <ModalBody>
+                        <ScrollView automaticallyAdjustKeyboardInsets={true}>
+                            <Text bold={true} size='md'>Consumption</Text>
+                            <Input
+                                className='w-full bg-white border-r-0 border-b-2 mt-2 mb-4'
+                                variant='underlined'
+                            >
+                                <InputField
+                                    onChangeText={(text) => setInputConsumption(parseInt(text))}
+                                    value={inputConsumption.toString()}
+                                    placeholder={inputConsumption.toString()}
+                                    keyboardType='numeric'
+                                />
+                            </Input>
 
-                                <Text bold={true} size='md'>Consumption Unit</Text>
-                                <Select
-                                    onValueChange={setInputConsumptionUnit}
-                                    selectedValue={inputConsumptionUnit}
-                                >
-                                    <SelectTrigger className='bg-white h-fit border-2 mt-2 mb-4'>
-                                        <SelectInput/>
-                                        <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                        <SelectContent>
-                                            <SelectItem value='L' label='L'/>
-                                            <SelectItem value='kWh' label='kWh'/>
-                                        </SelectContent>
-                                    </SelectPortal>
-                                </Select>
+                            <Text bold={true} size='md'>Consumption Unit</Text>
+                            <Select
+                                onValueChange={setInputConsumptionUnit}
+                                selectedValue={inputConsumptionUnit}
+                            >
+                                <SelectTrigger className='bg-white h-fit border-l-0 border-t-0 border-r-0 border-b-2 mt-2 mb-4'>
+                                    <SelectInput className='pt-3 pb-3'/>
+                                    <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
+                                </SelectTrigger>
+                                <SelectPortal>
+                                    <SelectContent>
+                                        <SelectItem value='liters' label='Diesel (Liters)'/>
+                                        <SelectItem value='kWh' label='Electric (kWh)'/>
+                                    </SelectContent>
+                                </SelectPortal>
+                            </Select>
 
-                                <Text bold={true} size='md'>Start Odometer Reading</Text>
-                                <Input
-                                    className='w-full bg-white border-2 mt-2 mb-4'
-                                    variant='underlined'
-                                >
-                                    <InputField
-                                        onChangeText={setInputStartOdometer}
-                                        value={inputStartOdometer}
-                                        placeholder={inputStartOdometer.toString()}
-                                    />
-                                </Input>
+                            <Text bold={true} size='md'>Start Odometer Reading</Text>
+                            <Input
+                                className='w-full bg-white border-r-0 border-b-2 mt-2 mb-4'
+                                variant='underlined'
+                            >
+                                <InputField
+                                    onChangeText={(text) => setInputStartOdometer(parseInt(text))}
+                                    value={inputStartOdometer.toString()}
+                                    placeholder={inputStartOdometer.toString()}
+                                    keyboardType='numeric'
+                                />
+                            </Input>
 
-                                <Text bold={true} size='md'>Final Odometer Reading</Text>
-                                <Input
-                                    className='w-full bg-white border-2 mt-2 mb-4'
-                                    variant='underlined'
-                                >
-                                    <InputField
-                                        onChangeText={setInputEndOdometer}
-                                        value={inputEndOdometer}
-                                        placeholder={inputEndOdometer.toString()}
-                                    />
-                                </Input>
-                            </ModalBody>
-                            <ModalFooter className='p-2'>
-                                <Button className='bg-transparent me-4'
-                                    onPress={closeModal}
-                                >
-                                    <ButtonText className='text-custom-secondary'>CANCEL</ButtonText>
-                                </Button>
+                            <Text bold={true} size='md'>Final Odometer Reading</Text>
+                            <Input
+                                className='w-full bg-white border-r-0 border-b-2 mt-2 mb-4'
+                                variant='underlined'
+                            >
+                                <InputField
+                                    onChangeText={(text) => setInputEndOdometer(parseInt(text))}
+                                    value={inputEndOdometer.toString()}
+                                    placeholder={inputEndOdometer.toString()}
+                                    keyboardType='numeric'
+                                />
+                            </Input>
+                        </ScrollView>
+                    </ModalBody>
+                    <ModalFooter className='p-2'>
+                        <Button className='bg-transparent me-4'
+                            onPress={closeModal}
+                        >
+                            <ButtonText className='text-custom-secondary'>CANCEL</ButtonText>
+                        </Button>
 
-                                <Button className='bg-transparent'
-                                    onPress={async() => {
-                                        await updateFleetRecord({
-                                            consumption: inputConsumption,
-                                            consumption_unit: inputConsumptionUnit,
-                                            start_odometer: inputStartOdometer,
-                                            end_odometer: inputEndOdometer,
-                                            id: id
-                                        }).then((res) => {
-                                            console.log(res);
+                        <Button className='bg-transparent'
+                            onPress={async() => {
+                                console.log(inputConsumptionUnit);
+                                await updateFleetRecord({
+                                    consumption: inputConsumption,
+                                    consumption_unit: inputConsumptionUnit,
+                                    start_odometer: inputStartOdometer,
+                                    end_odometer: inputEndOdometer,
+                                    id: id
+                                }).then((res) => {
+                                    console.log(res);
 
-                                            if (Number(res) > 0) {
-                                                closeModal();
-                                            }
-                                        });
-                                    }}
-                                >
-                                    <ButtonText className='text-custom-secondary'>SAVE</ButtonText>
-                                </Button>
-                            </ModalFooter>
-                        </ModalContent>
-                    </ScrollView>
-                </Modal>
-            {/* </Center> */}
+                                    if (Number(res) > 0) {
+                                        closeModal();
+                                    }
+                                });
+                            }}
+                        >
+                            <ButtonText className='text-custom-secondary'>SAVE</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }

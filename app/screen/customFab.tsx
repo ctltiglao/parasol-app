@@ -1,7 +1,7 @@
 // react native
 import React, { useState } from "react";
 // expo
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 // gluestack
 import { Button } from "@/components/ui/button";
 import { Box } from "@/components/ui/box";
@@ -11,24 +11,17 @@ interface FabProps {
 }
 
 export function CustomFleetFab({ onFabPress }: FabProps) {
-    const [ expanded, setExpanded ] = useState(false);
-    const toggleSubFab = () => setExpanded(!expanded);
-
     return (
-        <Box className="absolute right-0 p-3">
-            { expanded &&(
-                <>
-                    <SubFab iconName='directions' onPress={() => onFabPress()} />
-                </>
-            )}
+        <Box className="absolute p-3 items-center">
+            <SubFab iconName='directions' onPress={() => onFabPress()} />
+        </Box>
+    )
+}
 
-            <Button
-                style={{ borderRadius: 50 }}
-                className="h-fit p-3 bg-custom-secondary shadow-soft-4"
-                onPress={toggleSubFab}
-            >
-                <MaterialIcons name={ expanded ? "close" : "add" } size={24} color="white" />
-            </Button>
+export function CustomAddFab({ onFabPress }: FabProps) {
+    return (
+        <Box className="p-3">
+            <SubFab iconName='plus' onPress={() => onFabPress()} />
         </Box>
     )
 }
@@ -42,7 +35,7 @@ interface SubFabProps {
 export const SubFab: React.FC<SubFabProps> = ({ iconName, onPress }) => {
     return (
         <Button
-            className="bg-white w-fit h-fit items-center rounded-full mb-8 p-3"
+            className="bg-white w-fit h-fit items-center rounded-full mb-8 p-3 shadow-gray-400 shadow-md"
             onPress={onPress}
         >
             <MaterialCommunityIcons name={iconName} size={30} color="#0038A8" />

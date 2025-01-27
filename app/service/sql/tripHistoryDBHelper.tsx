@@ -22,6 +22,7 @@ const createDb = async () => {
         // console.log(`Table created successfully`);
     } catch (error) {
         // console.log('Error creating table ', error);
+        alert(`Error creating table ${error}`);
     }
 };
 

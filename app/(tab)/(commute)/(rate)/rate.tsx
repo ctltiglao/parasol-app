@@ -94,7 +94,7 @@ export default function TripRate({ handleAction, location } : any) {
             </Box>
 
             <Box className='mt-4 mb-20 pl-6 pr-6'>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets={true}>
                     <VStack className='mt-1'>
                         <Text size='md'>1. Vehicle condition</Text>
                         <RadioGroup onChange={toggleSelectedCondition} className='flex-row justify-between pl-4 pr-4'>

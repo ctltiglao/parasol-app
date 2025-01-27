@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import CommuteScreen from './(commute)/commute';
 import FleetScreen from './(fleet)/fleet';
+import NewsScreen from './(news)/news';
 import RoadSafetyScreen from './(roadSafety)/roadSafety';
 import ProfileScreen from './(profile)/profile';
 
@@ -87,6 +88,8 @@ export default function TabScreen() {
                         return <MaterialCommunityIcons name='navigation' size={iconSize} color={color} />
                     } else if (route.name === 'Fleet') {
                         return <MaterialCommunityIcons name='bus' size={iconSize} color={color} />
+                    } else if (route.name === 'News') {
+                        return <MaterialCommunityIcons name='newspaper-variant-multiple' size={iconSize} color={color} />
                     } else if (route.name === 'Road Safety') {
                         return <MaterialCommunityIcons name='steering' size={iconSize} color={color} />
                     } else if (route.name === 'Profile') {
@@ -108,6 +111,7 @@ export default function TabScreen() {
         >
             <Tab.Screen name='Commute' component={CommuteScreen} />
             <Tab.Screen name='Fleet' component={FleetScreen} />
+            <Tab.Screen name='News' component={NewsScreen} />
             <Tab.Screen name='Road Safety' component={RoadSafetyScreen} />
             <Tab.Screen name='Profile' component={ProfileScreen} />
         </Tab.Navigator>

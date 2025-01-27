@@ -322,7 +322,7 @@ export default function OverviewScreen() {
                 automaticallyAdjustKeyboardInsets={true}
                 showsVerticalScrollIndicator={false}
             >
-                <Box className='flex-1 w-full h-full'>
+                {/* <Box className='flex-1 w-full h-full'> */}
                     <VStack>
                         <Text size='lg' className='text-zinc-500'>Party Name</Text>
                         <Input
@@ -376,9 +376,9 @@ export default function OverviewScreen() {
                                     <SelectInput placeholder={ vehicleOptions[0].label } placeholderTextColor={'#000'} />
                                     <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
                                 </SelectTrigger>
-                                {/* <Box className='bg-custom-primary h-fit'> */}
-                                    <SelectPortal>
-                                        <SelectContent className='h-fit shadow-soft-3'>
+                                <SelectPortal className='h-1/2'>
+                                    <ScrollView>
+                                        <SelectContent className='shadow-soft-3'>
                                             { vehicleOptions.map((option) => (
                                                 <SelectItem
                                                     className='text-black text-lg font-medium'
@@ -388,8 +388,8 @@ export default function OverviewScreen() {
                                                 />
                                             )) }
                                         </SelectContent>
-                                    </SelectPortal>
-                                {/* </Box> */}
+                                    </ScrollView>
+                                </SelectPortal>
                             </Select>
                         </VStack>
 
@@ -537,7 +537,7 @@ export default function OverviewScreen() {
                             </Input>
                         </VStack>
                     </VStack>
-                </Box>
+                {/* </Box> */}
             </ScrollView>
         </GluestackUIProvider>
     )

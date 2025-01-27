@@ -36,14 +36,14 @@ export const onMqttConnect = (topic, message) => {
                 // console.log(message);
                 client.subscribe(topic, (err) => {
                     if (!err) {
-                        console.warn(topic);
+                        // console.warn(topic);
                         client.publish(topic, message);
                     }
                 });
             } else {
                 client.subscribe(topic, (err) => {
                     if (!err) {
-                        console.log(topic);
+                        // console.log(topic);
                         client.publish(topic, message);
                     }
                 });
@@ -64,6 +64,10 @@ export const onMqttConnect = (topic, message) => {
                 console.log(`Received message from ${topic}: ${message.toString()}`);
             }
         });
+
+        client.on('reconnect', () => {
+            // console.log('Reconnected to MQTT broker');
+        })
     
         client.on('error', (error) => {
             // console.log(`MQTT error: ${error}`);
@@ -81,34 +85,34 @@ export const onMqttConnect = (topic, message) => {
     }
 }
 
-export const onPublishMqtt = (topic, message) => {
-    const client = mqttConnect(MQTT_URL, MQTT_OPTIONS);
+// export const onPublishMqtt = (topic, message) => {
+//     const client = mqttConnect(MQTT_URL, MQTT_OPTIONS);
 
-    client.on('connect', () => {
-        // console.log(MQTT_OPTIONS.clientId);
-        // console.log('Connected to MQTT broker');
-    })
+//     client.on('connect', () => {
+//         // console.log(MQTT_OPTIONS.clientId);
+//         // console.log('Connected to MQTT broker');
+//     })
 
-    client.subscribe(topic, (err) => {
-        if (!err) {
-            console.warn(topic);
-            client.publish(topic, message);
-        }
-    });
+//     client.subscribe(topic, (err) => {
+//         if (!err) {
+//             console.warn(topic);
+//             client.publish(topic, message);
+//         }
+//     });
 
-    client.on('message', (topic, message) => {
-        console.log(`Received message from ${topic}: ${message.toString()}`);
-    });
+//     client.on('message', (topic, message) => {
+//         console.log(`Received message from ${topic}: ${message.toString()}`);
+//     });
 
-    client.on('error', (error) => {
-        // console.log(`MQTT error: ${error}`);
-    });
+//     client.on('error', (error) => {
+//         // console.log(`MQTT error: ${error}`);
+//     });
 
-    client.on('close', () => {
-        // console.log('Connection to MQTT broker closed');
-    });
+//     client.on('close', () => {
+//         // console.log('Connection to MQTT broker closed');
+//     });
 
-    return () => {
-        client.end();
-    }
-}
+//     return () => {
+//         client.end();
+//     }
+// }

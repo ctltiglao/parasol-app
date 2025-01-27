@@ -23,12 +23,12 @@ export default function FleetHeader({ navigation, route, options } : any) {
     };
 
     const fleetOptions = [
-        { id: 1, label: 'Dashboard Monitor', value: '1', onPress: () => {
-            nav.navigate('Dashboard');
+        { id: 1, label: 'Fleet History', value: '1', onPress: () => {
+            nav.navigate('History');
             handleMenuItemClick();
         } },
-        { id: 2, label: 'Fleet History', value: '2', onPress: () => {
-            nav.navigate('History');
+        { id: 2, label: 'Fuel Logs', value: '2', onPress: () => {
+            nav.navigate('Fuel');
             handleMenuItemClick();
         } },
         { id: 3, label: 'Settings', value: '3', onPress: () => {
