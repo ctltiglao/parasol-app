@@ -2,19 +2,19 @@
   "expo": {
     "name": "Parasol Fleet",
     "slug": "parasol-app",
-    "scheme": "parasol-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icons/stph_72.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "parasol",
     "splash": {
-      "image": "./assets/icons/stph_1200.png",
+      "image": "./assets/icons/stph_72.png",
       "resizeMode": "contain",
       "backgroundColor": "#FCD116"
     },
     "ios": {
-      "supportsTablet": true,
+      "bundleIdentifier": "com.safetravelph.parasol",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "For a better, experience, your device will need to use Location Accuracy",
         "NSLocationAlwaysUsageDescription": "For a better, experience, your device will need to use Location Accuracy",
@@ -22,16 +22,13 @@
         "NSPhotoLibraryUsageDescription": "We need access to save files to your photo library",
         "NSPhotoLibraryAddUsageDescription": "We need access to save files to your photo library"
       },
-      "bundleIdentifier": ".safetravelph.parasol",
       "config": {
         "googleMapsApiKey": "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
-      }
+      },
+      "supportsTablet": false
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icons/stph_72.png",
-        "backgroundColor": "#ffffff"
-      },
+      "package": "com.safetravelph.parasol",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
@@ -41,21 +38,26 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION"
       ],
-      "package": "com.safetravelph.parasol"
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/stph_72.png",
+        "backgroundColor": "#ffffff"
+      }
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "5958cfd3-998c-4a2a-96e6-f3790561425d"
-      },
-      "googleMapsApiKey": "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
+      "favicon": "./assets/icons/stph_72.png"
     },
     "plugins": [
-      "expo-sqlite",
-      "expo-router"
-    ]
+      "expo-router",
+      "expo-sqlite"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "5958cfd3-998c-4a2a-96e6-f3790561425d"
+      }
+    }
   }
 }

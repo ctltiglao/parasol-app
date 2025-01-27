@@ -1,10 +1,7 @@
 export const GOOGLE_MAPS_API_KEY= 'AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c';
 export const GOOGLE_PLACES_API_KEY = 'AIzaSyBxbNXjmdo5qt2cME549ozeVdtAFO9hD34';
 
-export const MQTT_HOST = 'mqtt.safetravel.ph';
-export const MQTT_PORT = 8883;
-export const MQTT_USERNAME = 'mqtt';
-export const MQTT_PASSWORD = 'mqtt';
+export const MQTT_HOST = 'ws://staging-mqtt.safetravel.ph:8000/mqtt';
 
 const String = {
     notice_contact: 'Visit www.safetravel.ph. For comments and suggestions, send email at admin@safetravel.ph',

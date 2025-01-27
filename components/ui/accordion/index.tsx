@@ -106,9 +106,9 @@ cssInterop(PrimitiveIcon, {
     nativeStyleToProp: {
       height: true,
       width: true,
-      // fill: true,
+      fill: true,
       color: 'classNameColor',
-      // stroke: true,
+      stroke: true,
     },
   },
 });

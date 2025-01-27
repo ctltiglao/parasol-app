@@ -22,6 +22,7 @@ const createDb = async () => {
         // console.log(`Table created successfully`);
     } catch (error) {
         // console.log('Error creating table ', error);
+        alert(`Error creating table ${error}`);
     }
 };
 
@@ -34,7 +35,7 @@ export const onCreate = async () => {
     if (!dbExists.exists) {
         await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}SQLite`, { intermediates: true })
         
-        const asset = Asset.fromModule(require("@/assets/safetravelph.db"));
+        const asset = Asset.fromModule(require("./safetravelph.db"));
         await FileSystem.downloadAsync(asset.uri, dbAssetPath);
         // console.log('Database copied successfully');
     } else {

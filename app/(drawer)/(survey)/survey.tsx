@@ -11,7 +11,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
-import { Text } from '@/components/ui/text';
+import { Heading } from '@/components/ui/heading';
 import { Button } from '@/components/ui/button';
 
 import { getUserState } from '@/app/(drawer)/drawerViewModel';
@@ -106,9 +106,7 @@ function Header({ navigation } : any) {
     const nav: any = useNavigation();
 
     return (
-        <Box 
-            style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 55, paddingBottom: 10, paddingHorizontal: 10 }}
-            className='items-center bg-custom-primary p-5'>
+        <Box className='flex-row bg-custom-primary justify-between items-center pt-14 ps-4 pb-4'>
             <MaterialCommunityIcons
                 name='arrow-left'
                 size={25}
@@ -116,7 +114,7 @@ function Header({ navigation } : any) {
                 onPress={() => nav.dispatch( navigation.goBack() )}
             />
             
-            <Text size='lg' className='font-bold text-custom-secondary'>PIVE Survey App</Text>
+            <Heading className='text-custom-secondary'>PIVE Survey App</Heading>
 
             <Menu
                 className='bg-custom-primary'

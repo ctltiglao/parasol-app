@@ -4,7 +4,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { NavigationProp, useFocusEffect } from '@react-navigation/native';
 // expo
 import { StatusBar } from 'expo-status-bar';
-import { makeRedirectUri, useAuthRequest, useAutoDiscovery, TokenRequest, ResponseType, exchangeCodeAsync } from 'expo-auth-session';
+import { makeRedirectUri, useAuthRequest, useAutoDiscovery, ResponseType } from 'expo-auth-session';
 // gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
@@ -12,13 +12,12 @@ import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
 
-import { getToken } from '../service/authContext';
 import String from '@/assets/values/strings';
 import { continueAsGuest, getPermissions, useViewModel } from './mainViewModel';
 
 const viewModel = useViewModel();
 
-export default function MainScreen({ navigation } : { navigation: NavigationProp<any> }) {
+export default function MainScreen({ navigation } : any) {
   // const { signIn, signOut, state } = useContext(AuthContext);
   const loginDiscovery = useAutoDiscovery('https://staging-iam.safetravel.ph/realms/safetravelph-cpa');
   const discovery = {
@@ -31,7 +30,7 @@ export default function MainScreen({ navigation } : { navigation: NavigationProp
       clientSecret: 'Ej37vQTHv5RH3SUREM4vCNnLz4du21Oq',
       responseType: ResponseType.Code,
       redirectUri: makeRedirectUri({
-        scheme: 'com.safetravelph.parasol',
+        scheme: 'parasol',
       }),
       scopes: ['openid', 'profile', 'email'],
       usePKCE: true,
@@ -50,41 +49,7 @@ export default function MainScreen({ navigation } : { navigation: NavigationProp
 
   useFocusEffect(() => {
     if (result?.type === 'success') {
-      // console.log('RESULT: ', request);
-      // const { code } = result.params;
-      // const codeVerifier = request?.codeVerifier;
-
-      // const getAccessToken = async() => {
-      //   console.log('Code: ', code);
-
-      //   try {
-      //     await exchangeCodeAsync({
-      //       clientId: 'safetravelph-cpa-test',
-      //       clientSecret: 'Ej37vQTHv5RH3SUREM4vCNnLz4du21Oq',
-      //       code: code,
-      //       redirectUri: makeRedirectUri({
-      //         scheme: 'com.safetravelph.parasol',
-      //       }),
-      //       extraParams: {
-      //         grant_type: 'authorization_code',
-      //       },
-      //     }, discovery).then((tokenResponse) => {
-      //       console.log('Token Response: ', tokenResponse);
-      //     });
-  
-      //     console.log('here');
-      //   } catch (error) {
-      //     console.error(error);
-      //   }
-      //   // console.log('Token Response: ', tokenResponse);
-      // }
-
-      // getAccessToken();
       toTab();
-
-      // console.log('RESULT: ', code);
-      // console.log('');
-      // console.log('REQUEST: ', request);
     }
   });
 
