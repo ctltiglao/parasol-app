@@ -166,15 +166,15 @@ function SqlMenu({
     const closeMenu = () => setMenuVisible(false);
 
     const openModal = () => {
-        console.log(id, consumption, consumption_unit, start_odometer, end_odometer);
+        console.log(id, inputConsumption, inputConsumptionUnit, inputStartOdometer, inputEndOdometer);
 
         setInputConsumption(consumption);
         if (consumption_unit === 'liters') {
-            setInputConsumptionUnit('Diesel (Liters)');
+            setInputConsumptionUnit('Diesel (L)');
         } else if (consumption_unit === 'kWh') {
             setInputConsumptionUnit('Electricity (kWh)');
         } else {
-            setInputConsumptionUnit('');
+            setInputConsumptionUnit('Diesel (L)');
         }
         setInputStartOdometer(start_odometer);
         setInputEndOdometer(end_odometer);

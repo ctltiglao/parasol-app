@@ -2,7 +2,7 @@
 // expo
 // gluestack
 
-import { onMqttConnect } from "@/app/service/mqtt/mqtt";
+import { onMqttPublish } from "@/app/service/mqtt/mqtt";
 import { Rating } from "@/app/service/mqtt/proto/Trip.proto.js";
 
 export const handleRating = ({
@@ -90,8 +90,8 @@ export const publishRating = async(message: any) => {
             }
 
             const buffer = Rating.encode(ratingData).finish();
-
-            onMqttConnect('ratings', buffer);
+            
+            onMqttPublish('ratings', buffer);
     
             // return true;
         } catch (error) {

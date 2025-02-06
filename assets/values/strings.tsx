@@ -7,7 +7,7 @@ const String = {
     notice_contact: 'Visit www.safetravel.ph. For comments and suggestions, send email at admin@safetravel.ph',
     notice_policy: 'Read our Terms of Use and Data Privacy Policy at ',
     notice_policy_link : 'https://www.safetravelph.org/privacy',
-    notice_copyright: '©2023 SafeTravelPH Mobility Innovations Organization. All rights reserved.',
+    notice_copyright: '©2025 SafeTravelPH Mobility Innovations Organization. All rights reserved.',
     report_placeholder: 'Please provide a detailed description and include recommendations for the concerned national/local government agency.',
 };
 

@@ -1,10 +1,10 @@
 import '@/global.css';
 // react native
 import React, { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { Alert, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useNavigation, NavigationContainer } from '@react-navigation/native';
+import { useNavigation, NavigationContainer, useNavigationState } from '@react-navigation/native';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 // gluestack
@@ -48,33 +48,6 @@ export default function TabScreen() {
 }
 
  function TabNavigator() {
-    const [showwModal, setShowModal] = useState(false);
-    const [pendingRoute, setPendingRoute] = useState(null);
-    const navigation = useNavigation();
-
-    useEffect(() => {
-        const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-            if (!pendingRoute) return;
-
-            e.preventDefault();
-            setShowModal(true);
-        });
-
-        return unsubscribe;
-    }, [navigation, pendingRoute]);
-
-    const handleConfirm = () => {
-        setShowModal(false);
-        setPendingRoute(null);
-
-        if (pendingRoute) navigation.dispatch(pendingRoute);
-    }
-
-    const handleCancel = () => {
-        setShowModal(false);
-        
-    }
-
     return (
         <Tab.Navigator
             screenOptions = {({ route } : any) => ({
@@ -107,6 +80,33 @@ export default function TabScreen() {
                         </Text>
                     )
                 },
+            })}
+            screenListeners={({ navigation, route } : any) => ({
+                tabPress: (e) => {
+                    e.preventDefault();
+                    
+                    var currentTab;
+                    if (navigation.getState().index === 0) {
+                        currentTab = 'Commute';
+                    } else if (navigation.getState().index === 1) {
+                        currentTab = 'Fleet';
+                    } else if (navigation.getState().index === 2) {
+                        currentTab = 'News';
+                    } else if (navigation.getState().index === 3) {
+                        currentTab = 'Road Safety';
+                    } else if (navigation.getState().index === 4) {
+                        currentTab = 'Profile';
+                    }
+
+                    Alert.alert(
+                        'Confirm',
+                        `Are you sure you want to exit ${currentTab}?`,
+                        [
+                            {text: 'No', style: 'cancel'},
+                            {text: 'Yes', onPress: () => navigation.navigate(route.name)},
+                        ]
+                    )
+                }
             })}
         >
             <Tab.Screen name='Commute' component={CommuteScreen} />

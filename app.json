@@ -23,7 +23,7 @@
         "NSPhotoLibraryAddUsageDescription": "We need access to save files to your photo library"
       },
       "config": {
-        "googleMapsApiKey": "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
+        "googleMapsApiKey": "AIzaSyAceRPYDG5xfrwFzFPET1EsKhEkLXasKw0"
       },
       "supportsTablet": false
     },
@@ -31,7 +31,7 @@
       "package": "com.safetravelph.parasol",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c"
+          "apiKey": "AIzaSyAceRPYDG5xfrwFzFPET1EsKhEkLXasKw0"
         }
       },
       "permissions": [

@@ -38,7 +38,7 @@ export default function FleetInfo({handleAction} : any) {
         const patternRoute = /Route:(.*?)\*\*\*/;
         const patternOperator = /Operator:(.*?)\*\*\*/;
         const patternPlate = /Plate:(.*?)\*\*\*/;
-        const patternCapacity = /\*\*\*Capacity:(.*?)/;
+        const patternCapacity = /Capacity:\s*(\d+)/;
         
         const matchRoute = data.match(patternRoute);
         const matchOperator = data.match(patternOperator);

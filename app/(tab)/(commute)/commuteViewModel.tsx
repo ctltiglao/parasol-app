@@ -98,7 +98,7 @@ export const mqttBroker = async(message: any) => {
         // const decoded = TripInfo.decode(buffer);
         // console.warn(decoded);
 
-        onMqttConnect('route_puv_vehicle_app_feeds', buffer);
+        // onMqttConnect('route_puv_vehicle_app_feeds', buffer);
     } catch (error) {
         console.error('Error in mqttBroker', error);
     }

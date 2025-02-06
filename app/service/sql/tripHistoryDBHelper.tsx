@@ -77,7 +77,7 @@ export const addCommuteRecord = async ({
 
 export const allCommuteRecords = async () => {
     try {
-        const result = await db.getAllAsync('SELECT * FROM CommuteRecord');
+        const result = await db.getAllAsync('SELECT * FROM CommuteRecord ORDER BY id DESC');
 
         return result;
     } catch (error) {
