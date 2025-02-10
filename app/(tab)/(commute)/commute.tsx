@@ -87,6 +87,8 @@ export default function CommuteScreen() {
 
     useFocusEffect(
         useCallback(() => {
+            // onMqttConnect();
+
             checkQuickTour();
         }, [])
     );
@@ -297,7 +299,9 @@ function Screen() {
 
         modeSelectChange(null);
 
-        mqttBroker('#');
+        mqttBroker('#').then(() => {
+            onMqttClose();
+        });
 
         setVehicleId('');
         setVehicleDescription('');

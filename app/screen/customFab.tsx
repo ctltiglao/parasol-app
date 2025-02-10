@@ -22,7 +22,7 @@ export function CustomFleetFab({ onFabPress }: FabProps) {
 export function CustomAddFab({ onFabPress }: FabProps) {
     return (
         <Box className="p-3">
-            <SubFab iconName='plus' onPress={() => onFabPress()} />
+            <SubFabFuel iconName='plus' onPress={() => onFabPress()} />
         </Box>
     )
 }
@@ -37,6 +37,19 @@ export const SubFab: React.FC<SubFabProps> = ({ iconName, onPress }) => {
         <>
             <Button
                 className="bg-white w-fit h-fit items-center rounded-full p-3 shadow-gray-400 shadow-md"
+                onPress={onPress}
+            >
+                <MaterialCommunityIcons name={iconName} size={30} color="#0038A8" />
+            </Button>
+        </>
+    )
+}
+
+export const SubFabFuel: React.FC<SubFabProps> = ({ iconName, onPress }) => {
+    return (
+        <>
+            <Button
+                className="bg-custom-primary w-fit h-fit items-center rounded-full p-3 shadow-gray-400 shadow-md"
                 onPress={onPress}
             >
                 <MaterialCommunityIcons name={iconName} size={30} color="#0038A8" />

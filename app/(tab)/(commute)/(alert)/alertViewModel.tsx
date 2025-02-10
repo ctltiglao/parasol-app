@@ -3,7 +3,7 @@
 // gluestack
 
 import { Alert } from '@/app/service/mqtt/proto/Trip.proto.js';
-import { onMqttConnect } from "@/app/service/mqtt/mqtt";
+import { onMqttConnect, onMqttPublish } from "@/app/service/mqtt/mqtt";
 
 export const handleAlert = ({
     selectedCheckboxes
@@ -67,7 +67,7 @@ export const publishAlert = async(message: any) => {
 
         const buffer = Alert.encode(alertData).finish();
 
-        onMqttConnect('alerts', buffer);
+        onMqttPublish('alerts', buffer);
 
         return true;
     } catch (error) {

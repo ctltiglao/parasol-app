@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { addCommuteRecord, onCreate } from "@/app/service/sql/tripHistoryDBHelper";
 import { Tracking } from "@/app/service/mqtt/proto/Tracking.proto.js";
-import { onMqttConnect } from "@/app/service/mqtt/mqtt";
+import { onMqttConnect, onMqttPublish } from "@/app/service/mqtt/mqtt";
 
 export const getQuickTourPref = async () => {
     try {
@@ -93,12 +93,8 @@ export const mqttBroker = async(message: any) => {
         // console.log('Tracking data', trackingData)
 
         const buffer = Tracking.encode(trackingData).finish();
-        // console.warn(buffer);
-
-        // const decoded = TripInfo.decode(buffer);
-        // console.warn(decoded);
-
-        // onMqttConnect('route_puv_vehicle_app_feeds', buffer);
+        
+        onMqttPublish('route_puv_vehicle_app_feeds', buffer);
     } catch (error) {
         console.error('Error in mqttBroker', error);
     }

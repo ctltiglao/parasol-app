@@ -39,19 +39,29 @@ export const onMqttConnect = () => {
 }
 
 export const onMqttPublish = (topic, message) => {
-    if (message !== '#') {
-        client.subscribe(topic, (err) => {
-            if (!err) {
-                client.publish(topic, message);
+    return new Promise((resolve, reject) => {
+        try {
+            if (message !== '#') {
+                console.log(topic);
+                client.subscribe(topic, (err) => {
+                    if (!err) {
+                        client.publish(topic, message);
+                        resolve(true)
+                    }
+                })
             }
-        })
-    }
-
-    client.on('message', (topic, message) => {
-        if (topic === 'route_puv_vehicle_app_feeds') {
-            console.log(`Received message from ${topic}: ${message.toString()}`);
-        } else if (topic === 'boardings' || topic === 'alightings') {
-            console.warn(`Received message from ${topic}: ${message.toString()}`);
+        
+            client.on('message', (topic, message) => {
+                if (topic === 'route_puv_vehicle_app_feeds') {
+                    console.log(`Received message from ${topic}: ${message.toString()}`);
+                } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
+                    console.warn(`Received message from ${topic}: ${message.toString()}`);
+                }
+            })
+            
+        } catch (error) {
+            alert('Failed to publish MQTT message: ', error.error);
+            reject(false)
         }
     })
 }
