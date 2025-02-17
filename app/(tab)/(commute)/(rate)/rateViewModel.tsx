@@ -90,21 +90,23 @@ export const publishRating = async(message: any) => {
             }
 
             const buffer = Rating.encode(ratingData).finish();
-            
-            // onMqttPublish('ratings', buffer).then((response) => {
-            //     console.log(response);
-            //     if (response === false) {
-            //         console.log(response);
-            //         onMqttConnect().then((response) => {
-            //             if (response === true) {
-            //                 onMqttPublish('ratings', buffer);
-            //             }
-            //         })
-            //     }
-            // });
 
-            onMqttPublish('ratings', buffer);
-    
+            const publish = onMqttPublish('ratings', buffer);
+
+            if (publish === false) {
+                onMqttConnect().then((response) => {
+                    
+                    if (response === true) {
+                        const pub = onMqttPublish('ratings', buffer);
+                        console.log('this ', pub);
+
+                        // if (pub !== false) {
+                        //     onMqttClose();
+                        // }
+                    };
+                })
+            }
+
             // return true;
         } catch (error) {
             console.error(error);

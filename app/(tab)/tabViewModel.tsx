@@ -4,9 +4,10 @@ import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // gluestack
 
-// export const getLocation = async () => {
-//     return await Location.getCurrentPositionAsync({})
-// }
+// check if with commute and fleet setting
+export const checkSetting = () => {
+    
+}
 
 // location permission
 export const getLocationPermission = async () => {

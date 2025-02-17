@@ -268,7 +268,7 @@ export default function TripRate({ handleAction, location } : any) {
                         <Button
                             className='w-1/2 h-fit p-4 bg-custom-secondary rounded-none'
                             onPress={() => {
-                                if (vehicleId !== '') {
+                                // if (vehicleId !== '') {
                                     const description = handleRating({
                                         isSelectedCondition,
                                         isSelectedComfort,
@@ -295,9 +295,9 @@ export default function TripRate({ handleAction, location } : any) {
                                     }
                                         
                                     publishRating(message);
-                                } else {
-                                    alert('Please set commute information');
-                                }
+                                // } else {
+                                //     alert('Please set commute information');
+                                // }
                             }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>

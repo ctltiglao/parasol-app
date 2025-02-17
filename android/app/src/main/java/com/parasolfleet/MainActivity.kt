@@ -1,4 +1,4 @@
-package com.safetravelph.parasol
+package com.parasolfleet
 
 import android.os.Build
 import android.os.Bundle

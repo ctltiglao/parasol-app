@@ -1,11 +1,22 @@
 // react native
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
+import * as Location from 'expo-location';
 // gluestack
 
 import { addCommuteRecord, onCreate } from "@/app/service/sql/tripHistoryDBHelper";
 import { Tracking } from "@/app/service/mqtt/proto/Tracking.proto.js";
 import { onMqttConnect, onMqttPublish } from "@/app/service/mqtt/mqtt";
+
+// remove previous commute vehicle
+export const removeItem = async () => {
+    try {
+        await AsyncStorage.removeItem('CommuteDetails');
+        // console.log('removed');
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 export const getQuickTourPref = async () => {
     try {
@@ -67,6 +78,12 @@ export const setCommuteRecord = async ({
         return false;
     }
 }
+
+let lastSentLocation: {
+    lat: number;
+    lng: number;
+    timestamp: string;
+} | null = null;
 
 export const mqttBroker = async(message: any) => {
     // console.log(message);

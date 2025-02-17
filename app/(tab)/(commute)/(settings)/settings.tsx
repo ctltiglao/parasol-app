@@ -39,6 +39,8 @@ function DrawerHistorybotNavigator() {
 }
 
 function Screen() {
+    
+    
     return (
         <GluestackUIProvider mode='light'>
             <Box className='bg-white flex-1 w-full h-full'>

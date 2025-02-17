@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
-    "android": "DARK_MODE=media expo start --android",
-    "ios": "DARK_MODE=media expo start --ios",
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "DARK_MODE=media expo start --web"
   },
   "dependencies": {
@@ -73,7 +73,7 @@
     "protobufjs": "^7.4.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-native": "0.76.5",
+    "react-native": "0.76.7",
     "react-native-app-auth": "^8.0.1",
     "react-native-crypto": "^2.2.0",
     "react-native-css-interop": "^0.1.22",
@@ -93,7 +93,8 @@
     "rnmrtt-client": "^1.0.13",
     "stream-browserify": "^3.0.0",
     "tailwindcss": "^3.4.17",
-    "uuid": "^11.0.4"
+    "uuid": "^11.0.4",
+    "expo-task-manager": "~12.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -143,7 +143,7 @@ function Screen() {
 
     useEffect(() => {
         getLocation();
-        getLocationPermission();
+        // getLocationPermission();
 
         if (navRoute.params) {
             setRouteCoordinates(navRoute.params.route_coordinates);
@@ -153,24 +153,21 @@ function Screen() {
             setMaxOnBoard(navRoute.params.max_pax);
             setTotalTrip(navRoute.params.total_trip);
             setTripStart(navRoute.params.trip_start);
-        } else {
-            console.log('NO PARAMS');
         }
     }, [navRoute.params]);
 
     // refresh tab
-    // useFocusEffect(
-    //     useCallback(() => {
-    //         getLocation();
-            
-    //         setRouteCoordinates([]);
-    //         // setSpeedStartTime(null);
-            
-    //         setIsOverlayInfoVisible(false);
+    useEffect(() => {
+        const unsubscribe = nav.addListener('state', (e) => {
+            const routes = e.data.state.routes;
+            const prevIndex = e.data.state.index;
+            const prevScreen = prevIndex >= 0 ? routes[prevIndex].name : null;
 
-    //         removeItem();
-    //     }, [])
-    // );
+            console.log('PREV SCREEN ', prevScreen);
+        })
+
+        return unsubscribe;
+    }, [nav])
 
     return (
         <GluestackUIProvider mode='light'>

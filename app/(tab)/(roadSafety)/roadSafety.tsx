@@ -1,11 +1,11 @@
 import '@/global.css';
 // react native
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MapView, { MapMarker, MapPressEvent, PROVIDER_GOOGLE} from 'react-native-maps';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { NavigationProp, useFocusEffect, useNavigation } from '@react-navigation/native';
 // expo
 import * as Location from 'expo-location';
 // gluestack
@@ -24,29 +24,33 @@ export default function RoadSafetyScreen() {
     const mapRef = useRef<MapView>(null);
     const [location, setLocation] = useState<any|null>(null);
     const [locationPress, setLocationPress] = useState<any|null>(null);
+
+    const getLocation = async () => {
+        const loc = await Location.getCurrentPositionAsync({});
+        setLocationPress(loc);
+
+        mapRef.current?.animateToRegion(
+            {
+                latitude: loc.coords.latitude,
+                longitude: loc.coords.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01
+            },
+            1000
+        );
+
+        setLocation(loc);
+    }
     
     useEffect(() => {
-        getLocationPermission();
-    
-        const getLocation = async () => {
-            const loc = await Location.getCurrentPositionAsync({});
-            setLocationPress(loc);
-    
-            mapRef.current?.animateToRegion(
-                {
-                    latitude: loc.coords.latitude,
-                    longitude: loc.coords.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01
-                },
-                1000
-            );
-    
-            setLocation(loc);
-        }
 
-        getLocation();
     }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            getLocation();
+        }, [])
+    );
     
     const handleMapPress = (event: MapPressEvent) => {
         const { coordinate } = event.nativeEvent;

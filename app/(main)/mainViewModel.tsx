@@ -1,5 +1,5 @@
 // react native
-import { Linking } from "react-native";
+import { Alert, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
 import * as Device from 'expo-device';
@@ -21,22 +21,32 @@ export const useViewModel = () => {
 // location permission
 export const getPermissions = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
+    const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
     const serviceEnabled = await Location.hasServicesEnabledAsync();
-
-    await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High
-    });
 
     if (!serviceEnabled) {
         return;
     }
 
     if (status !== 'granted') {
-        alert('Permmission to access location was denied');
+        Alert.alert(
+            'Permission to access location was denied',
+            'Location permission is required to use the app',
+        )
         return;
-    } else {
-        await Location.requestBackgroundPermissionsAsync();
     }
+
+    if (bgStatus !== 'granted') {
+        Alert.alert(
+            'Permission to access background location was denied',
+            'Background location permission is required to use the app',
+        )
+        return;
+    }
+
+    await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High
+    });
 }
 
 // =====> GUEST USER

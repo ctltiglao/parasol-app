@@ -6,12 +6,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MapView, { MapMarker, Polyline, PROVIDER_GOOGLE, PROVIDER_DEFAULT} from 'react-native-maps';
-import { Platform, StyleSheet } from 'react-native';
+import { Alert, AppState, Platform, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebView from 'react-native-webview';
 // expo
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import * as Device from 'expo-device';
 // gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -20,10 +21,8 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Select, SelectItem } from '@/components/ui/select';
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Heading } from '@/components/ui/heading';
-import { Checkbox, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
-import { Textarea, TextareaInput } from '@/components/ui/textarea';
+import { Checkbox, CheckboxLabel } from '@/components/ui/checkbox';
 import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
 
 import DrawerScreen from '@/app/(drawer)/drawer';
 import CommuteHeader from '@/app/screen/header/commuteHeader';
@@ -36,9 +35,9 @@ import TripFeed from './(feed)/feed';
 import CommuteHistoryScreen from './(history)/history';
 import CommuteSettingsScreen from './(settings)/settings';
 
-import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './commuteViewModel';
+import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord, removeItem } from './commuteViewModel';
 import { modeOptions } from '@/assets/values/strings';
-import { getLocationName, getLocationPermission, getUserState } from '../tabViewModel';
+import { getLocationName, getUserState } from '../tabViewModel';
 import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
 
 const Drawer = createDrawerNavigator();
@@ -166,11 +165,14 @@ export default function CommuteScreen() {
 }
 
 function Screen() {
+    const LOCATION_TRACKING = 'background-location-task';
+    // const [appState, setAppState] = useState(AppState.currentState);
+
     const mapRef = useRef<MapView>(null);
     const [selectedMode, setSelectedMode] = useState<string | null>(null);
     const [showModalSelect, setShowModalSelect] = useState(false);
 
-    const [location, setLocation] = useState<any|null>(null);
+    const [location, setLocation] = useState<Location.LocationObject|null>(null);
     const [isCommuteStart, setCommuteStart] = useState(false);
     const [isCommuteStop, setCommuteStop] = useState(false);
 
@@ -205,17 +207,26 @@ function Screen() {
     }
 
     useEffect(() => {
-        getUserState().then((response) => {
-            setUsername(response.username);
+        const subscription = AppState.addEventListener('change', (state) => {
+            console.log('AppState changed: ', state);
         })
 
-        getLocationPermission();
-        console.log('1', location);
+        // getUserState().then((response) => {
+        //     setUsername(response.username);
+        // })
+
+        // getLocationPermission();
+
+        return () => subscription.remove();
     }, []);
 
     // refresh tab
     useFocusEffect(
         useCallback(() => {
+            getUserState().then((response) => {
+                setUsername(response.username);
+            })
+
             getLocation();
 
             setSelectedMode(null);
@@ -237,31 +248,78 @@ function Screen() {
             setOverlayRateVisible(false);
             setOverlayFeedVisible(false);
 
-            (async () => {
-                await AsyncStorage.removeItem('CommuteVehicle');
-            })
+            removeItem();
         }, [])
     );
 
     const startCommuteTracking = async () => {
         const time = new Date().toISOString();
         setStartTime(time);
-        if (!locationSubscription) {
-            const locSubscription = await Location.watchPositionAsync({
-                accuracy: Location.Accuracy.High,
-                timeInterval: 1000,
-                distanceInterval: 1
-            }, (newLocation) => {
-                mapRef.current?.animateToRegion(
-                    {
-                        latitude: newLocation.coords.latitude,
-                        longitude: newLocation.coords.longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01
-                    },
-                    1000
-                );
-    
+
+        if (locationSubscription) {
+            return;
+        }
+
+        const subscription = await Location.watchPositionAsync({
+            accuracy: Location.Accuracy.High,
+            timeInterval: 5000,
+            distanceInterval: 5
+        }, (newLocation) => {
+            mapRef.current?.animateToRegion(
+                {
+                    latitude: newLocation.coords.latitude,
+                    longitude: newLocation.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01
+                },
+                5000
+            );
+
+            setRouteCoordinates((prevCoords) => [
+                ...prevCoords,
+                { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude }
+            ])
+
+            const message = {
+                deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                lat: newLocation.coords.latitude,
+                lng: newLocation.coords.longitude,
+                timestamp: new Date().toISOString(),
+                userId: username,
+                vehicleId: vehicleId,
+                vehicleDetails: vehicleDescription,
+                passengerId: '',
+                passengerDetails: '',
+                altitude: newLocation.coords.altitude,
+                accuracy: newLocation.coords.accuracy
+            }
+            
+            mqttBroker(message);
+            
+            setLocation(newLocation);
+
+            // console.log('4')
+        })
+
+        // console.log('1')
+
+        setLocationSubscription(subscription);
+    }
+
+    // background tracking
+    TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        if (isCommuteStart && data) {
+            const {locations} = data as any;
+            const newLocation = locations[0];
+
+            if (newLocation) {
+                console.log('Background location: ', newLocation);
+
                 setRouteCoordinates((prevCoords) => [
                     ...prevCoords,
                     { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude }
@@ -280,15 +338,11 @@ function Screen() {
                     altitude: newLocation.coords.altitude,
                     accuracy: newLocation.coords.accuracy
                 }
-                mqttBroker(message);
                 
-                setLocation(newLocation);
-                // console.log('COMMUTE ', location);
-            })
-
-            setLocationSubscription(locSubscription);
+                mqttBroker(message);
+            }
         }
-    }
+    })
 
     const stopCommuteTracking = () => {
         locationSubscription?.remove();
@@ -299,15 +353,13 @@ function Screen() {
 
         modeSelectChange(null);
 
-        mqttBroker('#').then(() => {
-            onMqttClose();
-        });
+        onMqttClose();
 
         setVehicleId('');
         setVehicleDescription('');
     }
 
-    const modeSelectChange = async (value: any) => {
+    const modeSelectChange = async (value: string | null): Promise<void> => {
         setSelectedMode(value);
         setShowModalSelect(false);
 
@@ -375,6 +427,20 @@ function Screen() {
                                     vehicle_id: vehicleId,
                                     vehicle_details: vehicleDescription,
                                     commute_date: startTime
+                                }).then((response) => {
+                                    console.log(response)
+
+                                    if (response === true) {
+                                        Alert.alert(
+                                            'Confirm',
+                                            'Earn tokens by rating your trip.',
+                                            [
+                                                {text: 'Close', onPress: () => {
+                                                    toggleOverlayRate();
+                                                }},
+                                            ]
+                                        )
+                                    }
                                 })
                             })
                         }}

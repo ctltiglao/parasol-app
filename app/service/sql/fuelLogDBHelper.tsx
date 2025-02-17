@@ -60,6 +60,7 @@ export const addFuelLog = async ({
 
         if (result.changes > 0) {
             alert('Fuel log added successfully');
+            return result.changes;
         }
     } catch (error) {
         if (!db) throw new Error('Database not initialized');
@@ -71,7 +72,7 @@ export const addFuelLog = async ({
 
 export const allFuelRecords = async () => {
     try {
-        const result = await db.getAllAsync('SELECT * FROM FuelLog ORDER BY id DESC');
+        const result = await db.getAllAsync('SELECT * FROM FuelLog ORDER BY log_date DESC');
 
         return result;
     } catch (error) {

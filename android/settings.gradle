@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'Parasol Fleet'
+rootProject.name = 'ParasolFleet'
 
 dependencyResolutionManagement {
   versionCatalogs {

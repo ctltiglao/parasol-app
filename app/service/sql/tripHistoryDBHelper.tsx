@@ -68,7 +68,7 @@ export const addCommuteRecord = async ({
 
         console.log(origin, destination, commute_date);
         if (result.changes > 0) {
-            alert('Commute record added successfully');
+            console.log('Commute record added successfully');
         }
     } catch (error) {
         alert(`Failed to add commute record ${error}`);

@@ -103,7 +103,10 @@ export default function TabScreen() {
                         `Are you sure you want to exit ${currentTab}?`,
                         [
                             {text: 'No', style: 'cancel'},
-                            {text: 'Yes', onPress: () => navigation.navigate(route.name)},
+                            {text: 'Yes', onPress: () => {
+                                navigation.navigate(route.name);
+                                console.log(navigation.navigate(route));
+                            }},
                         ]
                     )
                 }

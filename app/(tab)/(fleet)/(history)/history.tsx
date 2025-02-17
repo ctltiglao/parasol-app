@@ -154,10 +154,10 @@ function SqlMenu({
     start_odometer,
     end_odometer
 }: any) {
-    const [inputConsumption, setInputConsumption] = useState(0);
+    const [inputConsumption, setInputConsumption] = useState<Number|null>(null);
     const [inputConsumptionUnit, setInputConsumptionUnit] = useState('');
-    const [inputStartOdometer, setInputStartOdometer] = useState(0);
-    const [inputEndOdometer, setInputEndOdometer] = useState(0);
+    const [inputStartOdometer, setInputStartOdometer] = useState<Number|null>(null);
+    const [inputEndOdometer, setInputEndOdometer] = useState<Number|null>(null);
 
     const [menuVisible, setMenuVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
@@ -231,8 +231,7 @@ function SqlMenu({
                             >
                                 <InputField
                                     onChangeText={(text) => setInputConsumption(parseInt(text))}
-                                    value={inputConsumption.toString()}
-                                    placeholder={inputConsumption.toString()}
+                                    value={inputConsumption ? inputConsumption.toString() : ''}
                                     keyboardType='numeric'
                                 />
                             </Input>
@@ -261,8 +260,7 @@ function SqlMenu({
                             >
                                 <InputField
                                     onChangeText={(text) => setInputStartOdometer(parseInt(text))}
-                                    value={inputStartOdometer.toString()}
-                                    placeholder={inputStartOdometer.toString()}
+                                    value={inputStartOdometer ? inputStartOdometer.toString() : ''}
                                     keyboardType='numeric'
                                 />
                             </Input>
@@ -274,8 +272,7 @@ function SqlMenu({
                             >
                                 <InputField
                                     onChangeText={(text) => setInputEndOdometer(parseInt(text))}
-                                    value={inputEndOdometer.toString()}
-                                    placeholder={inputEndOdometer.toString()}
+                                    value={inputEndOdometer ? inputEndOdometer.toString() : ''}
                                     keyboardType='numeric'
                                 />
                             </Input>

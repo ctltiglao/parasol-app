@@ -1,13 +1,14 @@
 import '@/global.css';
 // react native
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import MapView, { MapMarker } from 'react-native-maps';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import * as TaskManager from 'expo-task-manager';
 import * as Device from 'expo-device';
 import { Accelerometer } from 'expo-sensors';
 // gluestack
@@ -23,7 +24,7 @@ import { Input, InputField } from '@/components/ui/input';
 import * as geolib from 'geolib';
 import moment from 'moment';
 
-import { getLocationName, getLocationPermission, getUserState } from '../../tabViewModel';
+import { getLocationName, getUserState } from '../../tabViewModel';
 import { getFleetDetails } from '../fleetViewModel';
 import { getAveSpeed, formatTravelTime, removeItem, mqttBroker, publishBA, setFleetRecord, getTravelSpeed } from './trackingViewModel';
 import { onMqttClose } from '@/app/service/mqtt/mqtt';
@@ -63,12 +64,13 @@ function TrackingNavigator() {
 
 function Screen() {
     const nav: NavigationProp<any, any> = useNavigation();
-    const [isStart, setIStart] = useState(false);
+    const LOCATION_TRACKING = 'background-location-task';
 
     const deviceId = Device.osBuildId ?? Device.osInternalBuildId ?? '';
     const mapRef = useRef<MapView>(null);
     const [location, setLocation] = useState<any|null>(null);
     const [isFleetPause, setFleetPause] = useState(false);
+    const [isFleetStop, setFleetStop] = useState(false);
 
     const [route, setRoute] = useState('');
     const [vehicleId, setVehicleId] = useState('');
@@ -109,6 +111,10 @@ function Screen() {
     }
 
     useEffect(() => {
+        const subs = AppState.addEventListener('change', (state) => {
+            console.log('AppState changed: ', state);
+        })
+
         // get user info
         getUserState().then((response) => {
             setUsername(response.username);
@@ -126,25 +132,24 @@ function Screen() {
 
         const subscription = Accelerometer.addListener(({ x, y, z }) => {
             const accelerometer = Math.sqrt(x * x + y * y + z * z);
+            // console.log(accelerometer);
             setAcceleration(accelerometer);
         })
 
         Accelerometer.setUpdateInterval(500);
     
-        getLocationPermission();
+        // getLocationPermission();
         // startFleetTracking();
 
-        if (!isStart) {
-            console.log(isStart);
-            // startFleetTracking();
-            onMqttConnect().then((response) => {
-                console.log(response);
-                startFleetTracking();
-            });
-            setIStart(true);
-        }
+        onMqttConnect().then((response) => {
+            console.log(response);
+            startFleetTracking();
+        });
 
-        return () => subscription.remove(); // cleanup on unamount
+        return () => {
+            subs.remove();
+            subscription.remove()
+        }; // cleanup on unamount
     }, []);
 
     // refresh tab
@@ -153,26 +158,29 @@ function Screen() {
             getLocation();
 
             setFleetPause(false);
+            setFleetStop(false);
             setRoute('');
             setVehicleId('');
             setVehicleDetails('');
+            setUsername('');
             setCapacity('');
+            setSpeed(0);
+            setDistance(0);
+            setTrackingTime(0);
             setAcceleration(0);
+            setPaxModalVisible(false);
             setAlight(0);
             setBoard(0);
             setPaxOnBoard(0);
             setInputPax('');
             setMaxOnBoard(0);
-            setSpeed(0);
-            setDistance(0);
-            setTrackingTime(0);
             setAveSpeed(0);
             setMaxSpeed(0);
             setTravelTime(0);
+            setOriginTime(null);
             locationSubscription?.remove();
             setLocationSubscription(null);
             setRouteCoordinates([]);
-            setOriginTime(null);
 
             closeModal();
 
@@ -182,108 +190,164 @@ function Screen() {
 
     const startFleetTracking = async() => {
         const prevLoc = await Location.getCurrentPositionAsync({});
-        if (!locationSubscription) {
-            // start time
-            setOriginTime(new Date());
-            const subscription = await Location.watchPositionAsync({
-                accuracy: Location.Accuracy.High,
-                timeInterval: 1000,
-                distanceInterval: 1
-            }, (newLocation) => {
-                if (prevLoc) {
-                    mapRef.current?.animateToRegion(
-                        {
-                            latitude: newLocation.coords.latitude,
-                            longitude: newLocation.coords.longitude,
-                            latitudeDelta: 0.01,
-                            longitudeDelta: 0.01
-                        }, 1000
-                    );
+        setOriginTime(new Date());
 
-                    // distance
+        if (locationSubscription) {
+            return;
+        }
+
+        const subscription = await Location.watchPositionAsync({
+            accuracy: Location.Accuracy.High,
+            timeInterval: 1000,
+            distanceInterval: 1
+        }, (newLocation) => {
+            if (prevLoc) {
+                mapRef.current?.animateToRegion(
+                    {
+                        latitude: newLocation.coords.latitude,
+                        longitude: newLocation.coords.longitude,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01
+                    }, 1000
+                );
+
+                // distance
+                const inMeter = geolib.getDistance(
+                    {latitude: prevLoc.coords.latitude, longitude: prevLoc.coords.longitude},
+                    {latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude}
+                );
+                const inKilometer = (inMeter / 1000).toFixed(2);
+                setDistance(parseFloat(inKilometer));
+
+                // travel time
+                const timeDelta = 2;
+                const speedInMeterPerSecond = inMeter / timeDelta;
+                // setSpeedStartTime(new Date().getTime());
+
+                if (speedInMeterPerSecond > 0) {
+                    setTrackingTime((prevTimeTravel) => prevTimeTravel + timeDelta);
+                }
+
+                // speed
+                const speedKph = newLocation.coords.speed ? newLocation.coords.speed * 3.6 : 0;
+                setSpeed(speedKph);
+            }
+
+            setRouteCoordinates((prevCoords) => [
+                ...prevCoords,
+                {
+                    latitude: newLocation.coords.latitude,
+                    longitude: newLocation.coords.longitude
+                }
+            ])
+
+            const message = {
+                deviceId: deviceId,
+                lat: newLocation.coords.latitude,
+                lng: newLocation.coords.longitude,
+                timestamp: new Date().toISOString(),
+                userId: username,
+                vehicleId: vehicleId,
+                vehicleDetails: vehicleDetails,
+                passengerId: '',
+                passengerDetails: '',
+                altitude: newLocation.coords.altitude,
+                accuracy: newLocation.coords.accuracy
+            }
+
+            mqttBroker(message);
+
+            setLocation(newLocation);
+        })
+
+        setLocationSubscription(subscription);
+    }
+
+    TaskManager.defineTask(LOCATION_TRACKING, async({ data, error }) => {
+        const prevLoc = await Location.getCurrentPositionAsync({});
+
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        if (data) {
+            const {location} = data as any;
+            const newLocation = location[0];
+
+            if (newLocation) {
+                if (prevLoc) {
                     const inMeter = geolib.getDistance(
                         {latitude: prevLoc.coords.latitude, longitude: prevLoc.coords.longitude},
-                        {latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude}
+                        {latitude: newLocation.latitude, longitude: newLocation.longitude}
                     );
                     const inKilometer = (inMeter / 1000).toFixed(2);
                     setDistance(parseFloat(inKilometer));
-
-                    // travel time
+    
                     const timeDelta = 2;
                     const speedInMeterPerSecond = inMeter / timeDelta;
-                    // setSpeedStartTime(new Date().getTime());
-
+    
                     if (speedInMeterPerSecond > 0) {
                         setTrackingTime((prevTimeTravel) => prevTimeTravel + timeDelta);
                     }
-
-                    // speed
-                    const speedKph = newLocation.coords.speed ? newLocation.coords.speed * 3.6 : 0;
+    
+                    const speedKph = newLocation.speed ? newLocation.speed * 3.6 : 0;
                     setSpeed(speedKph);
                 }
 
                 setRouteCoordinates((prevCoords) => [
                     ...prevCoords,
                     {
-                        latitude: newLocation.coords.latitude,
-                        longitude: newLocation.coords.longitude
+                        latitude: newLocation.latitude,
+                        longitude: newLocation.longitude
                     }
                 ])
 
                 const message = {
                     deviceId: deviceId,
-                    lat: newLocation.coords.latitude,
-                    lng: newLocation.coords.longitude,
+                    lat: newLocation.latitude,
+                    lng: newLocation.longitude,
                     timestamp: new Date().toISOString(),
                     userId: username,
                     vehicleId: vehicleId,
                     vehicleDetails: vehicleDetails,
                     passengerId: '',
                     passengerDetails: '',
-                    altitude: newLocation.coords.altitude,
-                    accuracy: newLocation.coords.accuracy
+                    altitude: newLocation.altitude,
+                    accuracy: newLocation.accuracy
                 }
 
                 mqttBroker(message);
-
-                setLocation(newLocation);
-            })
-
-            setLocationSubscription(subscription);
+            }
         }
-    }
+    })
 
-    const stopFleetTracking = () => {
-        locationSubscription?.remove();
-        setLocationSubscription(null);
+    useEffect(() => {
+        if (isFleetStop) {
+            locationSubscription?.remove();
+            setLocationSubscription(null);
 
-        // stop sending location
-        // mqttBroker('#');
+            // stop sending location
+            // mqttBroker('#');
 
-        setRoute('');
-        setVehicleId('');
+            setRoute('');
+            setVehicleId('');
 
-        let aveSpeed = getAveSpeed(speed, trackingTime);
-        setAveSpeed(aveSpeed);
-
-        if (paxOnBoard > maxOnBoard) {
-            setMaxOnBoard(paxOnBoard);
+            onMqttClose().then((response) => {
+                console.log(response);
+                nav.navigate('Main', {
+                    route_coordinates: routeCoordinates,
+                    ave_speed: aveSpeed,
+                    max_speed: maxSpeed.toFixed(2),
+                    travel_time: travelTime,
+                    max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
+                    total_trip: board,
+                    trip_start: moment(originTime).format('hh:mm:ss')
+                })
+                // nav.goBack();
+            });
         }
-
-        onMqttClose().then((response) => {
-            console.log(response);
-            nav.navigate('Main', {
-                route_coordinates: routeCoordinates,
-                ave_speed: aveSpeed,
-                max_speed: maxSpeed.toFixed(2),
-                travel_time: travelTime,
-                max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
-                total_trip: board,
-                trip_start: moment(originTime).format('hh:mm:ss')
-            })
-            // nav.goBack();
-        });
-    }
+    }, [isFleetStop, aveSpeed, maxSpeed, travelTime, routeCoordinates])
     
     const handleFleetPause = (i: boolean) => setFleetPause(i);
     
@@ -293,6 +357,15 @@ function Screen() {
                 <Button
                     className='h-fit p-4 bg-custom-customRed rounded-none'
                     onPress={async() => {
+                        let aveSpeed = getAveSpeed(speed, trackingTime);
+                        setAveSpeed(aveSpeed);
+
+                        setTravelTime(formatTravelTime(trackingTime));
+                                
+                        if (paxOnBoard > maxOnBoard) {
+                            setMaxOnBoard(paxOnBoard);
+                        }
+
                         if (Number(speed) > maxSpeed) {
                             setMaxSpeed(Number(speed));
                         }
@@ -320,7 +393,8 @@ function Screen() {
                         });
 
                         closeModal();
-                        stopFleetTracking();
+                        // stopFleetTracking();
+                        setFleetStop(true);
                     }}
                 >
                     <ButtonText className='text-white text-lg font-bold'>
@@ -451,8 +525,8 @@ function Screen() {
                                         name='circle'
                                         size={35}
                                         color={
-                                            acceleration <= 3.5 ? '#40C057' :
-                                            acceleration <= 5.5 ? '#FFA500' :
+                                            acceleration < 2.5 ? '#40C057' :
+                                            acceleration < 3.5 ? '#FFA500' :
                                             '#E0321C'
                                         }
                                     />

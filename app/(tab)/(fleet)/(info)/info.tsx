@@ -173,7 +173,7 @@ export default function FleetInfo({handleAction} : any) {
                                     capacity: capacity
                                 })
 
-                                res && Alert.alert('', 'Connected');
+                                res && Alert.alert('Success', 'Connected');
                             }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>

@@ -1,7 +1,7 @@
 import '@/global.css';
 // react native
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
@@ -133,7 +133,7 @@ export default function TripInfo({ handleAction } : any) {
                                 vehicleDescription: inputDescription
                             });
 
-                            res && handleAction();
+                            res && Alert.alert('Connected');
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
