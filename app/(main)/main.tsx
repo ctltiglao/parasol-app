@@ -1,10 +1,11 @@
 import '@/global.css';
 // react native
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { NavigationProp, useFocusEffect } from '@react-navigation/native';
 // expo
 import { StatusBar } from 'expo-status-bar';
-import { makeRedirectUri, useAuthRequest, useAutoDiscovery, ResponseType } from 'expo-auth-session';
+// import { makeRedirectUri, useAuthRequest, useAutoDiscovery, ResponseType } from 'expo-auth-session';
+import * as AuthSession from 'expo-auth-session';
 // gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
@@ -12,32 +13,36 @@ import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
 
-import String from '@/assets/values/strings';
-import { continueAsGuest, getPermissions, useViewModel } from './mainViewModel';
+import axios from 'axios';
+
+import String, { CLIENT_ID, REALM, SECRET } from '@/assets/values/strings';
+import { continueAsGuest, fetchToken, getPermissions, useViewModel } from './mainViewModel';
 
 const viewModel = useViewModel();
 
-export default function MainScreen({ navigation } : any) {
-  // const { signIn, signOut, state } = useContext(AuthContext);
-  const loginDiscovery = useAutoDiscovery('https://staging-iam.safetravel.ph/realms/safetravelph-cpa');
-  const discovery = {
-    tokenEndpoint: 'https://staging-iam.safetravel.ph/realms/safetravelph-cpa/protocol/openid-connect/token',
-  }
+const REDIRECT_URI = AuthSession.makeRedirectUri({
+  scheme: 'parasol',
+  path: 'com.safetravelph.parasol'
+});
 
-  const [ request, result, promptAsync ] = useAuthRequest(
+export default function MainScreen({ navigation } : any) {
+  const loginDiscovery = AuthSession.useAutoDiscovery(`${REALM}`);
+
+  const [ request, result, promptAsync ] = AuthSession.useAuthRequest(
     {
-      clientId: 'safetravelph-cpa-test',
-      clientSecret: 'Ej37vQTHv5RH3SUREM4vCNnLz4du21Oq',
-      responseType: ResponseType.Code,
-      redirectUri: makeRedirectUri({
-        scheme: 'parasol',
-      }),
+      clientId: CLIENT_ID,
+      clientSecret: SECRET,
+      responseType: AuthSession.ResponseType.Code,
+      redirectUri: REDIRECT_URI,
       scopes: ['openid', 'profile', 'email'],
-      usePKCE: true,
+      usePKCE: true
     }, loginDiscovery
   );
 
-  getPermissions();
+  useEffect(() => {
+    getPermissions();
+    console.log(REDIRECT_URI);
+  }, []);
 
   const toRegister = () => {
     navigation.navigate('Register');
@@ -47,11 +52,19 @@ export default function MainScreen({ navigation } : any) {
     navigation.navigate('Tab');
   }
 
-  useFocusEffect(() => {
-    if (result?.type === 'success') {
-      toTab();
-    }
-  });
+  useFocusEffect(
+    useCallback(() => {
+      if (result?.type === 'success') {
+        const token = async () => {
+          const res = await fetchToken(result.params.code, request?.codeVerifier ?? '');
+          console.log('token: ', JSON.stringify(res));
+        }
+
+        token()
+        toTab();
+      }
+    }, [result])
+  );
 
   return (
       <GluestackUIProvider mode='light'>
@@ -62,7 +75,6 @@ export default function MainScreen({ navigation } : any) {
             <Box className='w-full items-center justify-center mt-24 flex-col p-4'>
               <Button
                 className='bg-custom-primary w-full h-fit p-5 rounded-xl'
-                // onPress={handleLogin}
                 onPress={() => promptAsync()}
               >
                 <ButtonText className='text-black text-lg font-bold'>

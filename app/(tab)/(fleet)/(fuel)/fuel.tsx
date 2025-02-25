@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Platform, ScrollView } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
@@ -56,7 +56,8 @@ function DrawerFuelNavigator() {
 function Screen() {
     const [fuelLogs, setFuelLogs] = useState<any[]>([]);
 
-    const [inputDate, setInputDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
+    // const [inputDate, setInputDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
+    const [inputDate, setInputDate] = useState(new Date());
     const [inputeUpdateDate, setInputUpdateDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
     const [inputStartOdometer, setInputStartOdometer] = useState<Number|null>(null);
     const [inputEndOdometer, setInputEndOdometer] = useState<Number|null>(null);
@@ -75,28 +76,16 @@ function Screen() {
     const showPicker = () => setShowDatePicker(true);
 
     // ios data format
-    const onChangeDate = (event: any, selectedDate: any) => {
-        console.log(selectedDate);
-        let date = moment(selectedDate).format('YYYY-MM-DD')
+    const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        // console.log(selectedDate);
+        // let date = moment(selectedDate).format('YYYY-MM-DD')
+        // setShowDatePicker(false);
+        // setInputDate(date);
+
         setShowDatePicker(false);
-        setInputDate(date);
-    }
-
-    // android date format
-    const dateTextFormat = (input: any) => {
-        let clean = input.replace(/\D/g, '');
-
-        if (clean.length > 4) {
-            clean = clean.slice(0, 4) + '-' + clean.slice(4);
+        if (selectedDate) {
+            setInputDate(selectedDate);
         }
-        if (clean.length > 7) {
-            clean = clean.slice(0, 7) + '-' + clean.slice(7);
-        }
-        if (clean.length > 10) {
-            clean = clean.slice(0, 10);
-        }
-    
-        setInputDate(clean);
     }
 
     useEffect(() => {
@@ -108,13 +97,13 @@ function Screen() {
         }
 
         fetchFuel();
-    })
+    }, [inputDate])
 
     useFocusEffect(
         useCallback(() => {
             closeModal();
 
-            setInputDate(moment(new Date()).format('YYYY-MM-DD'));
+            // setInputDate(moment(new Date()).format('YYYY-MM-DD'));
             setInputUpdateDate(moment(new Date()).format('YYYY-MM-DD'));
             setInputStartOdometer(0);
             setInputEndOdometer(0);
@@ -142,7 +131,7 @@ function Screen() {
                                     <Heading>{moment(res.log_date).format('MMMM DD, YYYY')}</Heading>
                                     <SqlMenu
                                         id={res.id}
-                                        log_date={res.log_date}
+                                        log_date={new Date(res.log_date)}
                                         start_odometer={res.start_odometer}
                                         end_odometer={res.end_odometer}
                                         total_fuel={res.total_fuel}
@@ -194,7 +183,9 @@ function Screen() {
                                 {
                                     Platform.OS === 'ios' ? (
                                         <HStack space='md' className='items-center mb-4'>
-                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>{inputDate.toString()}</Text>
+                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                                { moment(inputDate).format('YYYY-MM-DD') }
+                                            </Text>
                                             <DateTimePicker
                                                 className='w-full h-fit'
                                                 value={moment(inputDate).toDate()}
@@ -205,18 +196,26 @@ function Screen() {
                                         </HStack>
                                     ) : (
                                         <Box>
-                                            <HStack space='md' className='items-center mb-4'>
-                                                <Input
-                                                    className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
-                                                    variant='underlined'
+                                            <HStack space='md' className='justify-between items-center mb-4'>
+                                                <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                                    { moment(inputDate).format('YYYY-MM-DD') }
+                                                </Text>
+                                                
+                                                <Button
+                                                    className='bg-zinc-300 p-1 rounded-md'
+                                                    onPress={() => setShowDatePicker(true)}
                                                 >
-                                                    <InputField
-                                                        onChangeText={dateTextFormat}
-                                                        value={inputDate.toString()}
-                                                        placeholder=''
-                                                        keyboardType='numeric'
+                                                    <ButtonText className='text-black'>CHANGE</ButtonText>
+                                                </Button>
+
+                                                { showDatePicker &&
+                                                    <DateTimePicker
+                                                        value={inputDate}
+                                                        mode='date'
+                                                        display='default'
+                                                        onChange={onChangeDate}
                                                     />
-                                                </Input>
+                                                }
                                             </HStack>
                                         </Box>
                                     )
@@ -290,7 +289,7 @@ function Screen() {
                                 onPress={async() => {
                                     console.log(inputFuelUnit);
                                     await addFuelLog({
-                                        log_date: inputDate,
+                                        log_date: moment(inputDate).format('YYYY-MM-DD'),
                                         date_update: inputeUpdateDate,
                                         start_odometer: inputStartOdometer,
                                         end_odometer: inputEndOdometer,
@@ -323,11 +322,11 @@ function SqlMenu({
     total_fuel,
     consumption_unit
 }: any) {
-    const [inputDate, setInputDate] = useState('');
+    const [inputDate, setInputDate] = useState(new Date());
     const [inputeUpdateDate, setInputUpdateDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
-    const [inputStartOdometer, setInputStartOdometer] = useState(0);
-    const [inputEndOdometer, setInputEndOdometer] = useState(0);
-    const [inputTotalFuel, setInputTotalFuel] = useState(0);
+    const [inputStartOdometer, setInputStartOdometer] = useState<number|null>(0);
+    const [inputEndOdometer, setInputEndOdometer] = useState<number|null>(0);
+    const [inputTotalFuel, setInputTotalFuel] = useState<number|null>(0);
     const [inputFuelUnit, setInputFuelUnit] = useState('');
 
     const [menuVisible, setMenuVisible] = useState(false);
@@ -355,14 +354,20 @@ function SqlMenu({
     }
     const closeModal = () => setModalVisible(false);
 
-    const showPicker = () => setShowDatePicker(true);
+    // const showPicker = () => setShowDatePicker(true);
 
     // ios data format
-    const onChangeDate = (event: any, selectedDate: any) => {
-        console.log(selectedDate);
-        let date = moment(selectedDate).format('YYYY-MM-DD')
+    const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        // console.log(selectedDate);
+        // let date = moment(selectedDate).format('YYYY-MM-DD')
+        // setShowDatePicker(false);
+        // setInputDate(date);
+
         setShowDatePicker(false);
-        setInputDate(date);
+        if (selectedDate) {
+            console.log(selectedDate);
+            setInputDate(selectedDate);
+        }
     }
 
     // android date format
@@ -430,7 +435,9 @@ function SqlMenu({
                             {
                                 Platform.OS === 'ios' ? (
                                     <HStack space='md' className='items-center mb-4'>
-                                        <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>{inputDate.toString()}</Text>
+                                        <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                            { moment(inputDate).format('YYYY-MM-DD') }
+                                        </Text>
                                         <DateTimePicker
                                             value={moment(inputDate).toDate()}
                                             mode='date'
@@ -440,18 +447,26 @@ function SqlMenu({
                                     </HStack>
                                 ) : (
                                     <Box>
-                                        <HStack space='md' className='items-center mb-4'>
-                                            <Input
-                                                className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
-                                                variant='underlined'
+                                        <HStack space='md' className='justify-between items-center mb-4'>
+                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                                { moment(inputDate).format('YYYY-MM-DD') }
+                                            </Text>
+                                                
+                                            <Button
+                                                className='bg-zinc-300 p-1 rounded-md'
+                                                onPress={() => setShowDatePicker(true)}
                                             >
-                                                <InputField
-                                                    onChangeText={dateTextFormat}
-                                                    value={inputDate.toString()}
-                                                    placeholder=''
-                                                    keyboardType='numeric'
+                                                <ButtonText className='text-black'>CHANGE</ButtonText>
+                                            </Button>
+
+                                            { showDatePicker &&
+                                                <DateTimePicker
+                                                    value={inputDate}
+                                                    mode='date'
+                                                    display='default'
+                                                    onChange={onChangeDate}
                                                 />
-                                            </Input>
+                                            }
                                         </HStack>
                                     </Box>
                                 )
@@ -463,8 +478,8 @@ function SqlMenu({
                                 variant='underlined'
                             >
                                 <InputField
-                                    onChangeText={(text) => setInputStartOdometer(parseFloat(text))}
-                                    value={inputStartOdometer.toString()}
+                                    onChangeText={(text) => setInputStartOdometer(text === '' ? null : parseFloat(text))}
+                                    value={inputStartOdometer === null ? '' : inputStartOdometer.toString()}
                                     placeholder=''
                                     keyboardType='numeric'
                                 />
@@ -476,8 +491,8 @@ function SqlMenu({
                                 variant='underlined'
                             >
                                 <InputField
-                                    onChangeText={(text) => setInputEndOdometer(parseFloat(text))}
-                                    value={inputEndOdometer.toString()}
+                                    onChangeText={(text) => setInputEndOdometer(text === '' ? null : parseFloat(text))}
+                                    value={inputEndOdometer === null ? '' : inputEndOdometer.toString()}
                                     placeholder=''
                                     keyboardType='numeric'
                                 />
@@ -489,8 +504,8 @@ function SqlMenu({
                                 variant='underlined'
                             >
                                 <InputField
-                                    onChangeText={(text) => setInputTotalFuel(parseFloat(text))}
-                                    value={inputTotalFuel.toString()}
+                                    onChangeText={(text) => setInputTotalFuel(text === '' ? null : parseFloat(text))}
+                                    value={inputTotalFuel === null ? '' : inputTotalFuel.toString()}
                                     placeholder=''
                                     keyboardType='numeric'
                                 />
@@ -523,9 +538,8 @@ function SqlMenu({
 
                         <Button className='bg-transparent'
                             onPress={async() => {
-                                console.log(inputFuelUnit);
                                 await updateFuelRecord({
-                                    log_date: inputDate,
+                                    log_date: moment(inputDate).format('YYYY-MM-DD'),
                                     date_update: inputeUpdateDate,
                                     start_odometer: inputStartOdometer,
                                     end_odometer: inputEndOdometer,

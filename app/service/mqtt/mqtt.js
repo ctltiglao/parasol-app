@@ -22,6 +22,7 @@ const MQTT_OPTIONS = {
     clean: true
 }
 let client = null;
+let subscribedTopics = new Set();
 
 export const onMqttConnect = () => {
     if (client && client.connected) {
@@ -48,13 +49,24 @@ export const onMqttPublish = (topic, message) => {
     }
 
     try {
-        if (message !== '#') {
+        // if (message !== '#') {
+        //     client.subscribe(topic, (err) => {
+        //         if (!err) {
+        //             client.publish(topic, message);
+        //         }
+        //     })
+        // }
+
+        if (!subscribedTopics.has(topic)) {
             client.subscribe(topic, (err) => {
                 if (!err) {
-                    client.publish(topic, message);
+                    subscribedTopics.add(topic);
+                    console.log(`Subscribed to ${topic}`);
                 }
             })
         }
+
+        client.publish(topic, message);
         
         client.on('message', (topic, message) => {
             if (topic === 'route_puv_vehicle_app_feeds') {

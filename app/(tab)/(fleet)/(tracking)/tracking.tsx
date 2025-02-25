@@ -24,17 +24,19 @@ import { Input, InputField } from '@/components/ui/input';
 import * as geolib from 'geolib';
 import moment from 'moment';
 
-import { getLocationName, getUserState } from '../../tabViewModel';
+import { generateGPX, getLocationName, getUserState } from '../../tabViewModel';
 import { getFleetDetails } from '../fleetViewModel';
 import { getAveSpeed, formatTravelTime, removeItem, mqttBroker, publishBA, setFleetRecord, getTravelSpeed } from './trackingViewModel';
 import { onMqttClose } from '@/app/service/mqtt/mqtt';
 import { onMqttConnect } from '@/app/service/mqtt/mqtt';
+import { getFleetSetting } from '../(settings)/settingsViewModel';
 
 const Drawer = createDrawerNavigator();
 
 interface Coordinate {
     latitude: number;
     longitude: number;
+    timestamp: Date
 }
 
 export default function TrackingScreen() {
@@ -56,6 +58,7 @@ function TrackingNavigator() {
             <Drawer.Screen
                 name='TrackingMain'
                 component={Screen}
+                options={{ unmountOnBlur: true }}
             />
             
         </Drawer.Navigator>
@@ -71,6 +74,8 @@ function Screen() {
     const [location, setLocation] = useState<any|null>(null);
     const [isFleetPause, setFleetPause] = useState(false);
     const [isFleetStop, setFleetStop] = useState(false);
+
+    const [isGpxOn, setGpxOn] = useState(true);
 
     const [route, setRoute] = useState('');
     const [vehicleId, setVehicleId] = useState('');
@@ -115,6 +120,8 @@ function Screen() {
             console.log('AppState changed: ', state);
         })
 
+        getLocation();
+
         // get user info
         getUserState().then((response) => {
             setUsername(response.username);
@@ -137,9 +144,6 @@ function Screen() {
         })
 
         Accelerometer.setUpdateInterval(500);
-    
-        // getLocationPermission();
-        // startFleetTracking();
 
         onMqttConnect().then((response) => {
             console.log(response);
@@ -155,7 +159,10 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
-            getLocation();
+            getFleetSetting().then((setting) => {
+                console.log('Fleet ', setting);
+                setGpxOn(setting.gps_tracks);
+            })
 
             setFleetPause(false);
             setFleetStop(false);
@@ -178,9 +185,10 @@ function Screen() {
             setMaxSpeed(0);
             setTravelTime(0);
             setOriginTime(null);
+            setRouteCoordinates([]);
+
             locationSubscription?.remove();
             setLocationSubscription(null);
-            setRouteCoordinates([]);
 
             closeModal();
 
@@ -237,7 +245,8 @@ function Screen() {
                 ...prevCoords,
                 {
                     latitude: newLocation.coords.latitude,
-                    longitude: newLocation.coords.longitude
+                    longitude: newLocation.coords.longitude,
+                    timestamp: new Date()
                 }
             ])
 
@@ -299,7 +308,8 @@ function Screen() {
                     ...prevCoords,
                     {
                         latitude: newLocation.latitude,
-                        longitude: newLocation.longitude
+                        longitude: newLocation.longitude,
+                        timestamp: new Date()
                     }
                 ])
 
@@ -335,15 +345,19 @@ function Screen() {
 
             onMqttClose().then((response) => {
                 console.log(response);
-                nav.navigate('Main', {
-                    route_coordinates: routeCoordinates,
-                    ave_speed: aveSpeed,
-                    max_speed: maxSpeed.toFixed(2),
-                    travel_time: travelTime,
-                    max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
-                    total_trip: board,
-                    trip_start: moment(originTime).format('hh:mm:ss')
-                })
+                if (isGpxOn) {
+                    generateGPX(routeCoordinates);
+
+                    nav.navigate('Main', {
+                        route_coordinates: routeCoordinates,
+                        ave_speed: aveSpeed,
+                        max_speed: maxSpeed.toFixed(2),
+                        travel_time: travelTime,
+                        max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
+                        total_trip: board,
+                        trip_start: moment(originTime).format('hh:mm:ss')
+                    })
+                }
                 // nav.goBack();
             });
         }

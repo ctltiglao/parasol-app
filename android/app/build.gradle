@@ -86,13 +86,14 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.parasolfleet"
+    namespace 'com.safetravelph.parasol'
     defaultConfig {
-        applicationId "com.parasolfleet"
+        applicationId 'com.safetravelph.parasol'
+        manifestPlaceholders += [appAuthRedirectScheme: 'com.safetravelph.parasol']
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
     }
     signingConfigs {
         debug {

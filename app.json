@@ -8,6 +8,8 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "parasol",
+    "host": "auth",
+    "platforms": ["ios", "android"],
     "splash": {
       "image": "./assets/icons/stph_72.png",
       "resizeMode": "contain",

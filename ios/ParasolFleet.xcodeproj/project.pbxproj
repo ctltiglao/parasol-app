@@ -14,7 +14,7 @@
 		96905EF65AED1B983A6B3ABC /* libPods-ParasolFleet.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-ParasolFleet.a */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		58448E463AA049E38A2F0134 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9454CEAFD71242EF8D80E651 /* noop-file.swift */; };
+		15E1862B2FA64BCB886E0268 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FA4AAFC1934B0FB8F868F5 /* noop-file.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +31,8 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ParasolFleet/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		9454CEAFD71242EF8D80E651 /* noop-file.swift */ = {isa = PBXFileReference; name = "noop-file.swift"; path = "ParasolFleet/noop-file.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		C8FA4AAFC1934B0FB8F868F5 /* noop-file.swift */ = {isa = PBXFileReference; name = "noop-file.swift"; path = "ParasolFleet/noop-file.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		61EB936101A64DEDB314D9B7 /* ParasolFleet-Bridging-Header.h */ = {isa = PBXFileReference; name = "ParasolFleet-Bridging-Header.h"; path = "ParasolFleet/ParasolFleet-Bridging-Header.h"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,7 +57,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				9454CEAFD71242EF8D80E651 /* noop-file.swift */,
+				C8FA4AAFC1934B0FB8F868F5 /* noop-file.swift */,
+				61EB936101A64DEDB314D9B7 /* ParasolFleet-Bridging-Header.h */,
 			);
 			name = ParasolFleet;
 			sourceTree = "<group>";
@@ -196,6 +198,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
+				96F1593947A5451DBED4C3ED /* ParasolFleet-Bridging-Header.h in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,7 +274,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				58448E463AA049E38A2F0134 /* noop-file.swift in Sources */,
+				15E1862B2FA64BCB886E0268 /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -305,6 +308,8 @@
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				TARGETED_DEVICE_FAMILY = "1";
+				SWIFT_OBJC_BRIDGING_HEADER = ParasolFleet/ParasolFleet-Bridging-Header.h;
+				CODE_SIGN_ENTITLEMENTS = ParasolFleet/ParasolFleet.entitlements;
 			};
 			name = Debug;
 		};
@@ -329,6 +334,8 @@
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 				TARGETED_DEVICE_FAMILY = "1";
+				SWIFT_OBJC_BRIDGING_HEADER = ParasolFleet/ParasolFleet-Bridging-Header.h;
+				CODE_SIGN_ENTITLEMENTS = ParasolFleet/ParasolFleet.entitlements;
 			};
 			name = Release;
 		};

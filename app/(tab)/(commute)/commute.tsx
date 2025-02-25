@@ -37,8 +37,9 @@ import CommuteSettingsScreen from './(settings)/settings';
 
 import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord, removeItem } from './commuteViewModel';
 import { modeOptions } from '@/assets/values/strings';
-import { getLocationName, getUserState } from '../tabViewModel';
+import { generateGPX, getLocationName, getUserState } from '../tabViewModel';
 import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
+import { getCommuteSetting } from './(settings)/settingsViewModel';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -47,6 +48,7 @@ const Stack = createNativeStackNavigator();
 interface Coordinate {
     latitude: number;
     longitude: number;
+    timestamp: Date
 }
 
 export default function CommuteScreen() {
@@ -168,6 +170,7 @@ function Screen() {
     const LOCATION_TRACKING = 'background-location-task';
     // const [appState, setAppState] = useState(AppState.currentState);
 
+    const [isGpxOn, setGpxOn] = useState(true);
     const mapRef = useRef<MapView>(null);
     const [selectedMode, setSelectedMode] = useState<string | null>(null);
     const [showModalSelect, setShowModalSelect] = useState(false);
@@ -191,6 +194,8 @@ function Screen() {
 
     const toggleOverlayInfo = () => {
         setOverlayInfoVisible(!isOverlayInfoVisible);
+        // locationSubscription?.remove();
+        // setLocationSubscription(null);
 
         getCommuteDetails().then((response) => {
             setVehicleId(response.vehicleId);
@@ -202,8 +207,22 @@ function Screen() {
     const toggleOverlayFeed = () => setOverlayFeedVisible(!isOverlayFeedVisible);
 
     const getLocation = async () => {
-        const loc = await Location.getCurrentPositionAsync({});
+        const loc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High
+        });
         setLocation(loc);
+
+        if (location && mapRef.current) {
+            mapRef.current.animateToRegion(
+                {
+                    latitude: loc.coords.latitude,
+                    longitude: loc.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01
+                },
+                1000
+            );
+        }
     }
 
     useEffect(() => {
@@ -211,14 +230,11 @@ function Screen() {
             console.log('AppState changed: ', state);
         })
 
-        // getUserState().then((response) => {
-        //     setUsername(response.username);
-        // })
-
-        // getLocationPermission();
+        getLocation();
 
         return () => subscription.remove();
     }, []);
+    // }, [location]);
 
     // refresh tab
     useFocusEffect(
@@ -227,7 +243,10 @@ function Screen() {
                 setUsername(response.username);
             })
 
-            getLocation();
+            getCommuteSetting().then((setting) => {
+                console.log('Commute ', setting);
+                setGpxOn(setting.gps_tracks);
+            })
 
             setSelectedMode(null);
             setShowModalSelect(false);
@@ -249,7 +268,7 @@ function Screen() {
             setOverlayFeedVisible(false);
 
             removeItem();
-        }, [])
+        }, [isGpxOn])
     );
 
     const startCommuteTracking = async () => {
@@ -277,7 +296,7 @@ function Screen() {
 
             setRouteCoordinates((prevCoords) => [
                 ...prevCoords,
-                { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude }
+                { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date() }
             ])
 
             const message = {
@@ -322,7 +341,7 @@ function Screen() {
 
                 setRouteCoordinates((prevCoords) => [
                     ...prevCoords,
-                    { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude }
+                    { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date() }
                 ])
     
                 const message = {
@@ -437,6 +456,10 @@ function Screen() {
                                             [
                                                 {text: 'Close', onPress: () => {
                                                     toggleOverlayRate();
+
+                                                    if (isGpxOn) {
+                                                        generateGPX(routeCoordinates);
+                                                    }
                                                 }},
                                             ]
                                         )

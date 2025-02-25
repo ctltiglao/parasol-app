@@ -24,6 +24,10 @@ import AboutScreen from '../(drawer)/(about)/about';
 import SettingsScreen from '../(drawer)/(settings)/settings';
 import LoginScreen from '../(main)/main';
 
+import { getCommuteSetting } from './(commute)/(settings)/settingsViewModel';
+import { getFleetSetting } from './(fleet)/(settings)/settingsViewModel';
+import { onMqttClose } from '../service/mqtt/mqtt';
+
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -48,6 +52,15 @@ export default function TabScreen() {
 }
 
  function TabNavigator() {
+    useEffect(() => {
+        getCommuteSetting().then((setting) => {
+            // console.log('Commute ', setting);
+        });
+        getFleetSetting().then((setting) => {
+            // console.log('Fleet ', setting);
+        });
+    })
+
     return (
         <Tab.Navigator
             screenOptions = {({ route } : any) => ({
@@ -84,6 +97,8 @@ export default function TabScreen() {
             screenListeners={({ navigation, route } : any) => ({
                 tabPress: (e) => {
                     e.preventDefault();
+
+                    const currRouteName = navigation.getState().routes[navigation.getState().index].name;
                     
                     var currentTab;
                     if (navigation.getState().index === 0) {
@@ -98,6 +113,10 @@ export default function TabScreen() {
                         currentTab = 'Profile';
                     }
 
+                    if (currRouteName === route.name) {
+                        return;
+                    }
+
                     Alert.alert(
                         'Confirm',
                         `Are you sure you want to exit ${currentTab}?`,
@@ -105,6 +124,7 @@ export default function TabScreen() {
                             {text: 'No', style: 'cancel'},
                             {text: 'Yes', onPress: () => {
                                 navigation.navigate(route.name);
+                                onMqttClose();
                                 console.log(navigation.navigate(route));
                             }},
                         ]

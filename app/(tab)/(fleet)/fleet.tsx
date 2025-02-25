@@ -126,19 +126,22 @@ function Screen() {
     }
 
     const getLocation = async () => {
-        const loc = await Location.getCurrentPositionAsync({});
-
-        mapRef.current?.animateToRegion(
-            {
-                latitude: loc.coords.latitude,
-                longitude: loc.coords.longitude,
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01
-            },
-            1000
-        );
-
+        const loc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High
+        });
         setLocation(loc);
+
+        if (location && mapRef.current) {
+            mapRef.current.animateToRegion(
+                {
+                    latitude: loc.coords.latitude,
+                    longitude: loc.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01
+                },
+                1000
+            );
+        }
     }
 
     useEffect(() => {
@@ -155,6 +158,7 @@ function Screen() {
             setTripStart(navRoute.params.trip_start);
         }
     }, [navRoute.params]);
+    // }, [navRoute.params, location]);
 
     // refresh tab
     useEffect(() => {
@@ -168,6 +172,12 @@ function Screen() {
 
         return unsubscribe;
     }, [nav])
+
+    useFocusEffect(
+        useCallback(() => {
+            setIsOverlayInfoVisible(false);
+        }, [])
+    )
 
     return (
         <GluestackUIProvider mode='light'>

@@ -1,6 +1,7 @@
 import '@/global.css';
 // react native
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useCallback, useEffect, useState } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 // expo
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,8 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Switch } from '@/components/ui/switch';
 import { Divider } from '@/components/ui/divider';
+
+import { getCommuteSetting, updateCommuteSetting } from './settingsViewModel';
 
 const Drawer = createDrawerNavigator();
 
@@ -39,7 +42,38 @@ function DrawerHistorybotNavigator() {
 }
 
 function Screen() {
-    
+    const [gpsTracks, setGpsTracks] = useState<boolean|null>(true);
+    const [cleanGps, setCleanGps] = useState<boolean|null>(true);
+    const [feed, setFeed] = useState<boolean|null>(true);
+    const [cleanFeed, setCleanFeed] = useState<boolean|null>(true);
+
+    useEffect(() => {
+        getCommuteSetting().then((setting) => {
+            console.log(setting);
+            setGpsTracks(setting.gps_tracks);
+            setCleanGps(setting.clean_gps);
+            setFeed(setting.feed);
+            setCleanFeed(setting.clean_feed);
+        })
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            updateCommuteSetting({
+                gps_tracks: gpsTracks?? true,
+                clean_gps: cleanGps?? true,
+                feed: feed?? true,
+                clean_feed: cleanFeed?? true
+            }).then((res) => {
+                console.log(res);
+            })
+
+            // return() => {
+            //     console.log('GPS TRACKS IS ON ', gpsTracks);
+            // }
+            
+        }, [gpsTracks, cleanGps, feed, cleanFeed])
+    )
     
     return (
         <GluestackUIProvider mode='light'>
@@ -54,7 +88,8 @@ function Screen() {
                         </VStack>
                         <Switch
                             size='sm'
-                            value={true}
+                            value={gpsTracks ?? true}
+                            onValueChange={(value) => setGpsTracks(value)}
                             trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                         />
                     </HStack>
@@ -66,7 +101,8 @@ function Screen() {
                         </VStack>
                         <Switch
                             size='sm'
-                            value={true}
+                            value={cleanGps ?? true}
+                            onValueChange={(value) => setCleanGps(value)}
                             trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                         />
                     </HStack>
@@ -82,7 +118,8 @@ function Screen() {
                         </VStack>
                         <Switch
                             size='sm'
-                            value={true}
+                            value={feed ?? true}
+                            onValueChange={(value) => setFeed(value)}
                             trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                         />
                     </HStack>
@@ -94,7 +131,8 @@ function Screen() {
                         </VStack>
                         <Switch
                             size='sm'
-                            value={true}
+                            value={cleanFeed ?? true}
+                            onValueChange={(value) => setCleanFeed(value)}
                             trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                         />
                     </HStack>

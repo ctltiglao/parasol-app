@@ -1,7 +1,6 @@
 // react native
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
-import * as Location from 'expo-location';
 // gluestack
 
 import { addCommuteRecord, onCreate } from "@/app/service/sql/tripHistoryDBHelper";
@@ -79,11 +78,11 @@ export const setCommuteRecord = async ({
     }
 }
 
-let lastSentLocation: {
-    lat: number;
-    lng: number;
-    timestamp: string;
-} | null = null;
+// let lastSentLocation: {
+//     lat: number;
+//     lng: number;
+//     timestamp: string;
+// } | null = null;
 
 export const mqttBroker = async(message: any) => {
     // console.log(message);
