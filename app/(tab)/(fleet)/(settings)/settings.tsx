@@ -1,6 +1,7 @@
 import '@/global.css';
 // react native
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect, useState } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { ScrollView } from 'react-native';
 // expo
@@ -14,6 +15,8 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Switch } from '@/components/ui/switch';
 import { Divider } from '@/components/ui/divider';
+
+import { getFleetSetting, updateFleetSetting } from './settingsViewModel';
 
 const Drawer = createDrawerNavigator();
 
@@ -40,6 +43,43 @@ function DrawerHistorybotNavigator() {
 }
 
 function Screen() {
+    const [telematics, setTelematics] = useState<boolean|null>(true);
+    const [gpsTracks, setGpsTracks] = useState<boolean|null>(true);
+    const [cleanGps, setCleanGps] = useState<boolean|null>(true);
+    const [feed, setFeed] = useState<boolean|null>(true);
+    const [cleanFeed, setCleanFeed] = useState<boolean|null>(true);
+    const [vehicle, setVehicle] = useState<boolean|null>(true);
+    const [passenger, setPassenger] = useState<boolean|null>(true);
+    
+    useEffect(() => {
+        getFleetSetting().then((setting) => {
+            console.log(setting);
+            setTelematics(setting.telematics);
+            setGpsTracks(setting.gps_tracks);
+            setCleanGps(setting.clean_gps);
+            setFeed(setting.feed);
+            setCleanFeed(setting.clean_feed);
+            setVehicle(setting.vehicle);
+            setPassenger(setting.passenger);
+        })
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            updateFleetSetting({
+                telematics: telematics ?? true,
+                gps_tracks: gpsTracks ?? true,
+                clean_gps: cleanGps ?? true,
+                feed: feed ?? true,
+                clean_feed: cleanFeed ?? true,
+                vehicle: vehicle ?? true,
+                passenger: passenger ?? true
+            }).then((res) => {
+                console.log(res);
+            })
+        }, [telematics, gpsTracks, cleanGps, feed, cleanFeed, vehicle, passenger])
+    )
+
     return (
         <GluestackUIProvider mode='light'>
             <Box className='bg-white flex-1 w-full h-full'>
@@ -54,7 +94,8 @@ function Screen() {
                             </VStack>
                             <Switch
                                 size='sm'
-                                value={true}
+                                value={telematics ?? true}
+                                onValueChange={(value) => setTelematics(value)}
                                 trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                             />
                         </HStack>
@@ -71,7 +112,8 @@ function Screen() {
                             </VStack>
                             <Switch
                                 size='sm'
-                                value={true}
+                                value={gpsTracks ?? true}
+                                onValueChange={(value) => setGpsTracks(value)}
                                 trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                             />
                         </HStack>
@@ -83,7 +125,8 @@ function Screen() {
                             </VStack>
                             <Switch
                                 size='sm'
-                                value={true}
+                                value={cleanGps ?? true}
+                                onValueChange={(value) => setCleanGps(value)}
                                 trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                             />
                         </HStack>
@@ -100,7 +143,8 @@ function Screen() {
                             </VStack>
                             <Switch
                                 size='sm'
-                                value={true}
+                                value={feed ?? true}
+                                onValueChange={(value) => setFeed(value)}
                                 trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                             />
                         </HStack>
@@ -112,7 +156,8 @@ function Screen() {
                             </VStack>
                             <Switch
                                 size='sm'
-                                value={true}
+                                value={cleanFeed ?? true}
+                                onValueChange={(value) => setCleanFeed(value)}
                                 trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                             />
                         </HStack>
@@ -129,7 +174,8 @@ function Screen() {
                             </VStack>
                             <Switch
                                 size='sm'
-                                value={true}
+                                value={vehicle ?? true}
+                                onValueChange={(value) => setVehicle(value)}
                                 trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                             />
                         </HStack>
@@ -141,7 +187,8 @@ function Screen() {
                             </VStack>
                             <Switch
                                 size='sm'
-                                value={true}
+                                value={passenger ?? true}
+                                onValueChange={(value) => setPassenger(value)}
                                 trackColor={{ true: '#0038A8', false: '#FFFFFF' }}
                             />
                         </HStack>

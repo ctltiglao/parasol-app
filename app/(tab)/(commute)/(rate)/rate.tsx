@@ -4,19 +4,19 @@ import { useState, useEffect } from 'react';
 import { ScrollView } from 'react-native';
 // expo
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Location from 'expo-location';
 import * as Device from 'expo-device';
 // gluestack
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
-import { Textarea, TextareaInput } from '@/components/ui/textarea';
 import { RadioGroup, RadioIndicator, Radio, RadioLabel } from '@/components/ui/radio';
 
 import { handleRating, publishRating } from './rateViewModel';
 import { getUserState } from '../../tabViewModel';
 import { getCommuteDetails } from '../commuteViewModel';
+import { HStack } from '@/components/ui/hstack';
+import { Textarea, TextareaInput } from '@/components/ui/textarea';
 
 export default function TripRate({ handleAction, location } : any) {
     const smileys = [
@@ -80,8 +80,8 @@ export default function TripRate({ handleAction, location } : any) {
     }, [])
 
     return (
-        <Box className='p-4'>
-            <Box className='flex-row w-full justify-between'>
+        <Box className='bg-white p-4'>
+            <HStack className='w-full justify-between'>
                 <Text className='text-xl font-medium'>Please rate your trip.</Text>
                 <Button
                     className='h-fit bg-typography-gray p-2 left-0 border-1 rounded-md'
@@ -91,7 +91,7 @@ export default function TripRate({ handleAction, location } : any) {
                         CLOSE
                     </ButtonText>
                 </Button>
-            </Box>
+            </HStack>
 
             <Box className='mt-4 mb-20 pl-6 pr-6'>
                 <ScrollView showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets={true}>
@@ -235,21 +235,6 @@ export default function TripRate({ handleAction, location } : any) {
                         </RadioGroup>
                     </VStack>
 
-                    {/* <VStack className='mt-2'>
-                        <Text size='md'>Comments and suggestions:</Text>
-                        <Textarea isDisabled={true}
-                            className='bg-white mt-3 border-2 border-custom-secondary rounded-md h-[30%]'
-                        >
-                            <TextareaInput
-                                value={inputComment}
-                                onChangeText={setInputComment}
-                                className={'text-lg font-medium p-2' +
-                                    inputComment ? 'text-black' : 'text-zinc-700'}
-                                placeholder='Comments and suggestions'
-                            />
-                        </Textarea>
-                    </VStack> */}
-
                     <VStack className='mt-4 items-center'>
                         <Text size='lg' className='font-medium'>What is your overall rating?</Text>
                         <RadioGroup onChange={toggleSelectedOverall} className='w-full flex-row justify-between pl-4 pr-4'>
@@ -270,24 +255,20 @@ export default function TripRate({ handleAction, location } : any) {
                         </RadioGroup>
                     </VStack>
                 
-                    <VStack className='mt-4 mb-20 items-center' space='md'>
-                        <Text size='md'>Comments and suggestions:</Text>
-                        <Textarea isDisabled={false}
-                            className='bg-white border-2 border-custom-secondary rounded-md h-[30%]'
-                        >
+                    <VStack space='md' className='mt-4 mb-32 items-center'>
+                        <Textarea className='bg-white border-2 border-custom-secondary rounded-md h-[30%]'>
                             <TextareaInput
                                 value={inputComment}
                                 onChangeText={setInputComment}
-                                className={'text-lg font-medium p-2' +
-                                    inputComment ? 'text-black' : 'text-zinc-700'}
+                                className='text-lg font-medium p-2 text-black'
                                 placeholder='Comments and suggestions'
                             />
                         </Textarea>
 
                         <Button
-                            className='w-1/2 h-fit p-4 bg-custom-secondary'
+                            className='w-1/2 h-fit p-4 bg-custom-secondary rounded-none'
                             onPress={() => {
-                                if (vehicleId !== '') {
+                                // if (vehicleId !== '') {
                                     const description = handleRating({
                                         isSelectedCondition,
                                         isSelectedComfort,
@@ -314,9 +295,9 @@ export default function TripRate({ handleAction, location } : any) {
                                     }
                                         
                                     publishRating(message);
-                                } else {
-                                    alert('Please set commute information');
-                                }
+                                // } else {
+                                //     alert('Please set commute information');
+                                // }
                             }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>

@@ -1,10 +1,13 @@
 // react native
-import { Linking } from "react-native";
+import { Alert, Linking } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
 import * as Device from 'expo-device';
 import * as Location from 'expo-location';
+import * as AuthSession from 'expo-auth-session';
 // gluestack
+
+import { CLIENT_ID, REALM, SECRET } from '@/assets/values/strings';
 
 // open privacy policy
 export const useViewModel = () => {
@@ -21,22 +24,32 @@ export const useViewModel = () => {
 // location permission
 export const getPermissions = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
+    const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
     const serviceEnabled = await Location.hasServicesEnabledAsync();
-
-    await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High
-    });
 
     if (!serviceEnabled) {
         return;
     }
 
     if (status !== 'granted') {
-        alert('Permmission to access location was denied');
+        Alert.alert(
+            'Permission to access location was denied',
+            'Location permission is required to use the app',
+        )
         return;
-    } else {
-        await Location.requestBackgroundPermissionsAsync();
     }
+
+    if (bgStatus !== 'granted') {
+        Alert.alert(
+            'Permission to access background location was denied',
+            'Background location permission is required to use the app',
+        )
+        return;
+    }
+
+    await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High
+    });
 }
 
 // =====> GUEST USER
@@ -89,4 +102,37 @@ export const continueAsGuest = async() => {
         return false;
     }    
 }
-// =====> GUEST USER
+// =====> GUEST 
+const REDIRECT_URI = AuthSession.makeRedirectUri();
+const DISCOVERY = {
+  authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,
+  tokenEndpoint: `${REALM}/protocol/openid-connect/token`,
+  revocationEndpoint: `${REALM}/protocol/openid-connect/logout`
+}
+
+// =====> KEYCLOAK
+// get token
+export async function fetchToken(code: string, code_verifier: string) {
+    // console.log(code_verifier);
+  
+    const response = await fetch(DISCOVERY.tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: SECRET,
+        grant_type: 'authorization_code',
+        code: code,
+        code_verifier: code_verifier,
+        redirect_uri: REDIRECT_URI
+      }).toString()
+    });
+  
+    const data = await response.json();
+  
+    return data;
+}
+
+// =====> KEYCLOAK

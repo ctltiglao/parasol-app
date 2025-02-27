@@ -1,3 +1,0 @@
-// react native
-// expo
-// gluestack

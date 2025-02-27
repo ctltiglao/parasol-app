@@ -68,7 +68,7 @@ export const addCommuteRecord = async ({
 
         console.log(origin, destination, commute_date);
         if (result.changes > 0) {
-            alert('Commute record added successfully');
+            console.log('Commute record added successfully');
         }
     } catch (error) {
         alert(`Failed to add commute record ${error}`);
@@ -77,7 +77,7 @@ export const addCommuteRecord = async ({
 
 export const allCommuteRecords = async () => {
     try {
-        const result = await db.getAllAsync('SELECT * FROM CommuteRecord');
+        const result = await db.getAllAsync('SELECT * FROM CommuteRecord ORDER BY id DESC');
 
         return result;
     } catch (error) {

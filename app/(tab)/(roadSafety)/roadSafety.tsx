@@ -1,11 +1,11 @@
 import '@/global.css';
 // react native
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MapView, { MapMarker, MapPressEvent, PROVIDER_GOOGLE} from 'react-native-maps';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { NavigationProp, useFocusEffect, useNavigation } from '@react-navigation/native';
 // expo
 import * as Location from 'expo-location';
 // gluestack
@@ -21,79 +21,6 @@ const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
 
 export default function RoadSafetyScreen() {
-    const mapRef = useRef<MapView>(null);
-    const [location, setLocation] = useState<any|null>(null);
-    const [locationPress, setLocationPress] = useState<any|null>(null);
-    
-    useEffect(() => {
-        getLocationPermission();
-    
-        const getLocation = async () => {
-            const loc = await Location.getCurrentPositionAsync({});
-            setLocationPress(loc);
-    
-            mapRef.current?.animateToRegion(
-                {
-                    latitude: loc.coords.latitude,
-                    longitude: loc.coords.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01
-                },
-                1000
-            );
-    
-            setLocation(loc);
-        }
-
-        getLocation();
-    }, []);
-    
-    const handleMapPress = (event: MapPressEvent) => {
-        const { coordinate } = event.nativeEvent;
-        setLocationPress({
-            latitude: coordinate.latitude,
-            longitude: coordinate.longitude
-        });
-        console.log(coordinate);
-    }
-
-    const Screen = ({ navigation }: { navigation: NavigationProp<any, any> }) => {
-        return (
-            <GluestackUIProvider mode='light'>
-                <Box className='flex-1 w-full h-full items justify-center'>
-                    <Box className='flex-1 h-full'>
-                        {
-                            location && (
-                                <MapView
-                                    ref={mapRef}
-                                    // provider={PROVIDER_GOOGLE}
-                                    style={StyleSheet.absoluteFillObject}
-                                    showsUserLocation={true}
-                                    initialRegion={{
-                                        latitude: location.coords.latitude,
-                                        longitude: location.coords.longitude,
-                                        latitudeDelta: 0.0922,
-                                        longitudeDelta: 0.0421
-                                    }}
-                                    onPress={(e) => {
-                                        console.log(e.nativeEvent.coordinate);
-                                        navigation.navigate('RoadModule');
-    
-                                        if (Platform.OS === 'ios') {
-                                            console.warn('ios');
-                                        } else if (Platform.OS === 'android') {
-                                            console.warn('android');
-                                        }
-                                    }}
-                                />
-                            )
-                        }
-                    </Box>
-                </Box>
-            </GluestackUIProvider>
-        );
-    }
-
     return (
         <GluestackUIProvider mode='light'>
             <Drawer.Navigator
@@ -112,6 +39,81 @@ export default function RoadSafetyScreen() {
                     options={{ headerShown: false }}
                 />
             </Drawer.Navigator>
+        </GluestackUIProvider>
+    );
+}
+
+function Screen({ navigation }: { navigation: NavigationProp<any, any> }) {
+    const mapRef = useRef<MapView>(null);
+    const [location, setLocation] = useState<any|null>(null);
+    const [locationPress, setLocationPress] = useState<any|null>(null);
+
+    const getLocation = async () => {
+        const loc = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High
+        });
+        setLocation(loc);
+        // setLocationPress(loc);
+
+        // if (location && mapRef.current) {
+            mapRef.current?.animateToRegion(
+                {
+                    latitude: loc.coords.latitude,
+                    longitude: loc.coords.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01
+                },
+                1000
+            );
+        // }
+    }
+    
+    useEffect(() => {
+        getLocation();
+    }, [location]);
+    
+    const handleMapPress = (event: MapPressEvent) => {
+        const { coordinate } = event.nativeEvent;
+        setLocationPress({
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude
+        });
+        console.log(coordinate);
+    }
+
+    return (
+        <GluestackUIProvider mode='light'>
+            <Box className='flex-1 w-full h-full items justify-center'>
+                <Box className='flex-1 h-full'>
+                    {
+                        location && (
+                            <MapView
+                                ref={mapRef}
+                                style={StyleSheet.absoluteFillObject}
+                                showsUserLocation={true}
+                                initialRegion={{
+                                    latitude: location.coords.latitude,
+                                    longitude: location.coords.longitude,
+                                    latitudeDelta: 0.0922,
+                                    longitudeDelta: 0.0421
+                                }}
+                                onPress={(e) => {
+                                    console.log(e.nativeEvent.coordinate);
+                                    navigation.navigate('RoadModule', {
+                                        location: e.nativeEvent.coordinate
+                                    });
+
+                                    if (Platform.OS === 'ios') {
+                                        console.warn('ios');
+                                    } else if (Platform.OS === 'android') {
+                                        console.warn('android');
+                                    }
+                                }}
+                            />
+                        )
+                    }
+                </Box>
+            </Box>
         </GluestackUIProvider>
     );
 }

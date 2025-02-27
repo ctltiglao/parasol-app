@@ -5,7 +5,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { addCommuteRecord, onCreate } from "@/app/service/sql/tripHistoryDBHelper";
 import { Tracking } from "@/app/service/mqtt/proto/Tracking.proto.js";
-import { onMqttConnect } from "@/app/service/mqtt/mqtt";
+import { onMqttConnect, onMqttPublish } from "@/app/service/mqtt/mqtt";
+
+// remove previous commute vehicle
+export const removeItem = async () => {
+    try {
+        await AsyncStorage.removeItem('CommuteDetails');
+        // console.log('removed');
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 export const getQuickTourPref = async () => {
     try {
@@ -68,6 +78,12 @@ export const setCommuteRecord = async ({
     }
 }
 
+// let lastSentLocation: {
+//     lat: number;
+//     lng: number;
+//     timestamp: string;
+// } | null = null;
+
 export const mqttBroker = async(message: any) => {
     // console.log(message);
     const MQTT_OPTIONS = {
@@ -93,12 +109,8 @@ export const mqttBroker = async(message: any) => {
         // console.log('Tracking data', trackingData)
 
         const buffer = Tracking.encode(trackingData).finish();
-        // console.warn(buffer);
-
-        // const decoded = TripInfo.decode(buffer);
-        // console.warn(decoded);
-
-        onMqttConnect('route_puv_vehicle_app_feeds', buffer);
+        
+        onMqttPublish('route_puv_vehicle_app_feeds', buffer);
     } catch (error) {
         console.error('Error in mqttBroker', error);
     }

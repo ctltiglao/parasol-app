@@ -89,6 +89,7 @@ android {
     namespace 'com.safetravelph.parasol'
     defaultConfig {
         applicationId 'com.safetravelph.parasol'
+        manifestPlaceholders += [appAuthRedirectScheme: 'com.safetravelph.parasol']
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

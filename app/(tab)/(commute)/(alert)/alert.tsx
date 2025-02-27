@@ -84,7 +84,7 @@ export default function TripAlert({ handleAction } : any) {
                 </Button>
             </Box>
 
-            <VStack className='flex-col mt-4'>
+            <VStack className='flex-col mt-4 mb-20'>
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <Checkbox size='md'
                         className='bg-white border-custom-secondary border-2 rounded-md p-2'
@@ -93,23 +93,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md'
-                                    className='border-zinc-300 bg-transparent border-1 rounded-md'
-                                >
-                                    {
-                                        selectedCheckboxes.lack ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.lack ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Lack of public transport
                                 </CheckboxLabel>
@@ -125,21 +121,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
-                                    {
-                                        selectedCheckboxes.violation ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.violation ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Violation of minimum health standards
                                 </CheckboxLabel>
@@ -155,21 +149,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
-                                    {
-                                        selectedCheckboxes.fare ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.fare ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Fare overpricing
                                 </CheckboxLabel>
@@ -185,21 +177,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
-                                    {
-                                        selectedCheckboxes.smoke ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.smoke ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Smoke belching
                                 </CheckboxLabel>
@@ -215,21 +205,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='flex-row w-full justify-between'>
                             <HStack className='flex-row w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
-                                    {
-                                        selectedCheckboxes.overspeed ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.overspeed ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Overspeeding
                                 </CheckboxLabel>
@@ -245,21 +233,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='flex-row w-full justify-between'>
                             <HStack className='flex-row w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
-                                    {
-                                        selectedCheckboxes.quality ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.quality ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Poor vehicle quality
                                 </CheckboxLabel>
@@ -275,21 +261,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='flex-row w-full justify-between'>
                             <HStack className='flex-row w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
-                                    {
-                                        selectedCheckboxes.unpro ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.unpro ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Unprofessional driver
                                 </CheckboxLabel>
@@ -305,21 +289,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                <CheckboxIndicator size='md' className='border-zinc-300 bg-transparent border-1 rounded-md'>
-                                    {
-                                        selectedCheckboxes.overload ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
-                                </CheckboxIndicator>
+                                {
+                                    selectedCheckboxes.overload ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Overloading
                                 </CheckboxLabel>
@@ -335,19 +317,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                    {
-                                        selectedCheckboxes.line ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
+                                {
+                                    selectedCheckboxes.line ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Out-of-line operation
                                 </CheckboxLabel>
@@ -363,19 +345,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                    {
-                                        selectedCheckboxes.crash ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
+                                {
+                                    selectedCheckboxes.crash ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Road crash
                                 </CheckboxLabel>
@@ -391,19 +373,19 @@ export default function TripAlert({ handleAction } : any) {
                     >
                         <HStack className='w-full justify-between'>
                             <HStack className='w-fit h-fit items-center'>
-                                    {
-                                        selectedCheckboxes.crime ? (
-                                            <MaterialIcons size={24}
-                                                color='#0038A8'
-                                                name='check-box'
-                                            />
-                                        ) : (
-                                            <MaterialIcons size={24}
-                                                color='gray'
-                                                name='check-box-outline-blank'
-                                            />
-                                        )
-                                    }
+                                {
+                                    selectedCheckboxes.crime ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
                                 <CheckboxLabel size='md' className='text-black font-medium'>
                                     Crime event
                                 </CheckboxLabel>
@@ -412,7 +394,7 @@ export default function TripAlert({ handleAction } : any) {
                         </HStack>
                     </Checkbox>
 
-                    <Button className='bg-custom-secondary h-fit mt-5 mb-20 ms-20 me-20 p-4'
+                    <Button className='bg-custom-secondary h-fit rounded-none mt-5 mb-20 ms-20 me-20 p-4'
                         onPress={() => {
                             if (vehicleId !== '') {
                                 const description = handleAlert({ selectedCheckboxes });

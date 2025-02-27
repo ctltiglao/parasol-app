@@ -10,6 +10,7 @@ import { connect as mqttConnect } from "mqtt";
 
 import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
+// import { resolve } from 'path';
 
 if (!global.Buffer) global.Buffer = Buffer;
 if (!global.atob) global.atob = decode;
@@ -20,99 +21,89 @@ const MQTT_OPTIONS = {
     clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
     clean: true
 }
+let client = null;
+let subscribedTopics = new Set();
 
-export const onMqttConnect = (topic, message) => {
-    const client = mqttConnect(MQTT_URL, MQTT_OPTIONS);
-    console.log(topic);
+export const onMqttConnect = () => {
+    if (client && client.connected) {
+        return Promise.resolve(true);
+    }
+
+    client = mqttConnect(MQTT_URL, MQTT_OPTIONS);
+    return new Promise((resolve, reject) => {
+        client.on('connect', () => {
+            console.log('MQTT: Connected');
+            resolve(true)
+        });
+
+        client.on('error', (error) => {
+            alert('Failed to connect to MQTT: ', error.error);
+            reject(false)
+        });
+    })
+}
+
+export const onMqttPublish = (topic, message) => {
+    if (!client || !client.connected) {
+        return false;
+    }
 
     try {
-        client.on('connect', () => {
-            // console.log(MQTT_OPTIONS.clientId);
-            // console.log('Connected to MQTT broker');
-        })
-    
-        if (message !== '#') {
-            if (topic !== 'route_puv_vehicle_app_feeds') {
-                // console.log(message);
-                client.subscribe(topic, (err) => {
-                    if (!err) {
-                        // console.warn(topic);
-                        client.publish(topic, message);
-                    }
-                });
-            } else {
-                client.subscribe(topic, (err) => {
-                    if (!err) {
-                        // console.log(topic);
-                        client.publish(topic, message);
-                    }
-                });
-            }
-        }
-    
-        if (message === '#') {
-            client.on('close', () => {
-                // console.log('Connection to MQTT broker closed');
-            });
-            client.end();
-        }
-    
-        client.on('message', (topic, message) => {
-            if (topic !== 'route_puv_vehicle_app_feeds') {
-                console.warn(`Received message from ${topic}: ${message.toString()}`);
-            } else {
-                console.log(`Received message from ${topic}: ${message.toString()}`);
-            }
-        });
+        // if (message !== '#') {
+        //     client.subscribe(topic, (err) => {
+        //         if (!err) {
+        //             client.publish(topic, message);
+        //         }
+        //     })
+        // }
 
-        client.on('reconnect', () => {
-            // console.log('Reconnected to MQTT broker');
-        })
-    
-        client.on('error', (error) => {
-            // console.log(`MQTT error: ${error}`);
-        });
-    
-        client.on('close', () => {
-            // console.log('Connection to MQTT broker closed');
-        });
-    
-        return () => {
-            client.end();
+        if (!subscribedTopics.has(topic)) {
+            client.subscribe(topic, (err) => {
+                if (!err) {
+                    subscribedTopics.add(topic);
+                    console.log(`Subscribed to ${topic}`);
+                }
+            })
         }
+
+        client.publish(topic, message);
+        
+        client.on('message', (topic, message) => {
+            if (topic === 'route_puv_vehicle_app_feeds') {
+                console.log(`Received message from ${topic}: message: ${message.toString()}`);
+            } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
+                console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+            }
+        })
+
+        return true
     } catch (error) {
-        console.log('MQTT ', error);
+        return false
     }
 }
 
-// export const onPublishMqtt = (topic, message) => {
-//     const client = mqttConnect(MQTT_URL, MQTT_OPTIONS);
+export const onMqttReconnect = () => {
+    if (!client) {
+        return false;
+    }
 
-//     client.on('connect', () => {
-//         // console.log(MQTT_OPTIONS.clientId);
-//         // console.log('Connected to MQTT broker');
-//     })
+    client.on('reconnect', () => {
+        console.log('MQTT: Reconnected');
+        return true
+    })
+}
 
-//     client.subscribe(topic, (err) => {
-//         if (!err) {
-//             console.warn(topic);
-//             client.publish(topic, message);
-//         }
-//     });
+export const onMqttClose = () => {
+    return new Promise((resolve, reject) => {
+        if (!client) {
+            console.log('MQTT: Disconnected');
+            reject(false);
+        }
 
-//     client.on('message', (topic, message) => {
-//         console.log(`Received message from ${topic}: ${message.toString()}`);
-//     });
-
-//     client.on('error', (error) => {
-//         // console.log(`MQTT error: ${error}`);
-//     });
-
-//     client.on('close', () => {
-//         // console.log('Connection to MQTT broker closed');
-//     });
-
-//     return () => {
-//         client.end();
-//     }
-// }
+        client.end(true, () => {
+            console.log('MQTT: Disconnected');
+            client = null;
+            resolve(true)
+        })
+    })
+}

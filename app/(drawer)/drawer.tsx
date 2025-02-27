@@ -46,8 +46,7 @@ export default function DrawerScreen(props: any) {
     })
 
     return (
-        <DrawerContentScrollView {...props}>
-            <StatusBar backgroundColor='#FCD116' />
+        <DrawerContentScrollView {...props} className='-top-2'>
             <Box className='bg-custom-primary w-full h-fit p-4'>
                 <HStack className='justify-between'>
                     <VStack>
@@ -62,7 +61,7 @@ export default function DrawerScreen(props: any) {
                 </HStack>
             </Box>
 
-            <Box className='bg-custom-customBackground w-full p-3'>
+            <Box className='bg-custom-customBackground h-full p-3'>
                 <Text className='text-typography-500 font-bold' >PIVE</Text>
                 <DrawerItem
                     icon={({ color, size }) => (

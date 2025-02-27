@@ -1,7 +1,8 @@
 import '@/global.css';
 // react native
-import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Platform, ScrollView } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 // expo
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 // gluestack
@@ -15,9 +16,26 @@ import { Select, SelectContent, SelectPortal, SelectTrigger, SelectItem, SelectI
 import { Input, InputField } from '@/components/ui/input';
 import { Checkbox, CheckboxIndicator, CheckboxLabel } from '@/components/ui/checkbox';
 
+import moment from 'moment';
+
 import { agencyOptions, causeOptions, collisionOptions, lightOptions, weatherOptions } from '@/assets/values/strings';
 
-export default function IncidentDetailsScreen() {
+interface Coordinate {
+    latitude: number;
+    longitude: number;
+}
+
+interface IncidentDetailsScreenProps {
+    loc: Coordinate[] | null;
+    locName: string;
+}
+
+export default function IncidentDetailsScreen({loc, locName}: IncidentDetailsScreenProps) {
+    const [ location, setLocation ] = useState<Coordinate[]>([]);
+    const [ locationName, setLocationName ] = useState('');
+    const [ date, setDate ] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+
     const [ selectWeather, setSelectWeather ] = useState('');
     const [ selectLight, setSelectLight ] = useState('');
     const [ checkSeverity, setCheckSeverity ] = useState({
@@ -31,6 +49,22 @@ export default function IncidentDetailsScreen() {
     const [ inputEmail, setInputEmail ] = useState('');
     const [ inputDescription, setInputDescription ] = useState('');
     const [ checkLocation, setCheckLocation ] = useState(false);
+
+    useEffect(() => {
+        if (loc) {
+            setLocation(loc);
+        }
+        if (locName) {
+            setLocationName(locName);
+        }
+    }, [loc, locName]);
+
+    const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            setDate(selectedDate);
+        }
+    }
 
     const toggeleSeverity = (severity: any) => {
         setCheckSeverity((prev: any) => ({
@@ -137,16 +171,43 @@ export default function IncidentDetailsScreen() {
             >
                 <VStack>
                     <Text size='lg' className='text-zinc-500'>Location</Text>
-                    <Text size='lg' className='text-black ms-4'>Location here</Text>
+                    <Text size='lg' className='text-black ms-4'>{locName}</Text>
                 </VStack>
 
                 <VStack className='mt-4'>
                     <Text size='lg' className='text-zinc-500'>Date Time</Text>
                     <HStack className='justify-between ms-4'>
-                        <Text size='lg' className='text-black'>Date here</Text>
-                        <Button className='bg-zinc-300 p-1 rounded-md'>
-                            <ButtonText className='text-black'>CHANGE</ButtonText>
-                        </Button>
+                        <Text size='lg' className='text-black'>
+                            { moment(date).format('MMMM DD, YYYY HH:mm A') }
+                        </Text>
+                        {
+                            Platform.OS === 'ios' ? (
+                                <DateTimePicker
+                                    value={date}
+                                    mode='date'
+                                    display='default'
+                                    onChange={onChangeDate}
+                                />
+                            ) : (
+                                <>
+                                    <Button
+                                        className='bg-zinc-300 p-1 rounded-md'
+                                        onPress={() => setShowDatePicker(true)}
+                                    >
+                                        <ButtonText className='text-black'>CHANGE</ButtonText>
+                                    </Button>
+
+                                    { showDatePicker &&
+                                        <DateTimePicker
+                                            value={date}
+                                            mode='date'
+                                            display='default'
+                                            onChange={onChangeDate}
+                                        />
+                                    }
+                                </>
+                            )
+                        }
                     </HStack>
                 </VStack>
 

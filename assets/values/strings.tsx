@@ -3,11 +3,16 @@ export const GOOGLE_PLACES_API_KEY = 'AIzaSyBxbNXjmdo5qt2cME549ozeVdtAFO9hD34';
 
 export const MQTT_HOST = 'ws://staging-mqtt.safetravel.ph:8000/mqtt';
 
+export const KEYCLOAK_BASE_URL = 'https://staging-iam.safetravel.ph';
+export const REALM = 'https://staging-iam.safetravel.ph/realms/safetravelph-cpa';
+export const CLIENT_ID = 'safetravelph-cpa-test';
+export const SECRET = 'E2bpLBo94YOBLWGaljCyMuQc0xU19AnP';
+
 const String = {
     notice_contact: 'Visit www.safetravel.ph. For comments and suggestions, send email at admin@safetravel.ph',
     notice_policy: 'Read our Terms of Use and Data Privacy Policy at ',
     notice_policy_link : 'https://www.safetravelph.org/privacy',
-    notice_copyright: '©2023 SafeTravelPH Mobility Innovations Organization. All rights reserved.',
+    notice_copyright: '©2025 SafeTravelPH Mobility Innovations Organization. All rights reserved.',
     report_placeholder: 'Please provide a detailed description and include recommendations for the concerned national/local government agency.',
 };
 
@@ -210,38 +215,5 @@ export const gradeOptions = [
     { id: 2, label: 'Elementary', value: '2' },
     { id: 3, label: 'High School', value: '3' }
 ]
-
-// export const  = [
-//     { id: 1, label: '', value: '1' },
-//     { id: 2, label: '', value: '2' },
-//     { id: 3, label: '', value: '3' },
-//     { id: 4, label: '', value: '4' },
-//     { id: 5, label: '', value: '5' },
-//     { id: 6, label: '', value: '6' },
-//     { id: 7, label: '', value: '7' },
-//     { id: 8, label: '', value: '8' },
-//     { id: 9, label: '', value: '9' },
-//     { id: 10, label: '', value: '10' },
-//     { id: 11, label: '', value: '11' },
-//     { id: 12, label: '', value: '12' },
-//     { id: 13, label: '', value: '13' },
-//     { id: 14, label: '', value: '14' },
-//     { id: 15, label: '', value: '15' },
-//     { id: 16, label: '', value: '16' },
-//     { id: 17, label: '', value: '17' },
-//     { id: 18, label: '', value: '18' },
-//     { id: 19, label: '', value: '19' },
-//     { id: 20, label: '', value: '20' },
-//     { id: 21, label: '', value: '21' },
-//     { id: 22, label: '', value: '22' },
-//     { id: 23, label: '', value: '23' },
-//     { id: 24, label: '', value: '24' },
-//     { id: 25, label: '', value: '25' },
-//     { id: 26, label: '', value: '26' },
-//     { id: 27, label: '', value: '27' },
-//     { id: 28, label: '', value: '28' },
-//     { id: 29, label: '', value: '29' },
-//     { id: 30, label: '', value: '30' },
-// ]
 
 export default String;

@@ -26,7 +26,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const linking = {
-    prefixes: ['parasol-app://'],
+    prefixes: ['parasol://'],
     config: {
       screens: {
         Register: 'register',

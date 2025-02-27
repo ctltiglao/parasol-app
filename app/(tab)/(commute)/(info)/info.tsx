@@ -1,7 +1,7 @@
 import '@/global.css';
 // react native
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraView } from 'expo-camera';
@@ -56,7 +56,7 @@ export default function TripInfo({ handleAction } : any) {
             <Box className='bg-white flex-1 p-4'>
                 <HStack className='w-full justify-between'>
                     <Button
-                        className='bg-typography-gray p-2 border-1 rounded-md'
+                        className='h-fit bg-typography-gray p-2 border-1 rounded-md'
                         onPress={() => clearSelection({
                             // setInputOrigin,
                             // setInputDestination,
@@ -73,7 +73,7 @@ export default function TripInfo({ handleAction } : any) {
                     </Button>
     
                     <Button
-                        className='bg-typography-gray p-2 border-1 rounded-md'
+                        className='h-fit bg-typography-gray p-2 border-1 rounded-md'
                         onPress={handleAction}
                     >
                         <ButtonText className='text-black text-lg font-medium'>
@@ -83,82 +83,6 @@ export default function TripInfo({ handleAction } : any) {
                 </HStack>
     
                 <Box className='flex-col mt-4'>
-                    {/* <Input className='bg-white border-2 border-custom-secondary focus:border-custom-secondary rounded-md'>
-                        <InputField
-                            value={inputOrigin}
-                            onChangeText={setInputOrigin}
-                            className='text-zinc-700 text-lg font-medium p-2'
-                            placeholder='Trip Origin'
-                        />
-                    </Input>
-
-                    <Input className='bg-white mt-3 border-2 border-custom-secondary focus:border-custom-secondary rounded-md'>
-                        <InputField
-                            value={inputDestination}
-                            onChangeText={setInputDestination}
-                            className='text-zinc-700 text-lg font-medium p-2'
-                            placeholder='Trip Dest'
-                        />
-                    </Input>
-                    
-                    <Select
-                        selectedValue={selectedPurpose}
-                        onValueChange={() => purposeSelectChange({setSelectedPurpose})}
-                    >
-                        <SelectTrigger className='bg-white mt-3 border-2 border-custom-secondary focus:border-custom-secondary rounded-md'>
-                            <SelectInput
-                                className={ selectedPurpose
-                                    ? 'text-black text-lg font-medium p-2'
-                                    : 'text-zinc-700 text-lg font-medium p-2'
-                                }
-                                placeholder='Trip Purpose'
-                            />
-                        </SelectTrigger>
-                        <SelectPortal>
-                            <SelectContent>
-                                {purposeOptions.map((option) => (
-                                    <SelectItem
-                                        className='text-black text-lg font-medium'
-                                        key={option.id}
-                                        label={option.label}
-                                        value={option.value}
-                                    />
-                                ))}
-                            </SelectContent>
-                        </SelectPortal>
-                    </Select>
-    
-                    <Select
-                        selectedValue={selectedMode}
-                        onValueChange={() => modeSelectChange({setSelectedMode})}
-                    >
-                        <SelectTrigger className='bg-white mt-3 border-2 border-custom-secondary focus:border-custom-secondary rounded-md'>
-                            <SelectInput
-                                className={ selectedMode
-                                    ? 'text-black text-lg font-medium p-2'
-                                    : 'text-zinc-700 text-lg font-medium p-2'
-                                }
-                                placeholder='Trip Mode'
-                            />
-                        </SelectTrigger>
-                        <SelectPortal className='justify-center'>
-                            <Box className='h-2/4 p-4'>
-                                <ScrollView>
-                                    <SelectContent>
-                                        {modeOptions.map((option) => (
-                                            <SelectItem
-                                                className='text-black text-lg font-medium'
-                                                key={option.id}
-                                                label={option.label}
-                                                value={option.value}
-                                            />
-                                        ))}
-                                    </SelectContent>
-                                </ScrollView>
-                            </Box>
-                        </SelectPortal>
-                    </Select> */}
-    
                     <HStack className='w-full items-center mt-6'>
                         <Input isDisabled={true}
                             className='bg-white w-11/12 border-2 border-custom-secondary rounded-md'
@@ -209,7 +133,7 @@ export default function TripInfo({ handleAction } : any) {
                                 vehicleDescription: inputDescription
                             });
 
-                            res && handleAction();
+                            res && Alert.alert('Connected');
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>

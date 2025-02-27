@@ -89,7 +89,7 @@ export const addFleetRecord = async ({
 
 export const allFleetRecords = async () => {
     try {
-        const result = await db.getAllAsync('SELECT * FROM FleetRecord');
+        const result = await db.getAllAsync('SELECT * FROM FleetRecord ORDER BY id DESC');
 
         return result;
     } catch (error) {
@@ -124,7 +124,7 @@ export const deleteFleetRecord = async (id: number) => {
 
         const result = await db.runAsync(
             'DELETE FROM FleetRecord WHERE id = $id;',
-            { $id: id }
+            [id]
         );
 
         return result.changes;

@@ -38,7 +38,7 @@ export default function FleetInfo({handleAction} : any) {
         const patternRoute = /Route:(.*?)\*\*\*/;
         const patternOperator = /Operator:(.*?)\*\*\*/;
         const patternPlate = /Plate:(.*?)\*\*\*/;
-        const patternCapacity = /\*\*\*Capacity:(.*?)/;
+        const patternCapacity = /Capacity:\s*(\d+)/;
         
         const matchRoute = data.match(patternRoute);
         const matchOperator = data.match(patternOperator);
@@ -173,7 +173,7 @@ export default function FleetInfo({handleAction} : any) {
                                     capacity: capacity
                                 })
 
-                                res && Alert.alert('', 'Connected');
+                                res && Alert.alert('Success', 'Connected');
                             }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>

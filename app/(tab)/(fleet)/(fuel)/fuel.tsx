@@ -1,12 +1,14 @@
 import '@/global.css';
 // react native
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Platform, ScrollView } from 'react-native';
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 // expo
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
+import { StorageAccessFramework } from 'expo-file-system';
 // gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
@@ -22,13 +24,11 @@ import { Input, InputField } from '@/components/ui/input';
 import { Select, SelectContent, SelectInput, SelectItem, SelectPortal, SelectTrigger } from '@/components/ui/select';
 
 import { jsonToCSV } from 'react-native-csv';
-import { format, parse } from 'date-fns';
 import moment from 'moment';
 
-import { CustomAddFab, CustomFleetFab, SubFab } from '@/app/screen/customFab';
-// import { allFleetRecords, deleteFleetRecord, onCreate, updateFleetRecord } from '@/app/service/sql/fleetHistoryDBHelper';
+import { CustomAddFab } from '@/app/screen/customFab';
 import { getUserState } from '../../tabViewModel';
-import { allCommuteRecords, onCreate } from '@/app/service/sql/tripHistoryDBHelper';
+import { addFuelLog, allFuelRecords, deleteFuelRecord, onCreate, updateFuelRecord } from '@/app/service/sql/fuelLogDBHelper';
 
 const Drawer = createDrawerNavigator();
 
@@ -56,11 +56,13 @@ function DrawerFuelNavigator() {
 function Screen() {
     const [fuelLogs, setFuelLogs] = useState<any[]>([]);
 
-    const [inputDate, setInputDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
-    const [inputStartOdometer, setInputStartOdometer] = useState(0);
-    const [inputEndOdometer, setInputEndOdometer] = useState(0);
-    const [inputTotalFuel, setInputTotalFuel] = useState(0);
-    const [inputFuelUnit, setInputFuelUnit] = useState('');
+    // const [inputDate, setInputDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
+    const [inputDate, setInputDate] = useState(new Date());
+    const [inputeUpdateDate, setInputUpdateDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
+    const [inputStartOdometer, setInputStartOdometer] = useState<Number|null>(null);
+    const [inputEndOdometer, setInputEndOdometer] = useState<Number|null>(null);
+    const [inputTotalFuel, setInputTotalFuel] = useState<Number|null>(null);
+    const [inputFuelUnit, setInputFuelUnit] = useState('liters');
 
     const [modalVisible, setModalVisible] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -72,23 +74,43 @@ function Screen() {
     }
 
     const showPicker = () => setShowDatePicker(true);
-    const onChangeDate = (event: any, selectedDate: any) => {
-        console.log(selectedDate);
-        let date = moment(new Date(selectedDate)).format('YYYY-MM-DD')
+
+    // ios data format
+    const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        // console.log(selectedDate);
+        // let date = moment(selectedDate).format('YYYY-MM-DD')
+        // setShowDatePicker(false);
+        // setInputDate(date);
+
         setShowDatePicker(false);
-        setInputDate(date);
+        if (selectedDate) {
+            setInputDate(selectedDate);
+        }
     }
 
     useEffect(() => {
         const fetchFuel = async () => {
             await onCreate().then(async () => {
-                const result = await allCommuteRecords();
+                const result = await allFuelRecords();
                 setFuelLogs(result ?? []);
             })
         }
 
         fetchFuel();
-    })
+    }, [inputDate])
+
+    useFocusEffect(
+        useCallback(() => {
+            closeModal();
+
+            // setInputDate(moment(new Date()).format('YYYY-MM-DD'));
+            setInputUpdateDate(moment(new Date()).format('YYYY-MM-DD'));
+            setInputStartOdometer(0);
+            setInputEndOdometer(0);
+            setInputTotalFuel(0);
+            setInputFuelUnit('liters');
+        }, [])
+    );
     
     return (
         <GluestackUIProvider mode='light'>
@@ -106,20 +128,27 @@ function Screen() {
                                 className='bg-white rounded-md mb-4 p-4'
                             >
                                 <HStack className='justify-between'>
-                                    <Heading>{res.commute_date}</Heading>
-                                    <SqlMenu />
+                                    <Heading>{moment(res.log_date).format('MMMM DD, YYYY')}</Heading>
+                                    <SqlMenu
+                                        id={res.id}
+                                        log_date={new Date(res.log_date)}
+                                        start_odometer={res.start_odometer}
+                                        end_odometer={res.end_odometer}
+                                        total_fuel={res.total_fuel}
+                                        consumption_unit={res.consumption_unit}
+                                    />
                                 </HStack>
-                                <Text>Update On {res.commute_date}</Text>
+                                <Text>Update On {moment(res.date_update).format('YYYY-MM-DD')}</Text>
                                 
                                 <Divider />
                                 <HStack>
                                     <VStack className='w-1/2'>
                                         <Text>Start Odometer</Text>
-                                        <Text bold={true}>{res.mode}</Text>
+                                        <Text bold={true}>{res.start_odometer} km</Text>
                                     </VStack>
                                     <VStack className='w-1/2'>
                                         <Text>End Odometer</Text>
-                                        <Text bold={true}>{res.mode}</Text>
+                                        <Text bold={true}>{res.end_odometer} km</Text>
                                     </VStack>
                                 </HStack>
 
@@ -127,11 +156,17 @@ function Screen() {
                                 <HStack>
                                     <VStack className='w-1/2'>
                                         <Text>Total Distance</Text>
-                                        <Text bold={true}>{res.mode}</Text>
+                                        <Text bold={true}>{res.end_odometer - res.start_odometer} km</Text>
                                     </VStack>
                                     <VStack className='w-1/2'>
                                         <Text>Total Fuel Consumed</Text>
-                                        <Text bold={true}>{res.mode}</Text>
+                                        <Text bold={true}>
+                                            {
+                                                res.total_fuel 
+                                            }{
+                                                res.consumption_unit === 'liters' ? ' (L)' : ' (kWh)'
+                                            }
+                                        </Text>
                                     </VStack>
                                 </HStack>
                             </VStack>
@@ -148,8 +183,11 @@ function Screen() {
                                 {
                                     Platform.OS === 'ios' ? (
                                         <HStack space='md' className='items-center mb-4'>
-                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>{inputDate.toString()}</Text>
+                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                                { moment(inputDate).format('YYYY-MM-DD') }
+                                            </Text>
                                             <DateTimePicker
+                                                className='w-full h-fit'
                                                 value={moment(inputDate).toDate()}
                                                 mode='date'
                                                 display='default'
@@ -158,22 +196,27 @@ function Screen() {
                                         </HStack>
                                     ) : (
                                         <Box>
-                                            <HStack space='md' className='items-center mb-4'>
-                                                <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>{inputDate.toString()}</Text>
-                                                <Button className='bg-white h-fit w-fit' onPress={showPicker}>
-                                                    <ButtonText className='text-custom-secondary'>Pick Date</ButtonText>
+                                            <HStack space='md' className='justify-between items-center mb-4'>
+                                                <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                                    { moment(inputDate).format('YYYY-MM-DD') }
+                                                </Text>
+                                                
+                                                <Button
+                                                    className='bg-zinc-300 p-1 rounded-md'
+                                                    onPress={() => setShowDatePicker(true)}
+                                                >
+                                                    <ButtonText className='text-black'>CHANGE</ButtonText>
                                                 </Button>
+
+                                                { showDatePicker &&
+                                                    <DateTimePicker
+                                                        value={inputDate}
+                                                        mode='date'
+                                                        display='default'
+                                                        onChange={onChangeDate}
+                                                    />
+                                                }
                                             </HStack>
-                                            
-                                            { showDatePicker && (
-                                                <DateTimePicker
-                                                    className='w-full'
-                                                    value={moment(inputDate).toDate()}
-                                                    mode='date'
-                                                    display='default'
-                                                    onChange={onChangeDate}
-                                                />
-                                            )}
                                         </Box>
                                     )
                                 }
@@ -185,12 +228,9 @@ function Screen() {
                                 >
                                     <InputField
                                         onChangeText={(text) => setInputStartOdometer(parseFloat(text))}
-                                        value={inputStartOdometer.toString()}
+                                        value={inputStartOdometer ? inputStartOdometer.toString() : ''}
                                         placeholder=''
                                         keyboardType='numeric'
-                                        onPress={() => {
-                                            showPicker();
-                                        }}
                                     />
                                 </Input>
 
@@ -201,12 +241,9 @@ function Screen() {
                                 >
                                     <InputField
                                         onChangeText={(text) => setInputEndOdometer(parseFloat(text))}
-                                        value={inputEndOdometer.toString()}
+                                        value={inputEndOdometer ? inputEndOdometer.toString() : ''}
                                         placeholder=''
                                         keyboardType='numeric'
-                                        onPress={() => {
-                                            showPicker();
-                                        }}
                                     />
                                 </Input>
 
@@ -217,19 +254,16 @@ function Screen() {
                                 >
                                     <InputField
                                         onChangeText={(text) => setInputTotalFuel(parseFloat(text))}
-                                        value={inputTotalFuel.toString()}
+                                        value={inputTotalFuel ? inputTotalFuel.toString() : ''}
                                         placeholder=''
                                         keyboardType='numeric'
-                                        onPress={() => {
-                                            showPicker();
-                                        }}
                                     />
                                 </Input>
 
                                 <Text bold={true} size='md'>Consumption Unit</Text>
                                 <Select
                                     onValueChange={setInputFuelUnit}
-                                    selectedValue={inputFuelUnit}
+                                    selectedValue={inputFuelUnit === 'liters' ? 'Diesel (L)' : 'Electric (kWh)'}
                                 >
                                     <SelectTrigger className='bg-white h-fit border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 mt-2 mb-4'>
                                         <SelectInput className='pt-3 pb-3'/>
@@ -237,7 +271,7 @@ function Screen() {
                                     </SelectTrigger>
                                     <SelectPortal>
                                         <SelectContent>
-                                            <SelectItem value='liters' label='Diesel (Liters)'/>
+                                            <SelectItem value='liters' label='Diesel (L)'/>
                                             <SelectItem value='kWh' label='Electric (kWh)'/>
                                         </SelectContent>
                                     </SelectPortal>
@@ -254,21 +288,20 @@ function Screen() {
                             <Button className='bg-transparent'
                                 onPress={async() => {
                                     console.log(inputFuelUnit);
-                                    console.log(inputDate);
-                                    // await updateFuelRecord({
-                                    //     date: inputDate,
-                                    //     start_odometer: inputStartOdometer,
-                                    //     end_odometer: inputStartOdometer,
-                                    //     total_fuel: inputTotalFuel,
-                                    //     consumption_unit: inputFuelUnit,
-                                    //     id: id
-                                    // }).then((res) => {
-                                    //     console.log(res);
-
-                                    //     if (Number(res) > 0) {
-                                    //         closeModal();
-                                    //     }
-                                    // });
+                                    await addFuelLog({
+                                        log_date: moment(inputDate).format('YYYY-MM-DD'),
+                                        date_update: inputeUpdateDate,
+                                        start_odometer: inputStartOdometer,
+                                        end_odometer: inputEndOdometer,
+                                        total_fuel: inputTotalFuel,
+                                        consumption_unit: inputFuelUnit
+                                    }).then((res) => {
+                                        console.log(res);
+                                        
+                                        if (Number(res) > 0) {
+                                            closeModal();
+                                        }
+                                    })
                                 }}
                             >
                                 <ButtonText className='text-custom-secondary'>SAVE</ButtonText>
@@ -289,10 +322,11 @@ function SqlMenu({
     total_fuel,
     consumption_unit
 }: any) {
-    const [inputDate, setInputDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
-    const [inputStartOdometer, setInputStartOdometer] = useState(0);
-    const [inputEndOdometer, setInputEndOdometer] = useState(0);
-    const [inputTotalFuel, setInputTotalFuel] = useState(0);
+    const [inputDate, setInputDate] = useState(new Date());
+    const [inputeUpdateDate, setInputUpdateDate] = useState(moment(new Date()).format('YYYY-MM-DD'));
+    const [inputStartOdometer, setInputStartOdometer] = useState<number|null>(0);
+    const [inputEndOdometer, setInputEndOdometer] = useState<number|null>(0);
+    const [inputTotalFuel, setInputTotalFuel] = useState<number|null>(0);
     const [inputFuelUnit, setInputFuelUnit] = useState('');
 
     const [menuVisible, setMenuVisible] = useState(false);
@@ -303,16 +337,54 @@ function SqlMenu({
     const closeMenu = () => setMenuVisible(false);
 
     const openModal = () => {
+        setInputDate(log_date);
+        setInputStartOdometer(start_odometer);
+        setInputEndOdometer(end_odometer);
+        setInputTotalFuel(total_fuel);
+        
+        if (consumption_unit === 'liters') {
+            setInputFuelUnit('Diesel (L)');
+        } else if (consumption_unit === 'kWh') {
+            setInputFuelUnit('Electricity (kWh)');
+        } else {
+            setInputFuelUnit('Diesel (L)');
+        }
+
         setModalVisible(true);
     }
     const closeModal = () => setModalVisible(false);
 
-    const showPicker = () => setShowDatePicker(true);
-    const onChangeDate = (event: any, selectedDate: any) => {
-        console.log(selectedDate);
-        let date = moment(new Date(selectedDate)).format('YYYY-MM-DD')
+    // const showPicker = () => setShowDatePicker(true);
+
+    // ios data format
+    const onChangeDate = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        // console.log(selectedDate);
+        // let date = moment(selectedDate).format('YYYY-MM-DD')
+        // setShowDatePicker(false);
+        // setInputDate(date);
+
         setShowDatePicker(false);
-        setInputDate(date);
+        if (selectedDate) {
+            console.log(selectedDate);
+            setInputDate(selectedDate);
+        }
+    }
+
+    // android date format
+    const dateTextFormat = (input: any) => {
+        let clean = input.replace(/\D/g, '');
+
+        if (clean.length > 4) {
+            clean = clean.slice(0, 4) + '-' + clean.slice(4);
+        }
+        if (clean.length > 7) {
+            clean = clean.slice(0, 7) + '-' + clean.slice(7);
+        }
+        if (clean.length > 10) {
+            clean = clean.slice(0, 10);
+        }
+    
+        setInputDate(clean);
     }
 
     return (
@@ -344,8 +416,10 @@ function SqlMenu({
                 <MenuItem
                     key='2'
                     textValue='Delete'
-                    onPress={() => {
-                        console.log('delete');
+                    onPress={async () => {
+                        console.log(id)
+
+                        await deleteFuelRecord(id);
                     }}
                 >
                     <MenuItemLabel>Delete</MenuItemLabel>
@@ -361,7 +435,9 @@ function SqlMenu({
                             {
                                 Platform.OS === 'ios' ? (
                                     <HStack space='md' className='items-center mb-4'>
-                                        <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>{inputDate.toString()}</Text>
+                                        <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                            { moment(inputDate).format('YYYY-MM-DD') }
+                                        </Text>
                                         <DateTimePicker
                                             value={moment(inputDate).toDate()}
                                             mode='date'
@@ -371,22 +447,27 @@ function SqlMenu({
                                     </HStack>
                                 ) : (
                                     <Box>
-                                        <HStack space='md' className='items-center mb-4'>
-                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>{inputDate.toString()}</Text>
-                                            <Button className='bg-white h-fit w-fit' onPress={showPicker}>
-                                                <ButtonText className='text-custom-secondary'>Pick Date</ButtonText>
+                                        <HStack space='md' className='justify-between items-center mb-4'>
+                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                                { moment(inputDate).format('YYYY-MM-DD') }
+                                            </Text>
+                                                
+                                            <Button
+                                                className='bg-zinc-300 p-1 rounded-md'
+                                                onPress={() => setShowDatePicker(true)}
+                                            >
+                                                <ButtonText className='text-black'>CHANGE</ButtonText>
                                             </Button>
+
+                                            { showDatePicker &&
+                                                <DateTimePicker
+                                                    value={inputDate}
+                                                    mode='date'
+                                                    display='default'
+                                                    onChange={onChangeDate}
+                                                />
+                                            }
                                         </HStack>
-                                            
-                                        { showDatePicker && (
-                                            <DateTimePicker
-                                                className='w-full'
-                                                value={moment(inputDate).toDate()}
-                                                mode='date'
-                                                display='default'
-                                                onChange={onChangeDate}
-                                            />
-                                        )}
                                     </Box>
                                 )
                             }
@@ -397,13 +478,10 @@ function SqlMenu({
                                 variant='underlined'
                             >
                                 <InputField
-                                    onChangeText={(text) => setInputStartOdometer(parseFloat(text))}
-                                    value={inputStartOdometer.toString()}
+                                    onChangeText={(text) => setInputStartOdometer(text === '' ? null : parseFloat(text))}
+                                    value={inputStartOdometer === null ? '' : inputStartOdometer.toString()}
                                     placeholder=''
                                     keyboardType='numeric'
-                                    onPress={() => {
-                                        showPicker();
-                                    }}
                                 />
                             </Input>
 
@@ -413,13 +491,10 @@ function SqlMenu({
                                 variant='underlined'
                             >
                                 <InputField
-                                    onChangeText={(text) => setInputEndOdometer(parseFloat(text))}
-                                    value={inputEndOdometer.toString()}
+                                    onChangeText={(text) => setInputEndOdometer(text === '' ? null : parseFloat(text))}
+                                    value={inputEndOdometer === null ? '' : inputEndOdometer.toString()}
                                     placeholder=''
                                     keyboardType='numeric'
-                                    onPress={() => {
-                                        showPicker();
-                                    }}
                                 />
                             </Input>
 
@@ -429,13 +504,10 @@ function SqlMenu({
                                 variant='underlined'
                             >
                                 <InputField
-                                    onChangeText={(text) => setInputTotalFuel(parseFloat(text))}
-                                    value={inputTotalFuel.toString()}
+                                    onChangeText={(text) => setInputTotalFuel(text === '' ? null : parseFloat(text))}
+                                    value={inputTotalFuel === null ? '' : inputTotalFuel.toString()}
                                     placeholder=''
                                     keyboardType='numeric'
-                                    onPress={() => {
-                                        showPicker();
-                                    }}
                                 />
                             </Input>
 
@@ -466,21 +538,21 @@ function SqlMenu({
 
                         <Button className='bg-transparent'
                             onPress={async() => {
-                                console.log(inputFuelUnit);
-                                // await updateFuelRecord({
-                                //     date: inputDate,
-                                //     start_odometer: inputStartOdometer,
-                                //     end_odometer: inputStartOdometer,
-                                //     total_fuel: inputTotalFuel,
-                                //     consumption_unit: inputFuelUnit,
-                                //     id: id
-                                // }).then((res) => {
-                                //     console.log(res);
+                                await updateFuelRecord({
+                                    log_date: moment(inputDate).format('YYYY-MM-DD'),
+                                    date_update: inputeUpdateDate,
+                                    start_odometer: inputStartOdometer,
+                                    end_odometer: inputEndOdometer,
+                                    total_fuel: inputTotalFuel,
+                                    consumption_unit: inputFuelUnit,
+                                    id: id
+                                }).then((res) => {
+                                    console.log(res);
 
-                                //     if (Number(res) > 0) {
-                                //         closeModal();
-                                //     }
-                                // });
+                                    if (Number(res) > 0) {
+                                        closeModal();
+                                    }
+                                })
                             }}
                         >
                             <ButtonText className='text-custom-secondary'>SAVE</ButtonText>
@@ -498,6 +570,51 @@ function Header({ navigation } : any) {
     
     const openMenu = () => setMenuVisible(true);
     const closeMenu = () => setMenuVisible(false);
+
+    const exportFuelCSV = async () => {
+        await onCreate().then(async () => {
+            const data : any[] = [];
+
+            const permission = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+            if (!permission.granted) {
+                return;
+            }
+
+            try {
+                const res = await allFuelRecords();
+
+                res?.forEach((record: any, index: any) => {
+                    data.push({
+                        no: index + 1,
+                        id: record.id,
+                        log_data: record.log_date,
+                        data_update: record.date_update,
+                        start_odometer: record.start_odometer,
+                        end_odometer: record.end_odometer,
+                        total_fuel: record.total_fuel,
+                        consumption_unit: record.consumption_unit
+                    })
+                })
+
+                const csv = jsonToCSV(data);
+
+                await StorageAccessFramework.createFileAsync(
+                    permission.directoryUri,
+                    'MyFuelRecords.csv',
+                    'application/csv'
+                ).then( async (uri) => {
+                    await FileSystem.writeAsStringAsync(uri, csv, {
+                        encoding: FileSystem.EncodingType.UTF8
+                    })
+                }).catch((error) => {
+                    alert(`Failed to save fuel records ${error}`);
+                });
+            } catch (error) {
+                // console.error(error);
+                alert(`Failed to export fuel records ${error}`);
+            }
+        });
+    }
 
     return (
         <Box className='flex-row bg-custom-primary justify-between items-center pt-14 ps-4 pb-4'>
@@ -529,7 +646,13 @@ function Header({ navigation } : any) {
                     key='1'
                     textValue='Export To CSV'
                     onPress={() => {
-                        // console.warn('pressed');
+                        // getUserState().then((res) => {
+                        //     if (!res.username.includes('guest')) {
+                                exportFuelCSV();
+                        //     } else {
+                        //         alert('You are not authorized to export fuel logs');
+                        //     }
+                        // })
                     }}
                 >
                     <MenuItemLabel>Export To CSV</MenuItemLabel>
