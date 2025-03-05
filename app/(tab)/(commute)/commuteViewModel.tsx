@@ -8,14 +8,14 @@ import { Tracking } from "@/app/service/mqtt/proto/Tracking.proto.js";
 import { onMqttConnect, onMqttPublish } from "@/app/service/mqtt/mqtt";
 
 // remove previous commute vehicle
-export const removeItem = async () => {
-    try {
-        await AsyncStorage.removeItem('CommuteDetails');
-        // console.log('removed');
-    } catch (error) {
-        console.log(error);
-    }
-}
+// export const removeItem = async () => {
+//     try {
+//         await AsyncStorage.removeItem('CommuteDetails');
+//         // console.log('removed');
+//     } catch (error) {
+//         console.log(error);
+//     }
+// }
 
 export const getQuickTourPref = async () => {
     try {
@@ -50,7 +50,7 @@ export const setCommuteRecord = async ({
     commute_date
 }: any) => {
     try {
-        await AsyncStorage.removeItem('CommuteDetails');
+        // await AsyncStorage.removeItem('CommuteDetails');
         // return CommuteRecord;
 
         console.log(commute_date);

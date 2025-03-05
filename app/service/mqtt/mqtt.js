@@ -61,7 +61,7 @@ export const onMqttPublish = (topic, message) => {
             client.subscribe(topic, (err) => {
                 if (!err) {
                     subscribedTopics.add(topic);
-                    console.log(`Subscribed to ${topic}`);
+                    // console.log(`Subscribed to ${topic}`);
                 }
             })
         }
@@ -70,9 +70,9 @@ export const onMqttPublish = (topic, message) => {
         
         client.on('message', (topic, message) => {
             if (topic === 'route_puv_vehicle_app_feeds') {
-                console.log(`Received message from ${topic}: message: ${message.toString()}`);
+                // console.log(`Received message from ${topic}: message: ${message.toString()}`);
             } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
-                console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+                // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
             }
         })
 

@@ -13,8 +13,7 @@ import { Box } from '@/components/ui/box';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
 import { Heading } from '@/components/ui/heading';
 import { Button } from '@/components/ui/button';
-
-import { getUserState } from '@/app/(drawer)/drawerViewModel';
+import { getUserState } from '@/app/(tab)/tabViewModel';
 
 const Drawer = createDrawerNavigator();
 
@@ -48,15 +47,20 @@ function Survey() {
 
     useEffect(() => {
         getUserState().then((response) => {
-            setUsername(response.username);
-            
-            if (response.realmRoles.includes('government')) {
-                setUserType('government');
-                getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
-            } else if (response.realmRoles.includes('ngo')) {
-                setUserType('ngo');
-                getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
+            if (response.username !== undefined) {
+                setUsername(response.username);
+                if (response.realmRoles.includes('government')) {
+                    setUserType('government');
+                    getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
+                } else if (response.realmRoles.includes('ngo')) {
+                    setUserType('ngo');
+                    getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
+                } else {
+                    setUserType('resident');
+                    getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
+                }
             } else {
+                setUsername(response.preferred_username);
                 setUserType('resident');
                 getUrl = `https://safetravel.ph/surveyapp/?user_type=${userType}`
             }

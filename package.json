@@ -19,7 +19,7 @@
     "@gluestack-ui/checkbox": "^0.1.33",
     "@gluestack-ui/divider": "^0.1.10",
     "@gluestack-ui/icon": "^0.1.25",
-    "@gluestack-ui/image": "^0.1.11",
+    "@gluestack-ui/image": "^0.1.16",
     "@gluestack-ui/input": "^0.1.32",
     "@gluestack-ui/menu": "^0.2.37",
     "@gluestack-ui/modal": "^0.1.35",
@@ -67,6 +67,7 @@
     "expo-system-ui": "~4.0.8",
     "expo-task-manager": "~12.0.5",
     "geolib": "^3.3.4",
+    "jwt-decode": "^4.0.0",
     "material-icons": "^1.13.12",
     "moment": "^2.30.1",
     "mqtt": "^5.10.3",
@@ -96,7 +97,9 @@
     "stream-browserify": "^3.0.0",
     "tailwindcss": "^3.4.17",
     "uuid": "^11.0.4",
-    "xmlbuilder2": "^3.1.1"
+    "xmlbuilder2": "^3.1.1",
+    "expo-notifications": "~0.29.13",
+    "expo-haptics": "~14.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

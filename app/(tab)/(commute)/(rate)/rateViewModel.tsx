@@ -78,37 +78,38 @@ export const handleRating = ({
 
 export const publishRating = async(message: any) => {
     try {
-            const ratingData = {
-                deviceId: message.deviceId,
-                lat: message.lat,
-                lng: message.lng,
-                timestamp: message.timestamp,
-                userId: message.userId,
-                description: message.description,
-                vehicleId: message.vehicleId,
-                vehicleDetails: message.vehicleDetails
-            }
-
-            const buffer = Rating.encode(ratingData).finish();
-
-            const publish = onMqttPublish('ratings', buffer);
-
-            if (publish === false) {
-                onMqttConnect().then((response) => {
-                    
-                    if (response === true) {
-                        const pub = onMqttPublish('ratings', buffer);
-                        console.log('this ', pub);
-
-                        // if (pub !== false) {
-                        //     onMqttClose();
-                        // }
-                    };
-                })
-            }
-
-            // return true;
-        } catch (error) {
-            console.error(error);
+        const ratingData = {
+            deviceId: message.deviceId,
+            lat: message.lat,
+            lng: message.lng,
+            timestamp: message.timestamp,
+            userId: message.userId,
+            description: message.description,
+            vehicleId: message.vehicleId,
+            vehicleDetails: message.vehicleDetails
         }
+
+        const buffer = Rating.encode(ratingData).finish();
+
+        const publish = onMqttPublish('ratings', buffer);
+
+        if (publish === false) {
+            onMqttConnect().then((response) => {
+                
+                if (response === true) {
+                    const pub = onMqttPublish('ratings', buffer);
+                    console.log('this ', pub);
+
+                    // if (pub !== false) {
+                    //     onMqttClose();
+                    // }
+                };
+            })
+        }
+
+        return true;
+    } catch (error) {
+        return false;
+        console.error(error);
+    }
 }

@@ -1,6 +1,7 @@
 // react native
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // expo
+import * as Notifications from 'expo-notifications';
 // gluestack
 
 import { Double } from "react-native/Libraries/Types/CodegenTypes";
@@ -10,6 +11,7 @@ import { addFleetRecord, onCreate } from "@/app/service/sql/fleetHistoryDBHelper
 import { Tracking } from '@/app/service/mqtt/proto/Tracking.proto.js';
 import { Alighting, Boarding } from '@/app/service/mqtt/proto/Fleet.proto.js';
 import { onMqttPublish } from "@/app/service/mqtt/mqtt";
+import { getNotificationPermissions } from "@/app/(main)/mainViewModel";
 
 // remove previous fleet vehicle
 export const removeItem = async () => {
@@ -19,6 +21,22 @@ export const removeItem = async () => {
     } catch (error) {
         console.log(error);
     }
+}
+
+export const sendPushNotification = async (title: any, body: any) => {
+    const hasPermission = await getNotificationPermissions();
+    if (!hasPermission) {
+        return;
+    }
+
+    await Notifications.scheduleNotificationAsync({
+        content: {
+            title: title,
+            body: body,
+            data: { tracking: true },
+        },
+        trigger: null
+    })
 }
 
 export const formatTravelTime = (totalSeconds : any) => {

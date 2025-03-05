@@ -17,9 +17,8 @@ import { Button } from '@/components/ui/button';
 
 import { jsonToCSV } from 'react-native-csv';
 
-import { getUserState } from '../../tabViewModel';
+import { generateCSV, getUserState } from '../../tabViewModel';
 import { allCommuteRecords, onCreate } from '@/app/service/sql/tripHistoryDBHelper';
-import { createAndroidCSV, createiOSCSV } from './historyViewModel';
 
 const Drawer = createDrawerNavigator();
 
@@ -115,11 +114,7 @@ function Header({ navigation } : any) {
                 
                 const csv = jsonToCSV(data);
 
-                if (Platform.OS === 'ios') {
-                    await createiOSCSV(csv);
-                } else {
-                    await createAndroidCSV(csv);
-                }
+                generateCSV(csv, 'MyCommuteRecords');
             } catch (error) {
                 alert(`Failed to export commute records ${error}`);
             }
@@ -157,7 +152,9 @@ function Header({ navigation } : any) {
                     textValue='Export To CSV'
                     onPress={() => {
                         getUserState().then((res) => {
-                            if (res.username.includes('guest')) {
+                            console.log(res.username);
+
+                            if (res.username === undefined) {
                                 exportCommuteCSV();
                             } else {
                                 alert('You are not authorized to export commute records');

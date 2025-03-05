@@ -1,8 +1,8 @@
 import '@/global.css';
 // react native
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking } from 'react-native';
 // expo
@@ -15,7 +15,8 @@ import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Divider } from '@/components/ui/divider';
 
-import { getUserState } from '../(drawer)/drawerViewModel';
+import { keycloakLogout } from '../(drawer)/drawerViewModel';
+import { getUserState } from '../(tab)/tabViewModel';
 
 export default function DrawerScreen(props: any) {
     const navigation: any = useNavigation();
@@ -39,11 +40,28 @@ export default function DrawerScreen(props: any) {
         }
     }
 
-    useEffect(() => {
-        getUserState().then((response) => {
-            setUsername(response.username);
-        })
-    })
+    // useEffect(() => {
+    //     getUserState().then((response) => {
+    //         setUsername(response);
+    //         // setUsername('no username haha');
+    //     })
+    // })
+
+    useFocusEffect(
+        useCallback(() => {
+            getUserState().then((response) => {
+
+                if (response.username !== undefined) {
+                    setUsername(response.username);
+                }
+
+                if (response.preferred_username !== undefined) {
+                    console.log('guest ', response.preferredUsername);
+                    setUsername(response.preferred_username);
+                }
+            })
+        }, [username])
+    )
 
     return (
         <DrawerContentScrollView {...props} className='-top-2'>
@@ -142,9 +160,14 @@ export default function DrawerScreen(props: any) {
                     label='Logout'
                     onPress={ async() => {
                         try {
-                            await AsyncStorage.removeItem('UserState').then(() => {
-                                navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-                            });
+                            await keycloakLogout().then(async (res) => {
+                                console.log('res here ', res);
+                                if (res === true) {
+                                    await AsyncStorage.removeItem('UserState').then(() => {
+                                        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+                                    });
+                                }
+                            })
                         } catch (e) {
                             alert(e);
                         }

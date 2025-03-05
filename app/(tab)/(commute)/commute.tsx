@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, createContext } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import MapView, { MapMarker, Polyline, PROVIDER_GOOGLE, PROVIDER_DEFAULT} from 'react-native-maps';
+import MapView, { MapMarker, Polyline, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Camera} from 'react-native-maps';
 import { Alert, AppState, Platform, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebView from 'react-native-webview';
@@ -35,7 +35,7 @@ import TripFeed from './(feed)/feed';
 import CommuteHistoryScreen from './(history)/history';
 import CommuteSettingsScreen from './(settings)/settings';
 
-import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord, removeItem } from './commuteViewModel';
+import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './commuteViewModel';
 import { modeOptions } from '@/assets/values/strings';
 import { generateGPX, getLocationName, getUserState } from '../tabViewModel';
 import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
@@ -48,7 +48,7 @@ const Stack = createNativeStackNavigator();
 interface Coordinate {
     latitude: number;
     longitude: number;
-    timestamp: Date
+    timestamp: string
 }
 
 export default function CommuteScreen() {
@@ -239,10 +239,6 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
-            getUserState().then((response) => {
-                setUsername(response.username);
-            })
-
             getCommuteSetting().then((setting) => {
                 console.log('Commute ', setting);
                 setGpxOn(setting.gps_tracks);
@@ -267,7 +263,7 @@ function Screen() {
             setOverlayRateVisible(false);
             setOverlayFeedVisible(false);
 
-            removeItem();
+            // removeItem();
         }, [isGpxOn])
     );
 
@@ -284,19 +280,15 @@ function Screen() {
             timeInterval: 5000,
             distanceInterval: 5
         }, (newLocation) => {
-            mapRef.current?.animateToRegion(
-                {
-                    latitude: newLocation.coords.latitude,
-                    longitude: newLocation.coords.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01
-                },
-                5000
-            );
+            updateCamera(
+                newLocation.coords.latitude,
+                newLocation.coords.longitude,
+                newLocation.coords.heading || 0
+            )
 
             setRouteCoordinates((prevCoords) => [
                 ...prevCoords,
-                { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date() }
+                { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date().toString() }
             ])
 
             const message = {
@@ -325,6 +317,23 @@ function Screen() {
         setLocationSubscription(subscription);
     }
 
+    const updateCamera = (latitude: number, longitude: number, heading: number) => {
+        if (mapRef.current) {
+            const camera: Camera = {
+                center: {
+                    latitude: latitude,
+                    longitude: longitude
+                },
+                pitch: 60,
+                heading,
+                altitude: 500,
+                zoom: 18
+            };
+    
+            mapRef.current.animateCamera(camera, {duration: 1000});
+        }
+    }
+
     // background tracking
     TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
         if (error) {
@@ -341,7 +350,7 @@ function Screen() {
 
                 setRouteCoordinates((prevCoords) => [
                     ...prevCoords,
-                    { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date() }
+                    { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date().toString() }
                 ])
     
                 const message = {
@@ -373,9 +382,6 @@ function Screen() {
         modeSelectChange(null);
 
         onMqttClose();
-
-        setVehicleId('');
-        setVehicleDescription('');
     }
 
     const modeSelectChange = async (value: string | null): Promise<void> => {
@@ -469,17 +475,25 @@ function Screen() {
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
-                            STOP TRIP TRACKING
+                            STOP COMMUTE TRACKING
                         </ButtonText>
                     </Button>
                 ) : (
                     <Button className='bg-custom-secondary h-fit rounded-none p-4'
                         onPress={() => {
                             // setShowModalSelect(true)
+                            getUserState().then((response) => {
+                                if (response.username !== undefined) {
+                                    setUsername(response.username);
+                                }
 
-                            onMqttConnect().then((response) => {
-                                console.log(response)
-                                setShowModalSelect(true)
+                                if (response.preferred_username !== undefined)  {
+                                    setUsername(response.preferred_username);
+                                }
+
+                                onMqttConnect().then((response) => {
+                                    setShowModalSelect(true)
+                                })
                             })
                         }}
                     >
@@ -494,7 +508,7 @@ function Screen() {
                 if (isOverlayInfoVisible) {
                     return <TripInfo handleAction={toggleOverlayInfo} />
                 } else if (isOverlayAlertVisible) {
-                    return <TripAlert handleAction={toggleOverlayAlert} />
+                    return <TripAlert handleAction={toggleOverlayAlert} location={location} />
                 } else if (isOverlayRateVisible) {
                     return <TripRate handleAction={toggleOverlayRate} location={location} />
                 } else if (isOverlayFeedVisible) {
@@ -516,6 +530,9 @@ function Screen() {
                                                 latitudeDelta: isCommuteStart ? 0.0922 : 0.01,
                                                 longitudeDelta: isCommuteStart ? 0.0421 : 0.01
                                             }}
+                                            showsTraffic
+                                            showsCompass
+                                            mapType='standard'
                                         >
                                             { isCommuteStart && (
                                                 <MapMarker
@@ -523,7 +540,6 @@ function Screen() {
                                                         latitude: location.coords.latitude,
                                                         longitude: location.coords.longitude
                                                     }}
-                                                    flat={true}
                                                     anchor={{ x: 0.5, y: 0.5 }}
                                                 />
                                             )}

@@ -23,7 +23,8 @@
         "NSLocationAlwaysUsageDescription": "For a better, experience, your device will need to use Location Accuracy",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "For a better, experience, your device will need to use Location Accuracy",
         "NSPhotoLibraryUsageDescription": "We need access to save files to your photo library",
-        "NSPhotoLibraryAddUsageDescription": "We need access to save files to your photo library"
+        "NSPhotoLibraryAddUsageDescription": "We need access to save files to your photo library",
+        "NSUserNotificationUsageDescription": "We need notifications to keep you updated on fleet tracking."
       },
       "config": {
         "googleMapsApiKey": "AIzaSyAceRPYDG5xfrwFzFPET1EsKhEkLXasKw0"
@@ -40,7 +41,8 @@
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_BACKGROUND_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        ["NOTIFICATIONS"]
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/stph_72.png",
@@ -53,7 +55,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-notifications"
     ],
     "extra": {
       "router": {

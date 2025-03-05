@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectInput, SelectItem, SelectPortal, SelectTri
 import { jsonToCSV } from 'react-native-csv';
 
 import { allFleetRecords, deleteFleetRecord, onCreate, updateFleetRecord } from '@/app/service/sql/fleetHistoryDBHelper';
-import { getUserState } from '../../tabViewModel';
+import { generateCSV, getUserState } from '../../tabViewModel';
 
 const Drawer = createDrawerNavigator();
 
@@ -323,11 +323,6 @@ function Header({ navigation } : any) {
         await onCreate().then(async () => {
             const data : any[] = [];
 
-            const permission = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-            if (!permission.granted) {
-                return;
-            }
-
             try {
                 const res = await allFleetRecords();
 
@@ -356,17 +351,7 @@ function Header({ navigation } : any) {
 
                 const csv = jsonToCSV(data);
 
-                await StorageAccessFramework.createFileAsync(
-                    permission.directoryUri,
-                    'MyFleetRecords.csv',
-                    'application/csv'
-                ).then( async (uri) => {
-                    await FileSystem.writeAsStringAsync(uri, csv, {
-                        encoding: FileSystem.EncodingType.UTF8
-                    })
-                }).catch((error) => {
-                    alert(`Failed to save fleet records ${error}`);
-                });
+                generateCSV(csv, 'MyFleetRecords');
             } catch (error) {
                 // console.error(error);
                 alert(`Failed to export fleet records ${error}`);
@@ -404,9 +389,9 @@ function Header({ navigation } : any) {
                     key='1'
                     textValue='Export To CSV'
                     onPress={() => {
-                        // console.warn('pressed');
+                        console.warn('pressed');
                         getUserState().then((res) => {
-                            if (!res.username.includes('guest')) {
+                            if (res.username === undefined) {
                                 exportFleetCSV();
                             } else {
                                 alert('You are not authorized to export fleet records');

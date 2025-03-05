@@ -71,6 +71,7 @@ export const publishAlert = async(message: any) => {
 
         return true;
     } catch (error) {
+        return false;
         console.error(error);
     }
 }

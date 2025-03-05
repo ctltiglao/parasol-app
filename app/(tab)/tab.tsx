@@ -27,6 +27,7 @@ import LoginScreen from '../(main)/main';
 import { getCommuteSetting } from './(commute)/(settings)/settingsViewModel';
 import { getFleetSetting } from './(fleet)/(settings)/settingsViewModel';
 import { onMqttClose } from '../service/mqtt/mqtt';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -99,8 +100,9 @@ export default function TabScreen() {
                     e.preventDefault();
 
                     const currRouteName = navigation.getState().routes[navigation.getState().index].name;
+                    console.log(currRouteName);
                     
-                    var currentTab;
+                    var currentTab : string = '';
                     if (navigation.getState().index === 0) {
                         currentTab = 'Commute';
                     } else if (navigation.getState().index === 1) {
@@ -122,7 +124,12 @@ export default function TabScreen() {
                         `Are you sure you want to exit ${currentTab}?`,
                         [
                             {text: 'No', style: 'cancel'},
-                            {text: 'Yes', onPress: () => {
+                            {text: 'Yes', onPress: async () => {
+                                if (currentTab === 'Commute') {
+                                    await AsyncStorage.removeItem('CommuteDetails');
+                                    console.log('removed commute details');
+                                }
+
                                 navigation.navigate(route.name);
                                 onMqttClose();
                                 console.log(navigation.navigate(route));

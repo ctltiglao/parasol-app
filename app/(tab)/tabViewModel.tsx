@@ -8,20 +8,35 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import { StorageAccessFramework } from 'expo-file-system';
+import * as AuthSession from 'expo-auth-session';
 // gluestack
 
 import { create } from 'xmlbuilder2';
+import { jwtDecode } from "jwt-decode";
+
+import { CLIENT_ID, DISCOVERY, REALM, SECRET } from "@/assets/values/strings";
 
 interface Coordinate {
     latitude: number;
     longitude: number;
-    timestamp: Date;
+    timestamp: string;
 }
 
-// check if with commute and fleet setting
-export const checkSetting = () => {
-    
-}
+// // for production
+// const REDIRECT_URI = AuthSession.makeRedirectUri({
+//   scheme: 'parasol',
+//   path: 'com.safetravelph.parasol'
+// });
+
+// // for development
+// // const REDIRECT_URI = AuthSession.makeRedirectUri();
+
+// const DISCOVERY = {
+//     authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,
+//     tokenEndpoint: `${REALM}/protocol/openid-connect/token`,
+//     revocationEndpoint: `${REALM}/protocol/openid-connect/logout`,
+//     userInfoEndpoint: `${REALM}/protocol/openid-connect/userinfo`
+// }
 
 // location permission
 export const getLocationPermission = async () => {
@@ -52,14 +67,87 @@ export const getLocationName = async ({latitude, longitude}: any) => {
     return `${place.name}, ${place.city}`;
 }
 
+// =====> KEYCLOAK
 export const getUserState = async () => {
+    let res = null;
+
+    const userState = await AsyncStorage.getItem('UserState');
+    const json = userState != null ? JSON.parse(userState) : null;
+
+    // try {
+        if (json.access_token !== undefined) {
+            // check if token is expired
+            const decoded: any = jwtDecode(json.access_token);
+            const current = Math.floor(Date.now() / 1000);
+
+            if (decoded && decoded.exp < current && json.refresh_token) {
+                const refresh = await refreshToken(json.refresh_token);
+                res = refresh;
+            } else {
+                res = await keycloakUserInfo(json.access_token);
+                console.log(res);
+            }
+        }
+
+        if (json.username !== undefined) {
+            res = json;
+        }
+
+        return res;
+    // } catch (error) {
+    //     console.error(error);
+    // }
+}
+
+async function keycloakUserInfo(token: string) {
     try {
-        const json = await AsyncStorage.getItem('UserState');
-        return json != null ? JSON.parse(json) : null;
+        const response = await fetch(DISCOVERY.userInfoEndpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const json = await response.json();
+        
+        return json;
     } catch (error) {
-        console.error(error);
+        console.log(error);
     }
 }
+
+export async function refreshToken(refreshToken: string) {
+    try {
+        const response = await fetch(DISCOVERY.tokenEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                client_id: CLIENT_ID,
+                client_secret: SECRET,
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken
+            }).toString()
+        });
+
+        const data = await response.json();
+        console.log('new access token ', data.access_token);
+
+        if (response.ok) {
+            await AsyncStorage.setItem('UserState', JSON.stringify(data));
+            return data.access_token;
+        } else {
+            console.log('refresh token failed');
+            await AsyncStorage.removeItem('UserState');
+            return null;
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+// =====> KEYCLOAK
 
 export async function generateGPX(coord: Coordinate[]) {
     try {
@@ -179,4 +267,52 @@ export function is30Days(date1: Date, date2: Date) {
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
 
     return diffInDays === 30;
+}
+
+// csv file
+export async function generateCSV(csv: any, title: string) {
+    try {
+        if (Platform.OS === 'ios') {
+            console.log('generateCSV new iOS');
+            const permission = await MediaLibrary.requestPermissionsAsync();
+            if (!permission.granted) {
+                return;
+            }
+
+            await FileSystem.writeAsStringAsync(`${FileSystem.documentDirectory}${title}.csv`, csv, {
+                encoding: FileSystem.EncodingType.UTF8
+            });
+
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(`${FileSystem.documentDirectory}${title}.csv`);
+            } else {
+                alert('Sharing is not available on this device');
+            }
+        }
+
+        if (Platform.OS === 'android') {
+            console.log('generateCSV new Android');
+            const permission = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+            if (!permission.granted) {
+                return;
+            }
+
+            await StorageAccessFramework.createFileAsync(
+                permission.directoryUri,
+                `${title}.csv`,
+                'application/csv'
+            ).then(async (uri) => {
+                await FileSystem.writeAsStringAsync(uri, csv, {
+                    encoding: FileSystem.EncodingType.UTF8
+                });
+
+                console.log(uri);
+            }).catch((error) => {
+                alert(`Failed to save records ${error}`);
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        alert(`Failed to save records ${error}`);
+    }
 }

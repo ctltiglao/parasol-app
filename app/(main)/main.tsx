@@ -13,17 +13,19 @@ import { Text } from '@/components/ui/text';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
 
-import axios from 'axios';
-
-import String, { CLIENT_ID, REALM, SECRET } from '@/assets/values/strings';
-import { continueAsGuest, fetchToken, getPermissions, useViewModel } from './mainViewModel';
+import String, { CLIENT_ID, REALM, REDIRECT_URI, SECRET } from '@/assets/values/strings';
+import { checkUser, continueAsGuest, fetchToken, getLocationPermissions, getNotificationPermissions, useViewModel } from './mainViewModel';
 
 const viewModel = useViewModel();
 
-const REDIRECT_URI = AuthSession.makeRedirectUri({
-  scheme: 'parasol',
-  path: 'com.safetravelph.parasol'
-});
+// for production
+// export const REDIRECT_URI = AuthSession.makeRedirectUri({
+//   scheme: 'parasol',
+//   path: 'com.safetravelph.parasol'
+// });
+
+// for development
+// export const REDIRECT_URI = AuthSession.makeRedirectUri();
 
 export default function MainScreen({ navigation } : any) {
   const loginDiscovery = AuthSession.useAutoDiscovery(`${REALM}`);
@@ -39,9 +41,20 @@ export default function MainScreen({ navigation } : any) {
     }, loginDiscovery
   );
 
+  const checkKeycloak = async () => {
+    const res = await checkUser();
+    console.log('res here ', res);
+
+    if (res === true) {
+      toTab();
+    }
+  }
+
   useEffect(() => {
-    getPermissions();
-    console.log(REDIRECT_URI);
+    getLocationPermissions();
+
+    getNotificationPermissions();
+    // console.log(REDIRECT_URI);
   }, []);
 
   const toRegister = () => {
@@ -51,13 +64,15 @@ export default function MainScreen({ navigation } : any) {
   const toTab = () => {
     navigation.navigate('Tab');
   }
-
+  
   useFocusEffect(
     useCallback(() => {
+      checkKeycloak();
+
       if (result?.type === 'success') {
         const token = async () => {
-          const res = await fetchToken(result.params.code, request?.codeVerifier ?? '');
-          console.log('token: ', JSON.stringify(res));
+          await fetchToken(result.params.code, request?.codeVerifier ?? '');
+          // console.log('token: ', JSON.stringify(res.id_token));
         }
 
         token()

@@ -229,6 +229,8 @@ function Screen() {
                                         latitudeDelta: 0.0922,
                                         longitudeDelta: 0.0421
                                     }}
+                                    showsTraffic
+                                    showsCompass
                                 >
                                     {
                                         routeCoordinates.length > 0 && (

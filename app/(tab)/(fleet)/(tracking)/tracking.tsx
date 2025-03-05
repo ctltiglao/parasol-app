@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, StyleSheet } from 'react-native';
 import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import MapView, { MapMarker } from 'react-native-maps';
+import MapView, { Camera, MapMarker } from 'react-native-maps';
 // expo
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import * as Device from 'expo-device';
+import * as Haptics from 'expo-haptics';
+import * as Notifications from 'expo-notifications';
 import { Accelerometer } from 'expo-sensors';
 // gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -26,17 +28,20 @@ import moment from 'moment';
 
 import { generateGPX, getLocationName, getUserState } from '../../tabViewModel';
 import { getFleetDetails } from '../fleetViewModel';
-import { getAveSpeed, formatTravelTime, removeItem, mqttBroker, publishBA, setFleetRecord, getTravelSpeed } from './trackingViewModel';
+import { getAveSpeed, formatTravelTime, removeItem, mqttBroker, publishBA, setFleetRecord, getTravelSpeed, sendPushNotification } from './trackingViewModel';
 import { onMqttClose } from '@/app/service/mqtt/mqtt';
 import { onMqttConnect } from '@/app/service/mqtt/mqtt';
 import { getFleetSetting } from '../(settings)/settingsViewModel';
+import { Image } from '@/components/ui/image';
+import { Radio, RadioGroup, RadioIndicator, RadioLabel } from '@/components/ui/radio';
+import { pauseOptions } from '@/assets/values/strings';
 
 const Drawer = createDrawerNavigator();
 
 interface Coordinate {
     latitude: number;
     longitude: number;
-    timestamp: Date
+    timestamp: string
 }
 
 export default function TrackingScreen() {
@@ -90,6 +95,7 @@ function Screen() {
     // const [aveTravelSpeed, setAveTravelSpeed] = useState(0);
 
     const [paxModalVisible, setPaxModalVisible] = useState(false);
+    const [pauseModalVisible, setPauseModalVisible] = useState(false);
     const [alight, setAlight] = useState(0);
     const [board, setBoard] = useState(0);
     const [paxOnBoard, setPaxOnBoard] = useState(0);
@@ -102,13 +108,23 @@ function Screen() {
     const [originTime, setOriginTime] = useState<Date|null>(null);
 
     // for tracking
+    const notificationListner = useRef<Notifications.Subscription | null>(null);
     const [locationSubscription, setLocationSubscription] = useState<Location.LocationSubscription|null>(null);
     // for route polyline
     const [routeCoordinates, setRouteCoordinates] = useState<Coordinate[]>([]);
-    // const [speedStartTime, setSpeedStartTime] = useState<any|null>(null);
+    // for auto pause
+    // const [isKeepTracking, setKeepTracking] = useState(true);
+    const [stationary, setStationary] = useState<boolean|null>(null);
+    const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+    const [isSelectPause, setIsSelectPause] = useState(null);
+    
+    const toggleSelectPause = (value: any) => setIsSelectPause(value);
 
     const openModal = () => setPaxModalVisible(true);
     const closeModal = () => setPaxModalVisible(false);
+
+    const openPauseModal = () => setPauseModalVisible(true);
+    const closePauseModal = () => setPauseModalVisible(false);
 
     const getLocation = async() => {
         const loc = await Location.getCurrentPositionAsync({});
@@ -116,16 +132,12 @@ function Screen() {
     }
 
     useEffect(() => {
+        console.log('Fleet Tracking')
         const subs = AppState.addEventListener('change', (state) => {
             console.log('AppState changed: ', state);
         })
 
         getLocation();
-
-        // get user info
-        getUserState().then((response) => {
-            setUsername(response.username);
-        })
 
         // get fleet details
         getFleetDetails().then((response) => {
@@ -140,6 +152,13 @@ function Screen() {
         const subscription = Accelerometer.addListener(({ x, y, z }) => {
             const accelerometer = Math.sqrt(x * x + y * y + z * z);
             // console.log(accelerometer);
+
+            if (isFleetStop !== false) {
+                if (accelerometer > 5.5) {
+                    sendPushNotification('Overspeeding Alert!', 'You are overspeeding! Slow down to ensure safety.');
+                }
+            }
+
             setAcceleration(accelerometer);
         })
 
@@ -148,9 +167,15 @@ function Screen() {
         onMqttConnect().then((response) => {
             console.log(response);
             startFleetTracking();
+            sendPushNotification('SafeTravelPH', 'Currently tracking your fleet...');
         });
 
         return () => {
+            if (notificationListner.current) {
+                Notifications.removeNotificationSubscription(notificationListner.current);
+                notificationListner.current = null;
+            }
+
             subs.remove();
             subscription.remove()
         }; // cleanup on unamount
@@ -159,6 +184,17 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
+            // get user info
+            getUserState().then((response) => {
+                if (response.username !== undefined) {
+                    console.log('guest ', response.username);
+                    setUsername(response.username);
+                } else {
+                    console.log('guest ', response.preferred_username);
+                    setUsername(response.preferred_username);
+                }
+            })
+
             getFleetSetting().then((setting) => {
                 console.log('Fleet ', setting);
                 setGpxOn(setting.gps_tracks);
@@ -193,10 +229,12 @@ function Screen() {
             closeModal();
 
             removeItem();
-        }, [])
+        }, [username])
     );
 
     const startFleetTracking = async() => {
+        sendPushNotification('SafeTravelPH', 'Currently tracking your fleet...');
+
         const prevLoc = await Location.getCurrentPositionAsync({});
         setOriginTime(new Date());
 
@@ -210,15 +248,6 @@ function Screen() {
             distanceInterval: 1
         }, (newLocation) => {
             if (prevLoc) {
-                mapRef.current?.animateToRegion(
-                    {
-                        latitude: newLocation.coords.latitude,
-                        longitude: newLocation.coords.longitude,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01
-                    }, 1000
-                );
-
                 // distance
                 const inMeter = geolib.getDistance(
                     {latitude: prevLoc.coords.latitude, longitude: prevLoc.coords.longitude},
@@ -238,7 +267,41 @@ function Screen() {
 
                 // speed
                 const speedKph = newLocation.coords.speed ? newLocation.coords.speed * 3.6 : 0;
+                // vibrate overspeed
+                if (speedKph > 60) {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }
+
                 setSpeed(speedKph);
+
+                // check if the location has changed
+                if (stationary === true) {
+                    console.log('keep tracking ', stationary);
+                }
+
+                if (
+                    prevLoc.coords.latitude === newLocation.coords.latitude &&
+                    prevLoc.coords.longitude === newLocation.coords.longitude
+                ) {
+                    console.log('stationary');
+                    if (!timeoutId) {
+                        // if stationary, set the timer
+                        const timer = setTimeout(() => {
+                            setStationary(true);
+                            openPauseModal();
+                        }, 90000) // 90 seconds
+                        setTimeoutId(timer);
+                    } else {
+                        // if movement detected, reset the timer
+                        if (timeoutId) {
+                            clearTimeout(timeoutId);
+                            setTimeoutId(null);
+                            setStationary(false);
+                        }
+                    }
+                }
+
+                updateCamera(newLocation.coords.latitude, newLocation.coords.longitude, newLocation.coords.heading || 0);
             }
 
             setRouteCoordinates((prevCoords) => [
@@ -246,7 +309,7 @@ function Screen() {
                 {
                     latitude: newLocation.coords.latitude,
                     longitude: newLocation.coords.longitude,
-                    timestamp: new Date()
+                    timestamp: new Date().toString(),
                 }
             ])
 
@@ -270,6 +333,23 @@ function Screen() {
         })
 
         setLocationSubscription(subscription);
+    }
+
+    const updateCamera = (latitude: number, longitude: number, heading: number) => {
+        if (mapRef.current) {
+            const camera: Camera = {
+                center: {
+                    latitude: latitude,
+                    longitude: longitude
+                },
+                pitch: 60,
+                heading,
+                altitude: 500,
+                zoom: 18
+            };
+
+            mapRef.current.animateCamera(camera, {duration: 1000});
+        }
     }
 
     TaskManager.defineTask(LOCATION_TRACKING, async({ data, error }) => {
@@ -301,6 +381,11 @@ function Screen() {
                     }
     
                     const speedKph = newLocation.speed ? newLocation.speed * 3.6 : 0;
+                    // vibrate overspeed
+                    if (speedKph > 60) {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }
+                    
                     setSpeed(speedKph);
                 }
 
@@ -309,7 +394,7 @@ function Screen() {
                     {
                         latitude: newLocation.latitude,
                         longitude: newLocation.longitude,
-                        timestamp: new Date()
+                        timestamp: new Date().toISOString(),
                     }
                 ])
 
@@ -336,6 +421,12 @@ function Screen() {
         if (isFleetStop) {
             locationSubscription?.remove();
             setLocationSubscription(null);
+
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                setTimeoutId(null);
+                setStationary(false);
+            }
 
             // stop sending location
             // mqttBroker('#');
@@ -367,6 +458,63 @@ function Screen() {
     
     return (
         <GluestackUIProvider mode='light'>
+            <Modal
+                className='p-4'
+                isOpen={pauseModalVisible}
+                onClose={closePauseModal}
+            >
+                <ModalContent className='w-full h-1/2'>
+                    <ModalBody>
+                        <Text bold={true} size='lg'>You have been idle</Text>
+                        <Text size='lg'>You have been idle for 90 seconds. Would you like to pause tracking?</Text>
+
+                        <RadioGroup onChange={toggleSelectPause} className='mt-4'>
+                            { pauseOptions.map((option) => (
+                                <Radio key={option.id} value={option.value} size='lg'>
+                                    <RadioIndicator className='h-fit w-fit border-transparent bg-transparent border-1'>
+                                        <MaterialIcons
+                                            size={25}
+                                            name={ isSelectPause === option.value ? 'radio-button-checked' : 'radio-button-unchecked' }
+                                        />
+                                    </RadioIndicator>
+                                    <RadioLabel className='text-md'>{option.label}</RadioLabel>
+                                </Radio>
+                            ))}
+                        </RadioGroup>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button className='bg-transparent'
+                            onPress={() => {
+                                if (timeoutId) {
+                                    clearTimeout(timeoutId);
+                                    setTimeoutId(null);
+                                    setStationary(false);
+                                }
+
+                                closePauseModal();
+                            }}
+                        >
+                            <ButtonText className='text-black'>KEEP TRACKING</ButtonText>
+                        </Button>
+
+                        <Button className='bg-transparent border-warning-500 border-2 rounded-md'
+                            onPress={() => {
+                                if (timeoutId) {
+                                    clearTimeout(timeoutId);
+                                    setTimeoutId(null);
+                                    setStationary(false);
+                                }
+
+                                closePauseModal();
+                            }}
+                        >
+                            <ButtonText className='text-warning-500'>PAUSE TRACKING</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
             <VStack>
                 <Button
                     className='h-fit p-4 bg-custom-customRed rounded-none'
@@ -474,13 +622,16 @@ function Screen() {
                             <MapView
                                 ref={mapRef}
                                 style={StyleSheet.absoluteFillObject}
-                                showsUserLocation={false}
+                                showsUserLocation={true}
                                 initialRegion={{
                                     latitude: location.coords.latitude,
                                     longitude: location.coords.longitude,
                                     latitudeDelta: 0.01,
                                     longitudeDelta: 0.01
                                 }}
+                                showsTraffic
+                                showsCompass
+                                mapType='standard'
                             >
                                 <MapMarker
                                     coordinate={{
@@ -488,8 +639,15 @@ function Screen() {
                                         longitude: location.coords.longitude
                                     }}
                                     flat={true}
+                                    rotation={location.coords.heading || 0}
                                     anchor={{x: 0.5, y: 0.5}}
-                                />
+                                >
+                                    <Image
+                                        source={(require('@/assets/icons/ic_navigate.png'))}
+                                        className='w-12 h-12'
+                                        alt='navigate'
+                                    />
+                                </MapMarker>
                             </MapView>
                         )
                     }
@@ -563,17 +721,14 @@ function Screen() {
                                         bold={true}
                                         size='3xl'
                                         className={
-                                            acceleration > 5.5 ? 'text-custom-customRed' : 
                                             speed > 60 ? 'text-custom-customRed' : 'text-custom-primary'
                                         }
                                     >
-                                        { acceleration > 5.5 ? (
-                                            'Aggressive'
-                                        ) : ( speed > 60 ? (
+                                        { speed > 60 ? (
                                             'Overspeeding'
                                         ) : (
                                             'Normal'
-                                        ))}
+                                        )}
                                     </Text>
                                 </Box>
                             </VStack>

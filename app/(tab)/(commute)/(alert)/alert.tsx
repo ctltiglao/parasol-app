@@ -1,6 +1,6 @@
 import '@/global.css';
 // react native
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Image, ScrollView } from 'react-native';
 // expo
 import { MaterialIcons } from '@expo/vector-icons';
@@ -16,8 +16,10 @@ import { Checkbox, CheckboxIndicator, CheckboxLabel } from '@/components/ui/chec
 import { handleAlert, publishAlert } from './alertViewModel';
 import { getUserState } from '../../tabViewModel';
 import { getCommuteDetails } from '../commuteViewModel';
+import { useFocusEffect } from '@react-navigation/native';
+import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
 
-export default function TripAlert({ handleAction } : any) {
+export default function TripAlert({ handleAction, location } : any) {
     const [selectedCheckboxes, setSelectedCheckboxes] = useState({
         lack: false,
         violation: false,
@@ -32,8 +34,8 @@ export default function TripAlert({ handleAction } : any) {
         crime: false
     });
 
-    const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
-    const [location, setLocation] = useState<any|null>(null);
+    // const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
+    // const [location, setLocation] = useState<any|null>(null);
     const [ vehicleId, setVehicleId ] = useState('');
     const [ vehicleDescription, setVehicleDescription ] = useState('');
     const [ username, setUsername ] = useState('');
@@ -44,23 +46,29 @@ export default function TripAlert({ handleAction } : any) {
         }));
     }
 
-    const getLocation = async() => {
-        if (!locationSubscription) {
-            const locSubscription = await Location.watchPositionAsync({
-                accuracy: Location.Accuracy.High,
-                timeInterval: 1000,
-                distanceInterval: 1
-            }, (newLocation) => {
-                setLocation(newLocation);
-            });
+    // const getLocation = async() => {
+    //     if (!locationSubscription) {
+    //         const locSubscription = await Location.watchPositionAsync({
+    //             accuracy: Location.Accuracy.High,
+    //             timeInterval: 1000,
+    //             distanceInterval: 1
+    //         }, (newLocation) => {
+    //             setLocation(newLocation);
+    //         });
 
-            setLocationSubscription(locSubscription);
-        }
-    }
+    //         setLocationSubscription(locSubscription);
+    //     }
+    // }
 
     useEffect(() => {
         getUserState().then((response) => {
-            setUsername(response.username);
+            if (response.username !== undefined) {
+                setUsername(response.username);
+            }
+
+            if (response.preferred_username !== undefined) {
+                setUsername(response.preferred_username);
+            }
         });
 
         getCommuteDetails().then((response) => {
@@ -68,8 +76,8 @@ export default function TripAlert({ handleAction } : any) {
             setVehicleDescription(response.vehicleDescription);
         })
 
-        getLocation();
-    }, [])
+        // getLocation();
+    }, [username]);
 
     return (
         <Box className='p-4 bg-white'>
@@ -409,12 +417,18 @@ export default function TripAlert({ handleAction } : any) {
                                     vehicleDetails: vehicleDescription
                                 }
 
-                                publishAlert(message).then((response) => {
-                                    if (response) {
-                                        locationSubscription?.remove();
-                                        setLocationSubscription(null);
-                                    }
-                                });
+                                console.log(location);
+
+                                onMqttConnect().then((response) => {
+                                    publishAlert(message).then((response) => {
+                                        if (response) {
+                                            // locationSubscription?.remove();
+                                            // setLocationSubscription(null);
+
+                                            onMqttClose();
+                                        }
+                                    });
+                                })
                             } else {
                                 alert('Please set commute information');
                             }

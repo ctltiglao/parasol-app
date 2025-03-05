@@ -1,13 +1,20 @@
 import '@/global.css';
+// react native
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+// import { Text } from 'react-native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+// expo
+// gluestack
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
-
-import { Text } from 'react-native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { Text } from '@/components/ui/text';
 
 import DrawerScreen from '@/app/(drawer)/drawer';
 import CustomHeader from '@/app/screen/header/customHeader';
+import { getUserState } from '../tabViewModel';
+import { Platform } from 'react-native';
 
 const Drawer = createDrawerNavigator();
 
@@ -35,6 +42,50 @@ function DrawerNavigator() {
 }
 
 function Screen() {
+    const [first, setFirst] = useState('');
+    const [last, setLast] = useState('');
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [role, setRole] = useState('');
+    const [resident, setResident] = useState('');
+    const [deviceId, setDeviceId] = useState('');
+
+    useFocusEffect(
+        useCallback(() => {
+            getUserState().then((response) => {
+                console.log('hereee ', response);
+                
+                if (response.username !== undefined) {
+                    setFirst(response.firstName);
+                    setLast(response.lastName);
+                    setUsername(response.username);
+                    setEmail(response.email);
+
+                    if (response.realmRoles.includes('government')) {
+                        setRole('Government');
+                    } else if (response.realmRoles.includes('ngo')) {
+                        setRole('NGO');
+                    } else if (response.realmRoles.includes('resident')) {
+                        setRole('Resident');
+                    }
+
+                    setResident(response.appRoles);
+                    setDeviceId(response.androidId);
+                }
+
+                if (response.preferred_username !== undefined) {
+                    setFirst(response.given_name);
+                    setLast(response.family_name);
+                    setUsername(response.preferred_username);
+                    setEmail(response.email);
+                    // setRole(response.realmRoles);
+                    // setResident(response.appRoles);
+                    setDeviceId(response.sub);
+                }
+            });
+        }, [])
+    )
+
     return (
         <GluestackUIProvider mode='light'>
             <Box className='flex-1 w-full h-full p-4'>
@@ -46,7 +97,7 @@ function Screen() {
                             First Name
                         </Text>
                         <Text className='text-black text-lg'>
-                            Guest
+                            {first ? first : ''}
                         </Text>
                     </Box>
 
@@ -55,27 +106,34 @@ function Screen() {
                             Last Name
                         </Text>
                         <Text className='text-black text-lg'>
-                            User
+                            {last ? last : ''}
                         </Text>
                     </Box>
 
                     <Box className='flex-col mt-4'>
                         <Text className='text-zinc-500 text-lg'>
-                            Last Name
+                            Username
                         </Text>
                         <Text className='text-black text-lg'>
-                            User
+                            {username ? username : ''}
                         </Text>
                     </Box>
-                </Box>
+                    
+                    <Box className='flex-col mt-4'>
+                        <Text className='text-zinc-500 text-lg'>
+                            Email
+                        </Text>
+                        <Text className='text-black text-lg'>
+                            {email ? email : ''}
+                        </Text>
+                    </Box>
 
-                <Box className='mt-8'>
-                    <Box className='flex-col'>
+                    <Box className='flex-col mt-4'>
                         <Text className='text-zinc-500 text-lg'>
                             User Role
                         </Text>
                         <Text className='text-black text-lg'>
-                            Resident
+                            {role ? role : ''}
                         </Text>
                     </Box>
 
@@ -84,7 +142,7 @@ function Screen() {
                             Resident Type
                         </Text>
                         <Text className='text-black text-lg'>
-                            Operator
+                            {resident ? resident : ''}
                         </Text>
                     </Box>
 
@@ -93,7 +151,7 @@ function Screen() {
                             Your Device ID
                         </Text>
                         <Text className='text-black text-lg'>
-                            a4d73b69bef8a382
+                            {deviceId ? deviceId : ''}
                         </Text>
                     </Box>
                 </Box>

@@ -17,6 +17,7 @@ import { getUserState } from '../../tabViewModel';
 import { getCommuteDetails } from '../commuteViewModel';
 import { HStack } from '@/components/ui/hstack';
 import { Textarea, TextareaInput } from '@/components/ui/textarea';
+import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
 
 export default function TripRate({ handleAction, location } : any) {
     const smileys = [
@@ -37,8 +38,6 @@ export default function TripRate({ handleAction, location } : any) {
     const [isSelectedOverall, setIsSelectedOverall] = useState(null);
     const [inputComment, setInputComment] = useState('');
 
-    // const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
-    // const [ location, setLocation ] = useState<any|null>(null);
     const [ vehicleId, setVehicleId ] = useState('');
     const [ vehicleDescription, setVehicleDescription ] = useState('');
     const [ username, setUsername ] = useState('');
@@ -51,24 +50,16 @@ export default function TripRate({ handleAction, location } : any) {
     const toggleSelectedAvailable = (value: any) => setIsSelectedAvailable(value);
     const toggleSelectedRoute = (value: any) => setIsSelectedRoute(value);
     const toggleSelectedOverall = (value: any) => setIsSelectedOverall(value);
-
-    // const getLocation = async() => {
-    //     if (!locationSubscription) {
-    //         const locSubscription = await Location.watchPositionAsync({
-    //             accuracy: Location.Accuracy.High,
-    //             timeInterval: 1000,
-    //             distanceInterval: 1
-    //         }, (newLocation) => {
-    //             setLocation(newLocation);
-    //         });
-    
-    //         setLocationSubscription(locSubscription);
-    //     }
-    // }
     
     useEffect(() => {
         getUserState().then((response) => {
-            setUsername(response.username);
+            if (response.username !== undefined) {
+                setUsername(response.username);
+            }
+
+            if (response.preferred_username !== undefined) {
+                setUsername(response.preferred_username);
+            }
         });
     
         getCommuteDetails().then((response) => {
@@ -77,7 +68,7 @@ export default function TripRate({ handleAction, location } : any) {
         })
 
         // getLocation();
-    }, [])
+    }, [username])
 
     return (
         <Box className='bg-white p-4'>
@@ -268,7 +259,7 @@ export default function TripRate({ handleAction, location } : any) {
                         <Button
                             className='w-1/2 h-fit p-4 bg-custom-secondary rounded-none'
                             onPress={() => {
-                                // if (vehicleId !== '') {
+                                if (vehicleId !== '') {
                                     const description = handleRating({
                                         isSelectedCondition,
                                         isSelectedComfort,
@@ -281,7 +272,9 @@ export default function TripRate({ handleAction, location } : any) {
                                         inputComment
                                     });
 
-                                    console.log(description);
+                                    console.log(vehicleId);
+                                    console.log(vehicleDescription);
+                                    console.log(username);
 
                                     const message = {
                                         deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
@@ -294,10 +287,16 @@ export default function TripRate({ handleAction, location } : any) {
                                         vehicleDetails: vehicleDescription
                                     }
                                         
-                                    publishRating(message);
-                                // } else {
-                                //     alert('Please set commute information');
-                                // }
+                                    onMqttConnect().then(() => {
+                                        publishRating(message).then((response) => {
+                                            if (response) {
+                                                onMqttClose();
+                                            }
+                                        });
+                                    });
+                                } else {
+                                    alert('Please set commute information');
+                                }
                             }}
                         >
                             <ButtonText className='text-white text-lg font-bold'>

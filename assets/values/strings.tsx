@@ -1,3 +1,5 @@
+import * as AuthSession from 'expo-auth-session';
+
 export const GOOGLE_MAPS_API_KEY= 'AIzaSyDcNwbKHXqF0YhYLhb7ZN2A3XupIk8v0_c';
 export const GOOGLE_PLACES_API_KEY = 'AIzaSyBxbNXjmdo5qt2cME549ozeVdtAFO9hD34';
 
@@ -7,6 +9,22 @@ export const KEYCLOAK_BASE_URL = 'https://staging-iam.safetravel.ph';
 export const REALM = 'https://staging-iam.safetravel.ph/realms/safetravelph-cpa';
 export const CLIENT_ID = 'safetravelph-cpa-test';
 export const SECRET = 'E2bpLBo94YOBLWGaljCyMuQc0xU19AnP';
+
+// for production
+export const REDIRECT_URI = AuthSession.makeRedirectUri({
+  scheme: 'parasol',
+  path: 'com.safetravelph.parasol'
+});
+
+// for development
+// export const REDIRECT_URI = AuthSession.makeRedirectUri();
+
+export const DISCOVERY = {
+    authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,
+    tokenEndpoint: `${REALM}/protocol/openid-connect/token`,
+    revocationEndpoint: `${REALM}/protocol/openid-connect/logout`,
+    userInfoEndpoint: `${REALM}/protocol/openid-connect/userinfo`
+}
 
 const String = {
     notice_contact: 'Visit www.safetravel.ph. For comments and suggestions, send email at admin@safetravel.ph',
@@ -36,6 +54,13 @@ export const modeOptions = [
     { id: 17, label: 'Bike', value: '17' },
     { id: 18, label: 'Company Service', value: '18' },
     { id: 19, label: 'Others', value: '19' }
+]
+
+export const pauseOptions = [
+    { id: 1, label: 'Super Traffic', value: '1' },
+    { id: 2, label: 'Road Incident/Vehicle Issues', value: '2' },
+    { id: 3, label: 'Passenger Issues', value: '3' },
+    { id: 4, label: 'Others', value: '4' }
 ]
 
 export const purposeOptions = [

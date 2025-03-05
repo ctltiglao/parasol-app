@@ -5,7 +5,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Device from 'expo-device';
 import * as Location from 'expo-location';
 import * as AuthSession from 'expo-auth-session';
+import * as Notifications from 'expo-notifications';
 // gluestack
+
+import jwtDecoder, { jwtDecode } from 'jwt-decode';
 
 import { CLIENT_ID, REALM, SECRET } from '@/assets/values/strings';
 
@@ -22,7 +25,7 @@ export const useViewModel = () => {
 }
 
 // location permission
-export const getPermissions = async () => {
+export const getLocationPermissions = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
     const serviceEnabled = await Location.hasServicesEnabledAsync();
@@ -50,6 +53,22 @@ export const getPermissions = async () => {
     await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High
     });
+}
+
+export const getNotificationPermissions = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+
+    if (status !== 'granted') {
+        Alert.alert(
+            "Permission Denied",
+            "You need to enable notifications in settings."
+        )
+
+        return false;
+    }
+
+    AsyncStorage.removeItem('NotifToken');
+    return true;
 }
 
 // =====> GUEST USER
@@ -103,14 +122,24 @@ export const continueAsGuest = async() => {
     }    
 }
 // =====> GUEST 
+
+// =====> KEYCLOAK
+// for production
+// const REDIRECT_URI = AuthSession.makeRedirectUri({
+//   scheme: 'parasol',
+//   path: 'com.safetravelph.parasol'
+// });
+
+// for development
 const REDIRECT_URI = AuthSession.makeRedirectUri();
+
 const DISCOVERY = {
   authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,
   tokenEndpoint: `${REALM}/protocol/openid-connect/token`,
-  revocationEndpoint: `${REALM}/protocol/openid-connect/logout`
+  revocationEndpoint: `${REALM}/protocol/openid-connect/logout`,
+  userInfoEndpoint: `${REALM}/protocol/openid-connect/userinfo`
 }
 
-// =====> KEYCLOAK
 // get token
 export async function fetchToken(code: string, code_verifier: string) {
     // console.log(code_verifier);
@@ -131,8 +160,67 @@ export async function fetchToken(code: string, code_verifier: string) {
     });
   
     const data = await response.json();
-  
-    return data;
+    // console.log(data);
+    AsyncStorage.setItem('UserState', JSON.stringify(data));
 }
 
+export async function checkUser() {
+    try {
+        const state = await AsyncStorage.getItem('UserState');
+        const json = state != null ? JSON.parse(state) : null;
+        // console.log(json);
+
+        if (json !== null) {
+            if (json.access_token !== undefined) {
+                // console.log('keycloak ',json);
+
+                const decoded: any = jwtDecode(json.access_token);
+                const current = Math.floor(Date.now() / 1000);
+
+                if (decoded && decoded.exp < current && json.refresh_token) {
+                    const result = await refreshToken(json.refresh_token);
+                    console.log('refresh');
+                } else {
+                    console.log('not expired');
+                }
+            }
+
+            return true
+        } else {
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export async function refreshToken(refreshToken: string) {
+    try {
+        const response = await fetch(DISCOVERY.tokenEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                client_id: CLIENT_ID,
+                client_secret: SECRET,
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken
+            }).toString()
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            await AsyncStorage.setItem('UserState', JSON.stringify(data));
+            return true;
+        } else {
+            console.log('refresh token failed');
+            await AsyncStorage.removeItem('UserState');
+            return false;
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
 // =====> KEYCLOAK
