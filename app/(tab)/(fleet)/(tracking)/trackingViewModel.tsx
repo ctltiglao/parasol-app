@@ -32,8 +32,7 @@ export const sendPushNotification = async (title: any, body: any) => {
     await Notifications.scheduleNotificationAsync({
         content: {
             title: title,
-            body: body,
-            data: { tracking: true },
+            body: body
         },
         trigger: null
     })

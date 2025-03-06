@@ -73,16 +73,10 @@ export const setCommuteRecord = async ({
 
         return true;
     } catch (error) {
-        alert(`Failed to Stop Commute Tracking ${error}`);
+        alert(`Failed to stop commute tracking ${error}`);
         return false;
     }
 }
-
-// let lastSentLocation: {
-//     lat: number;
-//     lng: number;
-//     timestamp: string;
-// } | null = null;
 
 export const mqttBroker = async(message: any) => {
     // console.log(message);

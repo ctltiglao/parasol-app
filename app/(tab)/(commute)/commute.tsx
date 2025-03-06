@@ -208,7 +208,7 @@ function Screen() {
 
     const getLocation = async () => {
         const loc = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High
+            accuracy: Location.Accuracy.Balanced
         });
         setLocation(loc);
 
@@ -272,13 +272,17 @@ function Screen() {
         setStartTime(time);
 
         if (locationSubscription) {
+            console.log('Removing previous location subscription...');
+            locationSubscription.remove();
+            setLocationSubscription(null);
             return;
         }
 
         const subscription = await Location.watchPositionAsync({
-            accuracy: Location.Accuracy.High,
-            timeInterval: 5000,
-            distanceInterval: 5
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 1000, // 10 seconds interval
+            distanceInterval: 1, // 10 meters interval
+            mayShowUserSettingsDialog: true
         }, (newLocation) => {
             updateCamera(
                 newLocation.coords.latitude,
@@ -380,18 +384,17 @@ function Screen() {
         handleCommuteStop(true);
 
         modeSelectChange(null);
-
-        onMqttClose();
     }
 
-    const modeSelectChange = async (value: string | null): Promise<void> => {
+    const modeSelectChange = async (value: string | null): Promise<boolean> => {
         setSelectedMode(value);
         setShowModalSelect(false);
 
         handleCommuteStart(true);
         isCommuteStop === true && handleCommuteStop(false);
 
-        await startCommuteTracking()
+        // await startCommuteTracking()
+        return Promise.resolve(true);
     }
 
     const handleCommuteStart = (i: boolean) => setCommuteStart(i);
@@ -434,43 +437,41 @@ function Screen() {
             {
                 selectedMode ? (
                     <Button className='h-fit p-4 bg-custom-customRed rounded-none'
-                        onPress={() => {
-                            onMqttClose().then(async (response) => {
+                        onPress={async () => {
+                            onMqttClose();
+
+                            stopCommuteTracking();
+
+                            setCommuteRecord({
+                                origin: await getLocationName(routeCoordinates[0]),
+                                originLat: routeCoordinates[0].latitude,
+                                originLng: routeCoordinates[0].longitude,
+                                destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                                destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                                destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                                mode: selectedMode,
+                                purpose: '',
+                                vehicle_id: vehicleId,
+                                vehicle_details: vehicleDescription,
+                                commute_date: startTime
+                            }).then((response) => {
                                 console.log(response)
 
-                                stopCommuteTracking();
+                                if (response === true) {
+                                    Alert.alert(
+                                        'Confirm',
+                                        'Earn tokens by rating your trip.',
+                                        [
+                                            {text: 'Close', onPress: () => {
+                                                toggleOverlayRate();
 
-                                setCommuteRecord({
-                                    origin: await getLocationName(routeCoordinates[0]),
-                                    originLat: routeCoordinates[0].latitude,
-                                    originLng: routeCoordinates[0].longitude,
-                                    destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
-                                    destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
-                                    destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
-                                    mode: selectedMode,
-                                    purpose: '',
-                                    vehicle_id: vehicleId,
-                                    vehicle_details: vehicleDescription,
-                                    commute_date: startTime
-                                }).then((response) => {
-                                    console.log(response)
-
-                                    if (response === true) {
-                                        Alert.alert(
-                                            'Confirm',
-                                            'Earn tokens by rating your trip.',
-                                            [
-                                                {text: 'Close', onPress: () => {
-                                                    toggleOverlayRate();
-
-                                                    if (isGpxOn) {
-                                                        generateGPX(routeCoordinates);
-                                                    }
-                                                }},
-                                            ]
-                                        )
-                                    }
-                                })
+                                                if (isGpxOn) {
+                                                    generateGPX(routeCoordinates);
+                                                }
+                                            }},
+                                        ]
+                                    )
+                                }
                             })
                         }}
                     >
@@ -491,9 +492,11 @@ function Screen() {
                                     setUsername(response.preferred_username);
                                 }
 
-                                onMqttConnect().then((response) => {
-                                    setShowModalSelect(true)
-                                })
+                                // onMqttConnect().then((response) => {
+                                //     console.log(response)
+                                //     setShowModalSelect(true)
+                                // })
+                                setShowModalSelect(true)
                             })
                         }}
                     >
@@ -589,9 +592,18 @@ function Screen() {
                                         key={option.id}
                                         label={option.label}
                                         value={option.value}
-                                        onPress={
-                                            () => modeSelectChange(option.label)
-                                        }
+                                        onPress={() => {
+                                            modeSelectChange(option.label).then(async () => {
+                                                onMqttConnect();
+                                                await startCommuteTracking();
+                                                // if (isCommuteStart !== true) {
+                                                //     console.log('not started');
+                                                    
+                                                // } else {
+                                                //     console.log('already started');
+                                                // }
+                                            })
+                                        }}
                                     />
                                 ))}
                             </Select>

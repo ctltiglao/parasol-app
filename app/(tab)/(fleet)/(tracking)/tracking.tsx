@@ -108,12 +108,11 @@ function Screen() {
     const [originTime, setOriginTime] = useState<Date|null>(null);
 
     // for tracking
-    const notificationListner = useRef<Notifications.Subscription | null>(null);
+    // const notificationListner = useRef<Notifications.Subscription | null>(null);
     const [locationSubscription, setLocationSubscription] = useState<Location.LocationSubscription|null>(null);
     // for route polyline
     const [routeCoordinates, setRouteCoordinates] = useState<Coordinate[]>([]);
     // for auto pause
-    // const [isKeepTracking, setKeepTracking] = useState(true);
     const [stationary, setStationary] = useState<boolean|null>(null);
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [isSelectPause, setIsSelectPause] = useState(null);
@@ -135,6 +134,16 @@ function Screen() {
         console.log('Fleet Tracking')
         const subs = AppState.addEventListener('change', (state) => {
             console.log('AppState changed: ', state);
+        })
+
+        // notification receiver
+        const notificationListner = Notifications.addNotificationResponseReceivedListener(notification => {
+            console.log(notification);
+        })
+
+        // user response to the notification
+        const responseListner = Notifications.addNotificationResponseReceivedListener(response => {
+            console.log(response);
         })
 
         getLocation();
@@ -162,19 +171,15 @@ function Screen() {
             setAcceleration(accelerometer);
         })
 
-        Accelerometer.setUpdateInterval(500);
-
-        onMqttConnect().then((response) => {
-            console.log(response);
-            startFleetTracking();
-            sendPushNotification('SafeTravelPH', 'Currently tracking your fleet...');
-        });
+        Accelerometer.setUpdateInterval(1000);
 
         return () => {
-            if (notificationListner.current) {
-                Notifications.removeNotificationSubscription(notificationListner.current);
-                notificationListner.current = null;
-            }
+            // if (notificationListner.current) {
+            //     Notifications.removeNotificationSubscription(notificationListner.current);
+            //     notificationListner.current = null;
+            // }
+            notificationListner.remove();
+            responseListner.remove();
 
             subs.remove();
             subscription.remove()
@@ -184,6 +189,8 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
+            startFleetTracking();
+
             // get user info
             getUserState().then((response) => {
                 if (response.username !== undefined) {
@@ -229,7 +236,7 @@ function Screen() {
             closeModal();
 
             removeItem();
-        }, [username])
+        }, [username, isFleetStop, aveSpeed, maxSpeed, travelTime, routeCoordinates])
     );
 
     const startFleetTracking = async() => {
@@ -238,14 +245,21 @@ function Screen() {
         const prevLoc = await Location.getCurrentPositionAsync({});
         setOriginTime(new Date());
 
+        // check if with with location subscribed,
+        // remove previous location subscription
+        // for memory leakage
         if (locationSubscription) {
+            console.log('Removing previous location subscription...');
+            locationSubscription.remove();
+            setLocationSubscription(null);
             return;
         }
 
         const subscription = await Location.watchPositionAsync({
-            accuracy: Location.Accuracy.High,
+            accuracy: Location.Accuracy.Balanced,
             timeInterval: 1000,
-            distanceInterval: 1
+            distanceInterval: 5,
+            mayShowUserSettingsDialog: true
         }, (newLocation) => {
             if (prevLoc) {
                 // distance
@@ -417,7 +431,7 @@ function Screen() {
         }
     })
 
-    useEffect(() => {
+    const stopFleetTracking = () => {
         if (isFleetStop) {
             locationSubscription?.remove();
             setLocationSubscription(null);
@@ -434,25 +448,21 @@ function Screen() {
             setRoute('');
             setVehicleId('');
 
-            onMqttClose().then((response) => {
-                console.log(response);
-                if (isGpxOn) {
-                    generateGPX(routeCoordinates);
+            if (isGpxOn) {
+                generateGPX(routeCoordinates);
 
-                    nav.navigate('Main', {
-                        route_coordinates: routeCoordinates,
-                        ave_speed: aveSpeed,
-                        max_speed: maxSpeed.toFixed(2),
-                        travel_time: travelTime,
-                        max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
-                        total_trip: board,
-                        trip_start: moment(originTime).format('hh:mm:ss')
-                    })
-                }
-                // nav.goBack();
-            });
+                nav.navigate('Main', {
+                    route_coordinates: routeCoordinates,
+                    ave_speed: aveSpeed,
+                    max_speed: maxSpeed.toFixed(2),
+                    travel_time: travelTime,
+                    max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
+                    total_trip: board,
+                    trip_start: moment(originTime).format('hh:mm:ss')
+                })
+            }
         }
-    }, [isFleetStop, aveSpeed, maxSpeed, travelTime, routeCoordinates])
+    }
     
     const handleFleetPause = (i: boolean) => setFleetPause(i);
     
@@ -519,6 +529,8 @@ function Screen() {
                 <Button
                     className='h-fit p-4 bg-custom-customRed rounded-none'
                     onPress={async() => {
+                        onMqttClose()
+
                         let aveSpeed = getAveSpeed(speed, trackingTime);
                         setAveSpeed(aveSpeed);
 
@@ -555,8 +567,8 @@ function Screen() {
                         });
 
                         closeModal();
-                        // stopFleetTracking();
-                        setFleetStop(true);
+                        stopFleetTracking();
+                        // setFleetStop(true);
                     }}
                 >
                     <ButtonText className='text-white text-lg font-bold'>

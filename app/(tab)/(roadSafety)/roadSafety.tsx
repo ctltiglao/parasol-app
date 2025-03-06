@@ -50,7 +50,7 @@ function Screen({ navigation }: { navigation: NavigationProp<any, any> }) {
 
     const getLocation = async () => {
         const loc = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High
+            accuracy: Location.Accuracy.Balanced
         });
         setLocation(loc);
         // setLocationPress(loc);

@@ -27,10 +27,14 @@ export const useViewModel = () => {
 // location permission
 export const getLocationPermissions = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+    // const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
     const serviceEnabled = await Location.hasServicesEnabledAsync();
 
     if (!serviceEnabled) {
+        Alert.alert(
+            'Location services are disabled',
+            'Location services are required to use the app'
+        )
         return;
     }
 
@@ -42,17 +46,13 @@ export const getLocationPermissions = async () => {
         return;
     }
 
-    if (bgStatus !== 'granted') {
-        Alert.alert(
-            'Permission to access background location was denied',
-            'Background location permission is required to use the app',
-        )
-        return;
-    }
-
-    await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High
-    });
+    // if (bgStatus !== 'granted') {
+    //     Alert.alert(
+    //         'Permission to access background location was denied',
+    //         'Background location permission is required to use the app',
+    //     )
+    //     return;
+    // }
 }
 
 export const getNotificationPermissions = async () => {

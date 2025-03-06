@@ -145,7 +145,6 @@ function Screen() {
     }
 
     useEffect(() => {
-        getLocation();
         // getLocationPermission();
 
         if (navRoute.params) {
@@ -175,6 +174,7 @@ function Screen() {
 
     useFocusEffect(
         useCallback(() => {
+            getLocation();
             setIsOverlayInfoVisible(false);
         }, [])
     )
@@ -187,6 +187,7 @@ function Screen() {
                     // isFleetStop === true && handleFleetStop(false);
 
                     // await startFleetTracking();
+                    onMqttConnect()
                     nav.navigate('Tracking');
                     
                     // onMqttConnect().then((response) => {

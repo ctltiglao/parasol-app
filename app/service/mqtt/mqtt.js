@@ -37,7 +37,7 @@ export const onMqttConnect = () => {
         });
 
         client.on('error', (error) => {
-            alert('Failed to connect to MQTT: ', error.error);
+            // alert('Failed to connect to MQTT: ', error.error);
             reject(false)
         });
     })
@@ -49,13 +49,7 @@ export const onMqttPublish = (topic, message) => {
     }
 
     try {
-        // if (message !== '#') {
-        //     client.subscribe(topic, (err) => {
-        //         if (!err) {
-        //             client.publish(topic, message);
-        //         }
-        //     })
-        // }
+        client.removeAllListeners('message');
 
         if (!subscribedTopics.has(topic)) {
             client.subscribe(topic, (err) => {
@@ -70,9 +64,9 @@ export const onMqttPublish = (topic, message) => {
         
         client.on('message', (topic, message) => {
             if (topic === 'route_puv_vehicle_app_feeds') {
-                // console.log(`Received message from ${topic}: message: ${message.toString()}`);
+                console.log(`Received message from ${topic}: message: ${message.toString()}`);
             } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
-                // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+                console.warn(`Received message from ${topic}: message: ${message.toString()}`);
             }
         })
 
@@ -99,6 +93,8 @@ export const onMqttClose = () => {
             console.log('MQTT: Disconnected');
             reject(false);
         }
+
+        client.removeAllListeners();
 
         client.end(true, () => {
             console.log('MQTT: Disconnected');
