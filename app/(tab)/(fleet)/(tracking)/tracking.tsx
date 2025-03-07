@@ -108,11 +108,12 @@ function Screen() {
     const [originTime, setOriginTime] = useState<Date|null>(null);
 
     // for tracking
-    // const notificationListner = useRef<Notifications.Subscription | null>(null);
+    const notificationListner = useRef<Notifications.Subscription | null>(null);
     const [locationSubscription, setLocationSubscription] = useState<Location.LocationSubscription|null>(null);
     // for route polyline
     const [routeCoordinates, setRouteCoordinates] = useState<Coordinate[]>([]);
     // for auto pause
+    // const [isKeepTracking, setKeepTracking] = useState(true);
     const [stationary, setStationary] = useState<boolean|null>(null);
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [isSelectPause, setIsSelectPause] = useState(null);
@@ -125,10 +126,10 @@ function Screen() {
     const openPauseModal = () => setPauseModalVisible(true);
     const closePauseModal = () => setPauseModalVisible(false);
 
-    const getLocation = async() => {
-        const loc = await Location.getCurrentPositionAsync({});
-        setLocation(loc);
-    }
+    // const getLocation = async() => {
+    //     const loc = await Location.getCurrentPositionAsync({});
+    //     setLocation(loc);
+    // }
 
     useEffect(() => {
         console.log('Fleet Tracking')
@@ -136,17 +137,13 @@ function Screen() {
             console.log('AppState changed: ', state);
         })
 
-        // notification receiver
-        const notificationListner = Notifications.addNotificationResponseReceivedListener(notification => {
-            console.log(notification);
-        })
+        // getLocation();
 
-        // user response to the notification
-        const responseListner = Notifications.addNotificationResponseReceivedListener(response => {
-            console.log(response);
-        })
-
-        getLocation();
+        notificationListner.current = Notifications.addNotificationReceivedListener(
+            notification => {
+                console.log(notification);
+            }
+        )
 
         // get fleet details
         getFleetDetails().then((response) => {
@@ -162,24 +159,25 @@ function Screen() {
             const accelerometer = Math.sqrt(x * x + y * y + z * z);
             // console.log(accelerometer);
 
-            if (isFleetStop !== false) {
-                if (accelerometer > 5.5) {
-                    sendPushNotification('Overspeeding Alert!', 'You are overspeeding! Slow down to ensure safety.');
-                }
+            if (accelerometer > 5.5) {
+                sendPushNotification('Overspeeding Alert!', 'You are overspeeding! Slow down to ensure safety.');
             }
 
             setAcceleration(accelerometer);
         })
 
-        Accelerometer.setUpdateInterval(1000);
+        Accelerometer.setUpdateInterval(500);
+
+        onMqttConnect().then((response) => {
+            console.log(response);
+            startFleetTracking();
+        });
 
         return () => {
-            // if (notificationListner.current) {
-            //     Notifications.removeNotificationSubscription(notificationListner.current);
-            //     notificationListner.current = null;
-            // }
-            notificationListner.remove();
-            responseListner.remove();
+            if (notificationListner.current) {
+                Notifications.removeNotificationSubscription(notificationListner.current);
+                notificationListner.current = null;
+            }
 
             subs.remove();
             subscription.remove()
@@ -189,8 +187,6 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
-            startFleetTracking();
-
             // get user info
             getUserState().then((response) => {
                 if (response.username !== undefined) {
@@ -234,9 +230,7 @@ function Screen() {
             setLocationSubscription(null);
 
             closeModal();
-
-            removeItem();
-        }, [username, isFleetStop, aveSpeed, maxSpeed, travelTime, routeCoordinates])
+        }, [username])
     );
 
     const startFleetTracking = async() => {
@@ -245,21 +239,14 @@ function Screen() {
         const prevLoc = await Location.getCurrentPositionAsync({});
         setOriginTime(new Date());
 
-        // check if with with location subscribed,
-        // remove previous location subscription
-        // for memory leakage
         if (locationSubscription) {
-            console.log('Removing previous location subscription...');
-            locationSubscription.remove();
-            setLocationSubscription(null);
             return;
         }
 
         const subscription = await Location.watchPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
+            accuracy: Location.Accuracy.High,
             timeInterval: 1000,
-            distanceInterval: 5,
-            mayShowUserSettingsDialog: true
+            distanceInterval: 1
         }, (newLocation) => {
             if (prevLoc) {
                 // distance
@@ -431,7 +418,7 @@ function Screen() {
         }
     })
 
-    const stopFleetTracking = () => {
+    useEffect(() => {
         if (isFleetStop) {
             locationSubscription?.remove();
             setLocationSubscription(null);
@@ -448,6 +435,8 @@ function Screen() {
             setRoute('');
             setVehicleId('');
 
+            onMqttClose()
+
             if (isGpxOn) {
                 generateGPX(routeCoordinates);
 
@@ -462,7 +451,7 @@ function Screen() {
                 })
             }
         }
-    }
+    }, [isFleetStop, aveSpeed, maxSpeed, travelTime, routeCoordinates])
     
     const handleFleetPause = (i: boolean) => setFleetPause(i);
     
@@ -529,8 +518,6 @@ function Screen() {
                 <Button
                     className='h-fit p-4 bg-custom-customRed rounded-none'
                     onPress={async() => {
-                        onMqttClose()
-
                         let aveSpeed = getAveSpeed(speed, trackingTime);
                         setAveSpeed(aveSpeed);
 
@@ -567,8 +554,8 @@ function Screen() {
                         });
 
                         closeModal();
-                        stopFleetTracking();
-                        // setFleetStop(true);
+                        // stopFleetTracking();
+                        setFleetStop(true);
                     }}
                 >
                     <ButtonText className='text-white text-lg font-bold'>

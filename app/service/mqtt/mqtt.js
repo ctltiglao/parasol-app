@@ -63,11 +63,11 @@ export const onMqttPublish = (topic, message) => {
         client.publish(topic, message);
         
         client.on('message', (topic, message) => {
-            if (topic === 'route_puv_vehicle_app_feeds') {
-                console.log(`Received message from ${topic}: message: ${message.toString()}`);
-            } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
-                console.warn(`Received message from ${topic}: message: ${message.toString()}`);
-            }
+            // if (topic === 'route_puv_vehicle_app_feeds') {
+            //     console.log(`Received message from ${topic}: message: ${message.toString()}`);
+            // } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
+            //     console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+            // }
         })
 
         return true
