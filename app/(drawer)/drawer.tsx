@@ -47,21 +47,19 @@ export default function DrawerScreen(props: any) {
     //     })
     // })
 
-    useFocusEffect(
-        useCallback(() => {
-            getUserState().then((response) => {
+    useEffect(() => {
+        getUserState().then((response) => {
 
-                if (response.username !== undefined) {
-                    setUsername(response.username);
-                }
+            if (response.username !== undefined) {
+                setUsername(response.username);
+            }
 
-                if (response.preferred_username !== undefined) {
-                    console.log('guest ', response.preferredUsername);
-                    setUsername(response.preferred_username);
-                }
-            })
-        }, [username])
-    )
+            if (response.preferred_username !== undefined) {
+                console.log('guest ', response.preferredUsername);
+                setUsername(response.preferred_username);
+            }
+        })
+    })
 
     return (
         <DrawerContentScrollView {...props} className='-top-2'>

@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications';
 
 import jwtDecoder, { jwtDecode } from 'jwt-decode';
 
-import { CLIENT_ID, REALM, SECRET } from '@/assets/values/strings';
+import { CLIENT_ID, DISCOVERY, REALM, REDIRECT_URI, SECRET } from '@/assets/values/strings';
 
 // open privacy policy
 export const useViewModel = () => {
@@ -124,22 +124,6 @@ export const continueAsGuest = async() => {
 // =====> GUEST 
 
 // =====> KEYCLOAK
-// for production
-// const REDIRECT_URI = AuthSession.makeRedirectUri({
-//   scheme: 'parasol',
-//   path: 'com.safetravelph.parasol'
-// });
-
-// for development
-const REDIRECT_URI = AuthSession.makeRedirectUri();
-
-const DISCOVERY = {
-  authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,
-  tokenEndpoint: `${REALM}/protocol/openid-connect/token`,
-  revocationEndpoint: `${REALM}/protocol/openid-connect/logout`,
-  userInfoEndpoint: `${REALM}/protocol/openid-connect/userinfo`
-}
-
 // get token
 export async function fetchToken(code: string, code_verifier: string) {
     // console.log(code_verifier);

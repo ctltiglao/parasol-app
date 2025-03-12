@@ -8,22 +8,6 @@ import * as WebBrowser from 'expo-web-browser';
 // ========== ==========
 // variables
 
-// for production
-// const REDIRECT_URI = AuthSession.makeRedirectUri({
-//   scheme: 'parasol',
-//   path: 'com.safetravelph.parasol'
-// });
-
-// for development
-// const REDIRECT_URI = AuthSession.makeRedirectUri();
-
-// const DISCOVERY = {
-//     authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,
-//     tokenEndpoint: `${REALM}/protocol/openid-connect/token`,
-//     revocationEndpoint: `${REALM}/protocol/openid-connect/logout`,
-//     userInfoEndpoint: `${REALM}/protocol/openid-connect/userinfo`
-// }
-
 export async function keycloakLogout() {
     try {
         const result = await AsyncStorage.getItem('UserState');

@@ -192,6 +192,8 @@ function Screen() {
     const [ isOverlayRateVisible, setOverlayRateVisible ] = useState(false);
     const [ isOverlayFeedVisible, setOverlayFeedVisible ] = useState(false);
 
+    let mqttInterval:any = null;
+
     const toggleOverlayInfo = () => {
         setOverlayInfoVisible(!isOverlayInfoVisible);
         // locationSubscription?.remove();
@@ -200,6 +202,11 @@ function Screen() {
         getCommuteDetails().then((response) => {
             setVehicleId(response.vehicleId);
             setVehicleDescription(response.vehicleDescription);
+            console.log(response.rate);
+
+            if (response.rate !== null) {
+                toggleOverlayRate();
+            }
         });
     };
     const toggleOverlayAlert = () => setOverlayAlertVisible(!isOverlayAlertVisible);
@@ -220,7 +227,7 @@ function Screen() {
                     latitudeDelta: 0.01,
                     longitudeDelta: 0.01
                 },
-                1000
+                10000
             );
         }
     }
@@ -280,8 +287,8 @@ function Screen() {
 
         const subscription = await Location.watchPositionAsync({
             accuracy: Location.Accuracy.Balanced,
-            timeInterval: 1000, // 10 seconds interval
-            distanceInterval: 1, // 10 meters interval
+            timeInterval: 5000, // 10 seconds interval
+            distanceInterval: 5, // 10 meters interval
             mayShowUserSettingsDialog: true
         }, (newLocation) => {
             updateCamera(
@@ -295,21 +302,21 @@ function Screen() {
                 { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date().toString() }
             ])
 
-            const message = {
-                deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
-                lat: newLocation.coords.latitude,
-                lng: newLocation.coords.longitude,
-                timestamp: new Date().toISOString(),
-                userId: username,
-                vehicleId: vehicleId,
-                vehicleDetails: vehicleDescription,
-                passengerId: '',
-                passengerDetails: '',
-                altitude: newLocation.coords.altitude,
-                accuracy: newLocation.coords.accuracy
-            }
+            // const message = {
+            //     deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+            //     lat: newLocation.coords.latitude,
+            //     lng: newLocation.coords.longitude,
+            //     timestamp: new Date().toISOString(),
+            //     userId: username,
+            //     vehicleId: vehicleId,
+            //     vehicleDetails: vehicleDescription,
+            //     passengerId: '',
+            //     passengerDetails: '',
+            //     altitude: newLocation.coords.altitude,
+            //     accuracy: newLocation.coords.accuracy
+            // }
             
-            mqttBroker(message);
+            // mqttBroker(message);
             
             setLocation(newLocation);
 
@@ -319,6 +326,31 @@ function Screen() {
         // console.log('1')
 
         setLocationSubscription(subscription);
+
+        if (!mqttInterval) {
+            console.log('Starting MQTT interval every 30 seconds...')
+
+            mqttInterval = setInterval(() => {
+                if (location) {
+                    const message = {
+                        deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                        lat: location.coords.latitude,
+                        lng: location.coords.longitude,
+                        timestamp: new Date().toISOString(),
+                        userId: username,
+                        vehicleId: vehicleId,
+                        vehicleDetails: vehicleDescription,
+                        passengerId: '',
+                        passengerDetails: '',
+                        altitude: location.coords.altitude,
+                        accuracy: location.coords.accuracy
+                    }
+                    
+                    console.log('Sending MQTT message...')
+                    mqttBroker(message);
+                }
+            }, 30000)
+        }
     }
 
     const updateCamera = (latitude: number, longitude: number, heading: number) => {
@@ -334,7 +366,7 @@ function Screen() {
                 zoom: 18
             };
     
-            mapRef.current.animateCamera(camera, {duration: 1000});
+            mapRef.current.animateCamera(camera, {duration: 10000});
         }
     }
 
@@ -357,21 +389,46 @@ function Screen() {
                     { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date().toString() }
                 ])
     
-                const message = {
-                    deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
-                    lat: newLocation.coords.latitude,
-                    lng: newLocation.coords.longitude,
-                    timestamp: new Date().toISOString(),
-                    userId: username,
-                    vehicleId: vehicleId,
-                    vehicleDetails: vehicleDescription,
-                    passengerId: '',
-                    passengerDetails: '',
-                    altitude: newLocation.coords.altitude,
-                    accuracy: newLocation.coords.accuracy
-                }
+                // const message = {
+                //     deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                //     lat: newLocation.coords.latitude,
+                //     lng: newLocation.coords.longitude,
+                //     timestamp: new Date().toISOString(),
+                //     userId: username,
+                //     vehicleId: vehicleId,
+                //     vehicleDetails: vehicleDescription,
+                //     passengerId: '',
+                //     passengerDetails: '',
+                //     altitude: newLocation.coords.altitude,
+                //     accuracy: newLocation.coords.accuracy
+                // }
                 
-                mqttBroker(message);
+                // mqttBroker(message);
+            }
+
+            if (!mqttInterval) {
+                console.log('Starting MQTT interval every 30 seconds...')
+    
+                mqttInterval = setInterval(() => {
+                    if (location) {
+                        const message = {
+                            deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                            lat: location.coords.latitude,
+                            lng: location.coords.longitude,
+                            timestamp: new Date().toISOString(),
+                            userId: username,
+                            vehicleId: vehicleId,
+                            vehicleDetails: vehicleDescription,
+                            passengerId: '',
+                            passengerDetails: '',
+                            altitude: location.coords.altitude,
+                            accuracy: location.coords.accuracy
+                        }
+                        
+                        console.log('Sending MQTT message...')
+                        mqttBroker(message);
+                    }
+                }, 30000)
             }
         }
     })
@@ -459,11 +516,19 @@ function Screen() {
 
                                 if (response === true) {
                                     Alert.alert(
-                                        'Confirm',
+                                        'Earn Paracoints',
                                         'Earn tokens by rating your trip.',
                                         [
-                                            {text: 'Close', onPress: () => {
-                                                toggleOverlayRate();
+                                            {text: 'NO THANKS', onPress: () => {
+                                                if (isGpxOn) {
+                                                    generateGPX(routeCoordinates);
+                                                }
+                                            }},{text: 'RATE TRIP', onPress: () => {
+                                                if (vehicleId !== '') {
+                                                    toggleOverlayRate();
+                                                } else {
+                                                    toggleOverlayInfo();
+                                                }
 
                                                 if (isGpxOn) {
                                                     generateGPX(routeCoordinates);
@@ -509,7 +574,7 @@ function Screen() {
 
             {(() => {
                 if (isOverlayInfoVisible) {
-                    return <TripInfo handleAction={toggleOverlayInfo} />
+                    return <TripInfo handleAction={toggleOverlayInfo} rate={isCommuteStop !== true ? null : 'rate'} />
                 } else if (isOverlayAlertVisible) {
                     return <TripAlert handleAction={toggleOverlayAlert} location={location} />
                 } else if (isOverlayRateVisible) {

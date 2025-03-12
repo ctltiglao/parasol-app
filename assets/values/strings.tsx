@@ -11,13 +11,13 @@ export const CLIENT_ID = 'safetravelph-cpa-test';
 export const SECRET = 'E2bpLBo94YOBLWGaljCyMuQc0xU19AnP';
 
 // for production
-export const REDIRECT_URI = AuthSession.makeRedirectUri({
-  scheme: 'parasol',
-  path: 'com.safetravelph.parasol'
-});
+// export const REDIRECT_URI = AuthSession.makeRedirectUri({
+//   scheme: 'parasol',
+//   path: 'com.safetravelph.parasol'
+// });
 
 // for development
-// export const REDIRECT_URI = AuthSession.makeRedirectUri();
+export const REDIRECT_URI = AuthSession.makeRedirectUri();
 
 export const DISCOVERY = {
     authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,

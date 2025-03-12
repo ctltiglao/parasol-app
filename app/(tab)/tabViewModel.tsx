@@ -22,22 +22,6 @@ interface Coordinate {
     timestamp: string;
 }
 
-// // for production
-// const REDIRECT_URI = AuthSession.makeRedirectUri({
-//   scheme: 'parasol',
-//   path: 'com.safetravelph.parasol'
-// });
-
-// // for development
-// // const REDIRECT_URI = AuthSession.makeRedirectUri();
-
-// const DISCOVERY = {
-//     authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,
-//     tokenEndpoint: `${REALM}/protocol/openid-connect/token`,
-//     revocationEndpoint: `${REALM}/protocol/openid-connect/logout`,
-//     userInfoEndpoint: `${REALM}/protocol/openid-connect/userinfo`
-// }
-
 // location permission
 export const getLocationPermission = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -73,9 +57,11 @@ export const getUserState = async () => {
 
     const userState = await AsyncStorage.getItem('UserState');
     const json = userState != null ? JSON.parse(userState) : null;
+    console.log(json);
 
-    // try {
+    try {
         if (json.access_token !== undefined) {
+            console.log('keycloak ',json);
             // check if token is expired
             const decoded: any = jwtDecode(json.access_token);
             const current = Math.floor(Date.now() / 1000);
@@ -90,16 +76,19 @@ export const getUserState = async () => {
         }
 
         if (json.username !== undefined) {
+            console.log('guest ',json);
             res = json;
         }
 
         return res;
-    // } catch (error) {
-    //     console.error(error);
-    // }
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 async function keycloakUserInfo(token: string) {
+    console.log('token ', token);
+
     try {
         const response = await fetch(DISCOVERY.userInfoEndpoint, {
             method: 'GET',

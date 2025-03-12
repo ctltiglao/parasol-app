@@ -15,7 +15,7 @@ import { Textarea, TextareaInput } from '@/components/ui/textarea';
 
 import { clearSelection, getCameraPermissions, saveCommuteDetails } from './infoViewModel';
 
-export default function TripInfo({ handleAction } : any) {
+export default function TripInfo({ handleAction, rate } : any) {
     // text input states
     // const [ inputOrigin, setInputOrigin ] = useState('');
     // const [ inputDestination, setInputDestination ] = useState('');
@@ -27,6 +27,8 @@ export default function TripInfo({ handleAction } : any) {
 
     // camera permission for qrcode scanner
     useEffect(() => {
+        console.log(rate);
+
         getCameraPermissions();
     }, []);
 
@@ -130,7 +132,8 @@ export default function TripInfo({ handleAction } : any) {
                         onPress={async () => {
                             const res = await saveCommuteDetails({
                                 vehicleId: inputId,
-                                vehicleDescription: inputDescription
+                                vehicleDescription: inputDescription,
+                                rate: rate
                             });
 
                             res && Alert.alert('Connected');

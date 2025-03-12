@@ -43,10 +43,11 @@ export const modeSelectChange = ({value, setSelectedMode}: any) => {
     setSelectedMode(selected!);
 }
 
-export const saveCommuteDetails = async ({vehicleId, vehicleDescription}: any) => {
+export const saveCommuteDetails = async ({vehicleId, vehicleDescription, rate}: any) => {
     const commuteDetails = {
         vehicleId: vehicleId,
-        vehicleDescription: vehicleDescription
+        vehicleDescription: vehicleDescription,
+        rate: rate
     }
 
     try {

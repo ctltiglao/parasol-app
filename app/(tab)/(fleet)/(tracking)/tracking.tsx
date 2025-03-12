@@ -132,6 +132,22 @@ function Screen() {
     // }
 
     useEffect(() => {
+        // get user info
+        getUserState().then((response) => {
+            if (response.username !== undefined) {
+                console.log('guest ', response.username);
+                setUsername(response.username);
+            } else {
+                console.log('keycloak ', response.preferred_username);
+                setUsername(response.preferred_username);
+            }
+        })
+
+        getFleetSetting().then((setting) => {
+            console.log('Fleet ', setting);
+            setGpxOn(setting.gps_tracks);
+        })
+
         console.log('Fleet Tracking')
         const subs = AppState.addEventListener('change', (state) => {
             console.log('AppState changed: ', state);
@@ -168,10 +184,19 @@ function Screen() {
 
         Accelerometer.setUpdateInterval(500);
 
-        onMqttConnect().then((response) => {
-            console.log(response);
-            startFleetTracking();
-        });
+        // onMqttConnect().then((response) => {
+        //     console.log(response);
+        //     startFleetTracking();
+        // });
+
+        startFleetTracking();
+        
+        if (locationSubscription) {
+            onMqttConnect().then((response) => {
+                console.log(response);
+                // startFleetTracking();
+            });
+        }
 
         return () => {
             if (notificationListner.current) {
@@ -187,22 +212,6 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
-            // get user info
-            getUserState().then((response) => {
-                if (response.username !== undefined) {
-                    console.log('guest ', response.username);
-                    setUsername(response.username);
-                } else {
-                    console.log('guest ', response.preferred_username);
-                    setUsername(response.preferred_username);
-                }
-            })
-
-            getFleetSetting().then((setting) => {
-                console.log('Fleet ', setting);
-                setGpxOn(setting.gps_tracks);
-            })
-
             setFleetPause(false);
             setFleetStop(false);
             setRoute('');
@@ -230,7 +239,7 @@ function Screen() {
             setLocationSubscription(null);
 
             closeModal();
-        }, [username])
+        }, [])
     );
 
     const startFleetTracking = async() => {
@@ -437,18 +446,20 @@ function Screen() {
 
             onMqttClose()
 
+            nav.navigate('Main', {
+                route_coordinates: routeCoordinates,
+                ave_speed: aveSpeed,
+                max_speed: maxSpeed.toFixed(2),
+                travel_time: travelTime,
+                max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
+                total_trip: board,
+                trip_start: moment(originTime).format('hh:mm:ss')
+            })
+
             if (isGpxOn) {
                 generateGPX(routeCoordinates);
 
-                nav.navigate('Main', {
-                    route_coordinates: routeCoordinates,
-                    ave_speed: aveSpeed,
-                    max_speed: maxSpeed.toFixed(2),
-                    travel_time: travelTime,
-                    max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
-                    total_trip: board,
-                    trip_start: moment(originTime).format('hh:mm:ss')
-                })
+                
             }
         }
     }, [isFleetStop, aveSpeed, maxSpeed, travelTime, routeCoordinates])
