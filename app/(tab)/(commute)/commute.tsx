@@ -40,6 +40,9 @@ import { modeOptions } from '@/assets/values/strings';
 import { generateGPX, getLocationName, getUserState } from '../tabViewModel';
 import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
 import { getCommuteSetting } from './(settings)/settingsViewModel';
+import { ApolloProvider, useMutation } from '@apollo/client';
+import { APOLLO_CLIENT, SEND_START_TRIP, SEND_STOP_TRIP } from '@/app/service/graphql';
+import moment from 'moment';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -95,74 +98,76 @@ export default function CommuteScreen() {
     );
 
     return (
-        <GluestackUIProvider mode='light'>
-            <Drawer.Navigator
-                initialRouteName='Main'
-                drawerContent={props => <DrawerScreen {...props} />}
+        <ApolloProvider client={APOLLO_CLIENT}>
+            <GluestackUIProvider mode='light'>
+                <Drawer.Navigator
+                    initialRouteName='Main'
+                    drawerContent={props => <DrawerScreen {...props} />}
 
-                screenOptions={{
-                    header: (props) => <CommuteHeader {...props} openModal={openModal}/>
-                }}
-            >
-                <Drawer.Screen name='Main' component={Screen} />
+                    screenOptions={{
+                        header: (props) => <CommuteHeader {...props} openModal={openModal}/>
+                    }}
+                >
+                    <Drawer.Screen name='Main' component={Screen} />
 
-                <Stack.Screen
-                    name='History'
-                    component={CommuteHistoryScreen}
-                    options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                    name='Settings'
-                    component={CommuteSettingsScreen}
-                    options={{ headerShown: false }}
-                />
-            </Drawer.Navigator>
-
-            {/* ========== QUICK TOUR ========== */}
-            <Modal
-                className={ Platform.OS === 'ios' ? 'h-screen pt-32 pe-8 pb-32 ps-8' : 'h-screen pt-32 pe-8 pb-14 ps-8' }
-                isOpen={modalVisible}
-                onClose={closeModal}
-            >
-                <ModalContent className='w-full h-full rounded-sm p-0'>
-                    <WebView
-                        source={{ uri: 'https://form.jotform.com/233414239585056' }}
+                    <Stack.Screen
+                        name='History'
+                        component={CommuteHistoryScreen}
+                        options={{ headerShown: false }}
                     />
-                    <ModalFooter className='p-4'>
-                        <Checkbox size='md'
-                            className='absolute left-0'
-                            value='Do not show again'
-                            onChange={() => toggleCheckbox()}
-                        >
-                            {
-                                selectedCheckboxes ? (
-                                    <MaterialIcons size={24}
-                                        color='#0038A8'
-                                        name='check-box'
-                                    />
-                                ) : (
-                                    <MaterialIcons size={24}
-                                        color='gray'
-                                        name='check-box-outline-blank'
-                                    />
-                                )
-                            }
-                            <CheckboxLabel size='md' className='text-black font-medium'>
-                                Do not show again
-                            </CheckboxLabel>
-                        </Checkbox>
+                    <Stack.Screen
+                        name='Settings'
+                        component={CommuteSettingsScreen}
+                        options={{ headerShown: false }}
+                    />
+                </Drawer.Navigator>
 
-                        <Button className='bg-zinc-300 rounded-md p-2'
-                            onPress={() => {
-                                closeModal();
-                            }}
-                        >
-                            <ButtonText className='text-black'>CANCEL</ButtonText>
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
-        </GluestackUIProvider>
+                {/* ========== QUICK TOUR ========== */}
+                <Modal
+                    className={ Platform.OS === 'ios' ? 'h-screen pt-32 pe-8 pb-32 ps-8' : 'h-screen pt-32 pe-8 pb-14 ps-8' }
+                    isOpen={modalVisible}
+                    onClose={closeModal}
+                >
+                    <ModalContent className='w-full h-full rounded-sm p-0'>
+                        <WebView
+                            source={{ uri: 'https://form.jotform.com/233414239585056' }}
+                        />
+                        <ModalFooter className='p-4'>
+                            <Checkbox size='md'
+                                className='absolute left-0'
+                                value='Do not show again'
+                                onChange={() => toggleCheckbox()}
+                            >
+                                {
+                                    selectedCheckboxes ? (
+                                        <MaterialIcons size={24}
+                                            color='#0038A8'
+                                            name='check-box'
+                                        />
+                                    ) : (
+                                        <MaterialIcons size={24}
+                                            color='gray'
+                                            name='check-box-outline-blank'
+                                        />
+                                    )
+                                }
+                                <CheckboxLabel size='md' className='text-black font-medium'>
+                                    Do not show again
+                                </CheckboxLabel>
+                            </Checkbox>
+
+                            <Button className='bg-zinc-300 rounded-md p-2'
+                                onPress={() => {
+                                    closeModal();
+                                }}
+                            >
+                                <ButtonText className='text-black'>CANCEL</ButtonText>
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+            </GluestackUIProvider>
+        </ApolloProvider>
     );
 }
 
@@ -178,6 +183,10 @@ function Screen() {
     const [location, setLocation] = useState<Location.LocationObject|null>(null);
     const [isCommuteStart, setCommuteStart] = useState(false);
     const [isCommuteStop, setCommuteStop] = useState(false);
+
+    // start and stop commute graphql
+    const [startTrip, {data: tripStartData, error: tripStartError}] = useMutation(SEND_START_TRIP);
+    const [stopTrip, {data: tripStopData, error: tripStopError}] = useMutation(SEND_STOP_TRIP);
 
     // let locationSubscription = useRef<Location.LocationSubscription|null>(null);
     const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
@@ -218,6 +227,13 @@ function Screen() {
             accuracy: Location.Accuracy.Balanced
         });
         setLocation(loc);
+
+        console.log({
+            coordinates: [
+                location?.coords.longitude,
+                location?.coords.latitude
+            ]
+        });
 
         if (location && mapRef.current) {
             mapRef.current.animateToRegion(
@@ -434,6 +450,8 @@ function Screen() {
     })
 
     const stopCommuteTracking = () => {
+        mqttInterval = null;
+
         locationSubscription?.remove();
         setLocationSubscription(null);
 
@@ -498,6 +516,30 @@ function Screen() {
                             onMqttClose();
 
                             stopCommuteTracking();
+                            
+                            // api sending...
+                            await stopTrip({
+                                variables: {
+                                    stopTrip: {
+                                        accuracy: 'HIGH',
+                                        altitude: location?.coords.latitude,
+                                        location: {
+                                            coordinates: [
+                                                location?.coords.longitude,
+                                                location?.coords.latitude
+                                            ]
+                                        },
+                                        timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                                        tripCode: 'ABC123'
+                                    }
+                                }
+                            }).then((response) => {
+                                console.log(response);
+                                console.log('STOP DATA: ', tripStopData);
+                            }).catch((error) => {
+                                console.log(error);
+                                console.log('STOP ERROR: ', tripStopError)
+                            });
 
                             setCommuteRecord({
                                 origin: await getLocationName(routeCoordinates[0]),
@@ -561,6 +603,7 @@ function Screen() {
                                 //     console.log(response)
                                 //     setShowModalSelect(true)
                                 // })
+                                
                                 setShowModalSelect(true)
                             })
                         }}
@@ -661,6 +704,35 @@ function Screen() {
                                             modeSelectChange(option.label).then(async () => {
                                                 onMqttConnect();
                                                 await startCommuteTracking();
+
+                                                startTrip({
+                                                    variables: {
+                                                        startTrip: {
+                                                            accuracy: 'HIGH',
+                                                            altitude: location?.coords.altitude,
+                                                            deviceCode: vehicleId,
+                                                            location: {
+                                                                coordinates: [
+                                                                    location?.coords.longitude,
+                                                                    location?.coords.latitude
+                                                                ]
+                                                            },
+                                                            mode: option.label,
+                                                            purpose: 'PERSONAL',
+                                                            qrCode: vehicleDescription,
+                                                            timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                                                            tripCode: 'ABC123',
+                                                            userCode: username
+                                                        }
+                                                    }
+                                                }).then((response) => {
+                                                    console.log(response);
+                                                    console.log('START DATA: ', tripStartData);
+                                                }).catch((error) => {
+                                                    console.log(error);
+                                                    console.log('START ERROR: ', tripStartError);
+                                                })
+
                                                 // if (isCommuteStart !== true) {
                                                 //     console.log('not started');
                                                     

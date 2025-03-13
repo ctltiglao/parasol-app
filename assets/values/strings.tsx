@@ -9,6 +9,10 @@ export const KEYCLOAK_BASE_URL = 'https://staging-iam.safetravel.ph';
 export const REALM = 'https://staging-iam.safetravel.ph/realms/safetravelph-cpa';
 export const CLIENT_ID = 'safetravelph-cpa-test';
 export const SECRET = 'E2bpLBo94YOBLWGaljCyMuQc0xU19AnP';
+// export const REALM = 'https://staging-iam.safetravel.ph/realms/safetravelph';
+// export const CLIENT_ID = 'stph-app'
+
+export const APOLLO_URL = 'http://52.221.1.119:5000/graphql'
 
 // for production
 // export const REDIRECT_URI = AuthSession.makeRedirectUri({
