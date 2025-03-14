@@ -138,6 +138,18 @@ export async function refreshToken(refreshToken: string) {
 }
 // =====> KEYCLOAK
 
+export const generateTripCode = () => {
+    const alphabets = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const digits = '0123456789';
+
+    const getRandomChar = (str: string) => str[Math.floor(Math.random() * str.length)];
+
+    let char = Array.from({ length: 3 }, () => getRandomChar(alphabets)).join('');
+    let num =  Array.from({ length: 3 }, () => getRandomChar(digits)).join('');
+
+    return `${char}${num}`;
+}
+
 export async function generateGPX(coord: Coordinate[]) {
     try {
         if (Platform.OS === 'ios') {

@@ -24,6 +24,9 @@ import { Heading } from '@/components/ui/heading';
 import { Checkbox, CheckboxLabel } from '@/components/ui/checkbox';
 import { VStack } from '@/components/ui/vstack';
 
+import { ApolloProvider, useMutation } from '@apollo/client';
+import moment from 'moment';
+
 import DrawerScreen from '@/app/(drawer)/drawer';
 import CommuteHeader from '@/app/screen/header/commuteHeader';
 import { CustomCommuteFab } from '@/app/screen/customFab';
@@ -37,12 +40,10 @@ import CommuteSettingsScreen from './(settings)/settings';
 
 import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './commuteViewModel';
 import { modeOptions } from '@/assets/values/strings';
-import { generateGPX, getLocationName, getUserState } from '../tabViewModel';
+import { generateGPX, generateTripCode, getLocationName, getUserState } from '../tabViewModel';
 import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
 import { getCommuteSetting } from './(settings)/settingsViewModel';
-import { ApolloProvider, useMutation } from '@apollo/client';
 import { APOLLO_CLIENT, SEND_START_TRIP, SEND_STOP_TRIP } from '@/app/service/graphql';
-import moment from 'moment';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -185,8 +186,10 @@ function Screen() {
     const [isCommuteStop, setCommuteStop] = useState(false);
 
     // start and stop commute graphql
-    const [startTrip, {data: tripStartData, error: tripStartError}] = useMutation(SEND_START_TRIP);
-    const [stopTrip, {data: tripStopData, error: tripStopError}] = useMutation(SEND_STOP_TRIP);
+    const [startTrip, { data: tripStartData, error: tripStartError }] = useMutation(SEND_START_TRIP);
+    // const [stopTrip, {data: tripStopData, error: tripStopError}] = useMutation(SEND_STOP_TRIP);
+    const [stopTrip, { data: tripStopData, error: tripStopError }] = useMutation(SEND_STOP_TRIP);
+    const [isTripCode, setIsTripCode] = useState<String|null>(null);
 
     // let locationSubscription = useRef<Location.LocationSubscription|null>(null);
     const [ locationSubscription, setLocationSubscription ] = useState<Location.LocationSubscription|null>(null);
@@ -520,25 +523,16 @@ function Screen() {
                             // api sending...
                             await stopTrip({
                                 variables: {
-                                    stopTrip: {
-                                        accuracy: 'HIGH',
-                                        altitude: location?.coords.latitude,
-                                        location: {
-                                            coordinates: [
-                                                location?.coords.longitude,
-                                                location?.coords.latitude
-                                            ]
-                                        },
-                                        timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                                        tripCode: 'ABC123'
-                                    }
+                                    altitude: location?.coords.latitude,
+                                    latitude: location?.coords.latitude,
+                                    longitude: location?.coords.longitude,
+                                    timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                                    tripCode: isTripCode
                                 }
-                            }).then((response) => {
-                                console.log(response);
-                                console.log('STOP DATA: ', tripStopData);
-                            }).catch((error) => {
-                                console.log(error);
-                                console.log('STOP ERROR: ', tripStopError)
+                            }).then((res) => {
+                                console.log('STOP TRIP GQL: ', res);
+                            }).catch((err) => {
+                                console.log('STOP TRIP GQL: ', err);
                             });
 
                             setCommuteRecord({
@@ -705,33 +699,51 @@ function Screen() {
                                                 onMqttConnect();
                                                 await startCommuteTracking();
 
-                                                startTrip({
+                                                var code = generateTripCode();
+                                                setIsTripCode(code);
+
+                                                console.log('Trip code: ', code);
+
+                                                await startTrip({
                                                     variables: {
-                                                        startTrip: {
-                                                            accuracy: 'HIGH',
-                                                            altitude: location?.coords.altitude,
-                                                            deviceCode: vehicleId,
-                                                            location: {
-                                                                coordinates: [
-                                                                    location?.coords.longitude,
-                                                                    location?.coords.latitude
-                                                                ]
-                                                            },
-                                                            mode: option.label,
-                                                            purpose: 'PERSONAL',
-                                                            qrCode: vehicleDescription,
-                                                            timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                                                            tripCode: 'ABC123',
-                                                            userCode: username
-                                                        }
+                                                        altitude: location?.coords.altitude,
+                                                        deviceCode: vehicleId,
+                                                        latitude: location?.coords.latitude,
+                                                        longitude: location?.coords.longitude,
+                                                        qrCode: vehicleDescription,
+                                                        timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                                                        tripCode: code,
+                                                        userCode: username
                                                     }
-                                                }).then((response) => {
-                                                    console.log(response);
-                                                    console.log('START DATA: ', tripStartData);
-                                                }).catch((error) => {
-                                                    console.log(error);
-                                                    console.log('START ERROR: ', tripStartError);
-                                                })
+                                                }).then((res) => {
+                                                    console.log('START TRIP GQL: ', res);
+                                                }).catch((err) => {
+                                                    console.log('START TRIP GQL: ', err);
+                                                });
+
+                                                // startTrip({
+                                                //     variables: {
+                                                //         startTrip: {
+                                                //             accuracy: 'HIGH',
+                                                //             altitude: location?.coords.altitude,
+                                                //             deviceCode: vehicleId,
+                                                //             latitude: location?.coords.latitude,
+                                                //             longitude: location?.coords.longitude,
+                                                //             mode: option.label,
+                                                //             purpose: 'PERSONAL',
+                                                //             qrCode: vehicleDescription,
+                                                //             timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                                                //             tripCode: 'ABC123',
+                                                //             userCode: username
+                                                //         }
+                                                //     }
+                                                // }).then((response) => {
+                                                //     console.log(response);
+                                                //     console.log('START DATA: ', tripStartData);
+                                                // }).catch((error) => {
+                                                //     console.log(error);
+                                                //     console.log('START ERROR: ', tripStartError);
+                                                // })
 
                                                 // if (isCommuteStart !== true) {
                                                 //     console.log('not started');

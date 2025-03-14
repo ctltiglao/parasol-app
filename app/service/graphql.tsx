@@ -8,96 +8,116 @@ export const APOLLO_CLIENT = new ApolloClient({
     cache: new InMemoryCache()
 });
 
-export const GET_START_TRIP = gql`
-    query GetAllStartTrips {
-        passengerAppFeeds_startTrip {
-            id
-            tripCode
-            timestamp
-            location
-        }
-    }
-`;
-
-// export const SEND_START_TRIP = `gql
-//     mutation startPassengerTrip(
-//         $accuracy: String!,
-//         $altitude: Int!,
-//         $deviceCode: String!,
-//         $location: [Float!],
-//         $mode: String!,
-//         $purpose: String!,
-//         $qrCode: String,
-//         $timestamp: String!,
-//         $tripCode: String!,
-//         $userCode: String!
-//     ) {
-//         passengerAppFeeds_startTrip(
-//             accuracy: $accuracy
-//             altitude: $altitude
-//             deviceCode: $deviceCode
-//             location: $location
-//             mode: $mode
-//             purpose: $purpose
-//             qrCode: $qrCode
-//             timestamp: $timestamp
-//             tripCode: $tripCode
-//             userCode: $userCode
-//         ) {
+// export const GET_START_TRIP = gql`
+//     query GetAllStartTrips {
+//         passengerAppFeeds_startTrip {
 //             id
-//             accuracy
-//             altitude
-//             deviceCode
-//             location
-//             mode
-//             purpose
-//             qrCode
-//             timestamp
 //             tripCode
-//             userCode
+//             timestamp
+//             location
 //         }
 //     }
 // `;
 
 export const SEND_START_TRIP = gql`
-    mutation startPassengerTrip($startTrip: StartTripInput!) {
-        passengerAppFeeds_startTrip(startTrip: $startTrip) {
-            id
-            accuracy
-            altitude
-            deviceCode
-            location {
-                coordinates
+    mutation startPassengerTrip(
+        $altitude: Float!,
+        $deviceCode: String!,
+        $latitude: Float!,
+        $longitude: Float!,
+        $qrCode: String,
+        $timestamp: DateTime!,
+        $tripCode: String!,
+        $userCode: String!
+    ) {
+        passengerAppFeeds_startTrip(
+            startTrip: {
+                accuracy: HIGH,
+                altitude: $altitude,
+                deviceCode: $deviceCode,
+                location: { coordinates: [$latitude, $longitude] },
+                mode: ELECTRIC_BUS,
+                purpose: PERSONAL,
+                qrCode: $qrCode,
+                timestamp: $timestamp,
+                tripCode: $tripCode,
+                userCode: $userCode
             }
-            mode
-            purpose
-            qrCode
-            timestamp
-            tripCode
-            userCode
+        ) {
+            id
         }
     }
 `;
 
 export const SEND_STOP_TRIP = gql`
-    mutation endPassengerTrip($endTrip: EndTripInput!) {
-        passengerAppFeeds_endTrip(endTrip: $endTrip) {
+    mutation endPassengerTrip(
+        $altitude: Float!,
+        $latitude: Float!,
+        $longitude: Float!,
+        $timestamp: DateTime!,
+        $tripCode: String!,
+    ) {
+        passengerAppFeeds_endTrip(
+            endTrip: {
+                accuracy: HIGH,
+                altitude: $altitude,
+                location: { coordinates: [$latitude, $longitude] },
+                timestamp: $timestamp,
+                tripCode: $tripCode
+            }
+        ) {
             id
         }
     }
 `;
 
 export const SEND_START_FLEET = gql`
-    mutation startRoutePuvVehicleTrip($startFleet: StartTripInput!) {
-        routePuvVehicleAppFeeds_startTrip(startTrip: $startFleet) {
+    mutation startRoutePuvVehicleTrip(
+        $altitude: Float!,
+        $deviceCode: String!,
+        $latitude: Float!,
+        $longitude: Float!,
+        $qrCode: String!,
+        $timestamp: DateTime!,
+        $tripCode: String!,
+        $userCode: String!
+    ) {
+        routePuvVehicleAppFeeds_startTrip(
+            startTrip: {
+                accuracy: HIGH,
+                altitude: $altitude,
+                deviceCode: $deviceCode,
+                location: { coordinates: [$latitude, $longitude] },
+                mode: ELECTRIC_BUS,
+                purpose: PERSONAL,
+                qrCode: $qrCode,
+                timestamp: $timestamp,
+                tripCode: $tripCode,
+                userCode: $userCode
+            }
+        ) {
             id
         }
     }
 `;
 
 export const SEND_STOP_FLEET = gql`
-    mutation endRoutePuvVehicleTrip($endFleet: EndTripInput!) {
-        routePuvVehicleAppFeeds_endTrip(endTrip: $endFleet) {
+    mutation endRoutePuvVehicleTrip(
+        $altitude: Float!,
+        $latitude: Float!,
+        $longitude: Float!,
+        $timestamp: DateTime!,
+        $tripCode: String!,
+    ) {
+        routePuvVehicleAppFeeds_endTrip(
+            endTrip: {
+                accuracy: HIGH,
+                altitude: $altitude,
+                location: { coordinates: [$latitude, $longitude] },
+                timestamp: $timestamp,
+                tripCode: $tripCode
+            }
+        ) {
             id
         }
     }

@@ -2,7 +2,7 @@ import '@/global.css';
 // react native
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, StyleSheet } from 'react-native';
-import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native";
+import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import MapView, { Camera, MapMarker } from 'react-native-maps';
 // expo
@@ -25,6 +25,7 @@ import { Input, InputField } from '@/components/ui/input';
 
 import * as geolib from 'geolib';
 import moment from 'moment';
+import { ApolloProvider, useMutation } from '@apollo/client';
 
 import { generateGPX, getLocationName, getUserState } from '../../tabViewModel';
 import { getFleetDetails } from '../fleetViewModel';
@@ -35,6 +36,7 @@ import { getFleetSetting } from '../(settings)/settingsViewModel';
 import { Image } from '@/components/ui/image';
 import { Radio, RadioGroup, RadioIndicator, RadioLabel } from '@/components/ui/radio';
 import { pauseOptions } from '@/assets/values/strings';
+import { APOLLO_CLIENT, SEND_STOP_FLEET } from '@/app/service/graphql';
 
 const Drawer = createDrawerNavigator();
 
@@ -46,9 +48,11 @@ interface Coordinate {
 
 export default function TrackingScreen() {
     return (
-        <GluestackUIProvider mode='light'>
-            <TrackingNavigator />
-        </GluestackUIProvider>
+        <ApolloProvider client={APOLLO_CLIENT}>
+            <GluestackUIProvider mode='light'>
+                <TrackingNavigator />
+            </GluestackUIProvider>
+        </ApolloProvider>
     );
 }
 
@@ -71,12 +75,13 @@ function TrackingNavigator() {
 }
 
 function Screen() {
-    const nav: NavigationProp<any, any> = useNavigation();
+    const nav : NavigationProp<any, any> = useNavigation();
+    // const navRoute = useRoute<TripCodeParamsPromp>();
     const LOCATION_TRACKING = 'background-location-task';
 
     const deviceId = Device.osBuildId ?? Device.osInternalBuildId ?? '';
     const mapRef = useRef<MapView>(null);
-    const [location, setLocation] = useState<any|null>(null);
+    const [location, setLocation] = useState<Location.LocationObject|null>(null);
     const [isFleetPause, setFleetPause] = useState(false);
     const [isFleetStop, setFleetStop] = useState(false);
 
@@ -117,6 +122,10 @@ function Screen() {
     const [stationary, setStationary] = useState<boolean|null>(null);
     const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const [isSelectPause, setIsSelectPause] = useState(null);
+
+    // stop fleet graphql
+    const [stopTrip, { data: tripStopData, error: stopError }] = useMutation(SEND_STOP_FLEET);
+    const [isTripCode, setIsTripCode] = useState<String|null>(null);
     
     const toggleSelectPause = (value: any) => setIsSelectPause(value);
 
@@ -454,7 +463,7 @@ function Screen() {
                 max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
                 total_trip: board,
                 trip_start: moment(originTime).format('hh:mm:ss')
-            })
+            });
 
             if (isGpxOn) {
                 generateGPX(routeCoordinates);
@@ -541,6 +550,20 @@ function Screen() {
                         if (Number(speed) > maxSpeed) {
                             setMaxSpeed(Number(speed));
                         }
+
+                        await stopTrip({
+                            variables: {
+                                altitude: location?.coords.altitude,
+                                latitude: location?.coords.latitude,
+                                longitude: location?.coords.longitude,
+                                timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                                tripCode: isTripCode
+                            }
+                        }).then((res) => {
+                            console.log('STOP TRIP GQL: ', res);
+                        }).catch((err) => {
+                            console.log('STOP TRIP GQL: ', err);
+                        });
 
                         setFleetRecord({
                             route: route,
@@ -760,16 +783,16 @@ function Screen() {
 
                                     const message = {
                                         deviceId: deviceId,
-                                        lat: location.coords.latitude,
-                                        lng: location.coords.longitude,
+                                        lat: location?.coords.latitude,
+                                        lng: location?.coords.longitude,
                                         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
                                         userId: username,
                                         vehicleId: vehicleId,
                                         vehicleDetails: vehicleDetails,
                                         passengerId: '',
                                         passengerDetails: '',
-                                        altitude: location.coords.altitude,
-                                        accuracy: location.coords.accuracy
+                                        altitude: location?.coords.altitude,
+                                        accuracy: location?.coords.accuracy
                                     }
 
                                     publishBA('boardings', message);
@@ -825,16 +848,16 @@ function Screen() {
 
                                     const message = {
                                         deviceId: deviceId,
-                                        lat: location.coords.latitude,
-                                        lng: location.coords.longitude,
+                                        lat: location?.coords.latitude,
+                                        lng: location?.coords.longitude,
                                         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
                                         userId: username,
                                         vehicleId: vehicleId,
                                         vehicleDetails: vehicleDetails,
                                         passengerId: '',
                                         passengerDetails: '',
-                                        altitude: location.coords.altitude,
-                                        accuracy: location.coords.accuracy
+                                        altitude: location?.coords.altitude,
+                                        accuracy: location?.coords.accuracy
                                     }
 
                                     publishBA('alightings', message);

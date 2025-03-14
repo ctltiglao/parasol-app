@@ -16,6 +16,9 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 
+import { ApolloProvider, useMutation } from '@apollo/client';
+import moment from 'moment';
+
 import { CustomFleetFab } from '@/app/screen/customFab';
 import DrawerScreen from '@/app/(drawer)/drawer';
 import FleetHeader from '@/app/screen/header/fleetHeader';
@@ -24,10 +27,11 @@ import FleetInfo from './(info)/info';
 import FleetHistoryScreen from './(history)/history';
 import FuelLogsScreen from './(fuel)/fuel';
 import FleetSettingsScreen from './(settings)/settings';
-import { getLocationPermission } from '../tabViewModel';
+import { generateTripCode, getLocationPermission, getUserState } from '../tabViewModel';
 import { getFleetDetails } from './fleetViewModel';
 import TrackingScreen from './(tracking)/tracking';
 import { onMqttConnect } from '@/app/service/mqtt/mqtt';
+import { APOLLO_CLIENT, SEND_START_FLEET } from '@/app/service/graphql';
 
 interface Coordinate {
     latitude: number;
@@ -51,9 +55,11 @@ const Stack = createNativeStackNavigator();
 
 export default function FleetScreen() {
     return (
-        <GluestackUIProvider mode='light'>
-            <DrawerNavigator />
-        </GluestackUIProvider>
+        <ApolloProvider client={APOLLO_CLIENT}>
+            <GluestackUIProvider mode='light'>
+                <DrawerNavigator />
+            </GluestackUIProvider>
+        </ApolloProvider>
     );
 }
 
@@ -100,8 +106,13 @@ function Screen() {
     const mapRef = useRef<MapView>(null);
     const [ location, setLocation ] = useState<any|null>(null);
 
+    const [username, setUsername] = useState('');
     const [ route, setRoute ] = useState('');
     const [ vehicleId, setVehicleId ] = useState('');
+    const [ vehicleDetails, setVehicleDetails ] = useState('');
+
+    // start fleet graphql
+    const [startTrip, { data: tripStartData, error: tripStartError }] = useMutation(SEND_START_FLEET);
     
     const [ routeCoordinates, setRouteCoordinates ] = useState<Coordinate[]>([]);
     // const [ speedStartTime, setSpeedStartTime ] = useState<any|null>(null);
@@ -120,6 +131,7 @@ function Screen() {
         getFleetDetails().then((response) => {
             setRoute(response.route);
             setVehicleId(response.vehicleId);
+            setVehicleDetails(response.vehicleDetails);
 
             console.log(response.capacity);
         })
@@ -146,6 +158,16 @@ function Screen() {
 
     useEffect(() => {
         // getLocationPermission();
+        // get user info
+        getUserState().then((response) => {
+            if (response.username !== undefined) {
+                console.log('guest ', response.username);
+                setUsername(response.username);
+            } else {
+                console.log('keycloak ', response.preferred_username);
+                setUsername(response.preferred_username);
+            }
+        })
 
         if (navRoute.params) {
             setRouteCoordinates(navRoute.params.route_coordinates);
@@ -183,12 +205,30 @@ function Screen() {
         <GluestackUIProvider mode='light'>
             <Button className='h-fit p-4 bg-custom-secondary rounded-none'
                 onPress={async () => {
+                    var tripCode = generateTripCode();
+                    console.log(tripCode)
+
+                    // await startTrip({
+                    //     variables: {
+                    //         altitude: location?.coords.altitude,
+                    //         deviceCode: vehicleId,
+                    //         latitude: location.coords.latitude,
+                    //         longitude: location.coords.longitude,
+                    //         qrCode: vehicleDetails,
+                    //         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                    //         tripCode: tripCode,
+                    //         userCode: username
+                    //     }
+                    // })
+
                     // handleFleetStart(true);
                     // isFleetStop === true && handleFleetStop(false);
 
                     // await startFleetTracking();
                     onMqttConnect()
-                    nav.navigate('Tracking');
+                    nav.navigate('Tracking', {
+                        code: tripCode
+                    });
                     
                     // onMqttConnect().then((response) => {
                     //     console.log('here ', response);
