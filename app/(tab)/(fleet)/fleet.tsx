@@ -3,7 +3,7 @@ import '@/global.css';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MapView, { Polyline } from 'react-native-maps';
 import { StyleSheet } from 'react-native';
 // expo
@@ -29,7 +29,8 @@ import FuelLogsScreen from './(fuel)/fuel';
 import FleetSettingsScreen from './(settings)/settings';
 import { generateTripCode, getLocationPermission, getUserState } from '../tabViewModel';
 import { getFleetDetails } from './fleetViewModel';
-import TrackingScreen from './(tracking)/tracking';
+// import TrackingScreen from './(tracking)/tracking';
+import { TrackingScreen } from './(tracking)/tracking';
 import { onMqttConnect } from '@/app/service/mqtt/mqtt';
 import { APOLLO_CLIENT, SEND_START_FLEET } from '@/app/service/graphql';
 
@@ -38,7 +39,7 @@ interface Coordinate {
     longitude: number;
 }
 
-type RouteParams = {
+type TrackingParams = {
     route_coordinates: Coordinate[];
     ave_speed: number;
     max_speed: number;
@@ -48,10 +49,20 @@ type RouteParams = {
     trip_start: any;
 }
 
-type RouteParamsProp = RouteProp<{Main: RouteParams}, 'Main'>;
+type TrackingParamsProp = RouteProp<{Main: TrackingParams}, 'Main'>;
+
+export type RootStackParamList = {
+    Main: TrackingParams;
+    History: undefined;
+    Fuel: undefined;
+    Settings: undefined;
+    Tracking: {tripCode: string};
+};
+
+type MainScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Main'>;
 
 const Drawer = createDrawerNavigator();
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function FleetScreen() {
     return (
@@ -100,8 +111,8 @@ function DrawerNavigator() {
 }
 
 function Screen() {
-    const nav : NavigationProp<any, any> = useNavigation();
-    const navRoute = useRoute<RouteParamsProp>();
+    const nav : NavigationProp<any, any> = useNavigation<MainScreenNavigationProp>();
+    const navTracking = useRoute<TrackingParamsProp>();
 
     const mapRef = useRef<MapView>(null);
     const [ location, setLocation ] = useState<any|null>(null);
@@ -169,16 +180,16 @@ function Screen() {
             }
         })
 
-        if (navRoute.params) {
-            setRouteCoordinates(navRoute.params.route_coordinates);
-            setAveSpeed(navRoute.params.ave_speed);
-            setMaxSpeed(navRoute.params.max_speed);
-            setTravelTime(navRoute.params.travel_time);
-            setMaxOnBoard(navRoute.params.max_pax);
-            setTotalTrip(navRoute.params.total_trip);
-            setTripStart(navRoute.params.trip_start);
+        if (navTracking.params) {
+            setRouteCoordinates(navTracking.params.route_coordinates);
+            setAveSpeed(navTracking.params.ave_speed);
+            setMaxSpeed(navTracking.params.max_speed);
+            setTravelTime(navTracking.params.travel_time);
+            setMaxOnBoard(navTracking.params.max_pax);
+            setTotalTrip(navTracking.params.total_trip);
+            setTripStart(navTracking.params.trip_start);
         }
-    }, [navRoute.params]);
+    }, [navTracking.params]);
     // }, [navRoute.params, location]);
 
     // refresh tab
@@ -227,7 +238,7 @@ function Screen() {
                     // await startFleetTracking();
                     onMqttConnect()
                     nav.navigate('Tracking', {
-                        code: tripCode
+                        tripCode: tripCode
                     });
                     
                     // onMqttConnect().then((response) => {

@@ -37,6 +37,7 @@ import { Image } from '@/components/ui/image';
 import { Radio, RadioGroup, RadioIndicator, RadioLabel } from '@/components/ui/radio';
 import { pauseOptions } from '@/assets/values/strings';
 import { APOLLO_CLIENT, SEND_STOP_FLEET } from '@/app/service/graphql';
+import { RootStackParamList } from '../fleet';
 
 const Drawer = createDrawerNavigator();
 
@@ -46,7 +47,12 @@ interface Coordinate {
     timestamp: string
 }
 
-export default function TrackingScreen() {
+type TrackingScreenNavigationProp = RouteProp<RootStackParamList, 'Tracking'>;
+let trip_code = '';
+
+export const TrackingScreen = ({ route }: { route: TrackingScreenNavigationProp }) => {
+    trip_code = route.params.tripCode;
+
     return (
         <ApolloProvider client={APOLLO_CLIENT}>
             <GluestackUIProvider mode='light'>
@@ -141,6 +147,9 @@ function Screen() {
     // }
 
     useEffect(() => {
+        console.log('TRACKING TRIP CODE HERE ', trip_code);
+        setIsTripCode(trip_code);
+
         // get user info
         getUserState().then((response) => {
             if (response.username !== undefined) {
@@ -201,10 +210,10 @@ function Screen() {
         startFleetTracking();
         
         if (locationSubscription) {
-            onMqttConnect().then((response) => {
-                console.log(response);
-                // startFleetTracking();
-            });
+            // onMqttConnect().then((response) => {
+            //     console.log(response);
+            //     // startFleetTracking();
+            // });
         }
 
         return () => {
@@ -346,7 +355,7 @@ function Screen() {
                 accuracy: newLocation.coords.accuracy
             }
 
-            mqttBroker(message);
+            // mqttBroker(message);
 
             setLocation(newLocation);
         })
@@ -538,6 +547,8 @@ function Screen() {
                 <Button
                     className='h-fit p-4 bg-custom-customRed rounded-none'
                     onPress={async() => {
+                        console.log('STOP FLEET TRACKING HERE ', isTripCode)
+
                         let aveSpeed = getAveSpeed(speed, trackingTime);
                         setAveSpeed(aveSpeed);
 
@@ -562,7 +573,8 @@ function Screen() {
                         }).then((res) => {
                             console.log('STOP TRIP GQL: ', res);
                         }).catch((err) => {
-                            console.log('STOP TRIP GQL: ', err);
+                            console.log('ERROR STOP TRIP GQL: ', err);
+                            console.log('STOP TRIP GQL: ', err.message);
                         });
 
                         setFleetRecord({

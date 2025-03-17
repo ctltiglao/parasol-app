@@ -321,21 +321,21 @@ function Screen() {
                 { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date().toString() }
             ])
 
-            // const message = {
-            //     deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
-            //     lat: newLocation.coords.latitude,
-            //     lng: newLocation.coords.longitude,
-            //     timestamp: new Date().toISOString(),
-            //     userId: username,
-            //     vehicleId: vehicleId,
-            //     vehicleDetails: vehicleDescription,
-            //     passengerId: '',
-            //     passengerDetails: '',
-            //     altitude: newLocation.coords.altitude,
-            //     accuracy: newLocation.coords.accuracy
-            // }
+            const message = {
+                deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                lat: newLocation.coords.latitude,
+                lng: newLocation.coords.longitude,
+                timestamp: new Date().toISOString(),
+                userId: username,
+                vehicleId: vehicleId,
+                vehicleDetails: vehicleDescription,
+                passengerId: '',
+                passengerDetails: '',
+                altitude: newLocation.coords.altitude,
+                accuracy: newLocation.coords.accuracy
+            }
             
-            // mqttBroker(message);
+            mqttBroker(message);
             
             setLocation(newLocation);
 
@@ -454,6 +454,7 @@ function Screen() {
 
     const stopCommuteTracking = () => {
         mqttInterval = null;
+        mqttInterval.clearInterval();
 
         locationSubscription?.remove();
         setLocationSubscription(null);
@@ -720,30 +721,6 @@ function Screen() {
                                                 }).catch((err) => {
                                                     console.log('START TRIP GQL: ', err);
                                                 });
-
-                                                // startTrip({
-                                                //     variables: {
-                                                //         startTrip: {
-                                                //             accuracy: 'HIGH',
-                                                //             altitude: location?.coords.altitude,
-                                                //             deviceCode: vehicleId,
-                                                //             latitude: location?.coords.latitude,
-                                                //             longitude: location?.coords.longitude,
-                                                //             mode: option.label,
-                                                //             purpose: 'PERSONAL',
-                                                //             qrCode: vehicleDescription,
-                                                //             timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                                                //             tripCode: 'ABC123',
-                                                //             userCode: username
-                                                //         }
-                                                //     }
-                                                // }).then((response) => {
-                                                //     console.log(response);
-                                                //     console.log('START DATA: ', tripStartData);
-                                                // }).catch((error) => {
-                                                //     console.log(error);
-                                                //     console.log('START ERROR: ', tripStartError);
-                                                // })
 
                                                 // if (isCommuteStart !== true) {
                                                 //     console.log('not started');
