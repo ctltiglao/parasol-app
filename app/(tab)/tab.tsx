@@ -28,6 +28,7 @@ import { getCommuteSetting } from './(commute)/(settings)/settingsViewModel';
 import { getFleetSetting } from './(fleet)/(settings)/settingsViewModel';
 import { onMqttClose } from '../service/mqtt/mqtt';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserState } from './tabViewModel';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -53,12 +54,22 @@ export default function TabScreen() {
 }
 
  function TabNavigator() {
+    const [isGuest, setIsGuest] = useState<boolean|null>(null);
+
     useEffect(() => {
         getCommuteSetting().then((setting) => {
             // console.log('Commute ', setting);
         });
         getFleetSetting().then((setting) => {
             // console.log('Fleet ', setting);
+        });
+
+        getUserState().then((response) => {
+            if (response.username !== undefined) {
+                setIsGuest(true);
+            } else {
+                setIsGuest(false);
+            }
         });
     })
 
@@ -140,7 +151,12 @@ export default function TabScreen() {
             })}
         >
             <Tab.Screen name='Commute' component={CommuteScreen} />
-            <Tab.Screen name='Fleet' component={FleetScreen} />
+            {/* <Tab.Screen name='Fleet' component={FleetScreen} /> */}
+
+            { isGuest === false &&
+                <Tab.Screen name='Fleet' component={FleetScreen} />
+            }
+
             <Tab.Screen name='News' component={NewsScreen} />
             <Tab.Screen name='Road Safety' component={RoadSafetyScreen} />
             <Tab.Screen name='Profile' component={ProfileScreen} />

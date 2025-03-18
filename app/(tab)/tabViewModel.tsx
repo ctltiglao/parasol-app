@@ -43,6 +43,8 @@ export const getLocationPermission = async () => {
 }
 
 export const getLocationName = async ({latitude, longitude}: any) => {
+    console.log('location ', latitude, longitude);
+
     const [place] = await Location.reverseGeocodeAsync({
         latitude, longitude
     })
@@ -57,11 +59,11 @@ export const getUserState = async () => {
 
     const userState = await AsyncStorage.getItem('UserState');
     const json = userState != null ? JSON.parse(userState) : null;
-    console.log(json);
+    // console.log(json);
 
     try {
         if (json.access_token !== undefined) {
-            console.log('keycloak ',json);
+            // console.log('keycloak ',json);
             // check if token is expired
             const decoded: any = jwtDecode(json.access_token);
             const current = Math.floor(Date.now() / 1000);
@@ -71,23 +73,23 @@ export const getUserState = async () => {
                 res = refresh;
             } else {
                 res = await keycloakUserInfo(json.access_token);
-                console.log(res);
+                // console.log(res);
             }
         }
 
         if (json.username !== undefined) {
-            console.log('guest ',json);
+            // console.log('guest ',json);
             res = json;
         }
 
         return res;
     } catch (error) {
-        console.error(error);
+        // console.error(error);
     }
 }
 
 async function keycloakUserInfo(token: string) {
-    console.log('token ', token);
+    // console.log('token ', token);
 
     try {
         const response = await fetch(DISCOVERY.userInfoEndpoint, {
@@ -102,7 +104,7 @@ async function keycloakUserInfo(token: string) {
         
         return json;
     } catch (error) {
-        console.log(error);
+        // console.log(error);
     }
 }
 
@@ -133,7 +135,7 @@ export async function refreshToken(refreshToken: string) {
             return null;
         }
     } catch (error) {
-        console.log(error);
+        // console.log(error);
     }
 }
 // =====> KEYCLOAK

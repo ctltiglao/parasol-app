@@ -52,6 +52,7 @@ export const onMqttPublish = (topic, message) => {
         client.removeAllListeners('message');
 
         if (!subscribedTopics.has(topic)) {
+            console.log('here')
             client.subscribe(topic, (err) => {
                 if (!err) {
                     subscribedTopics.add(topic);
@@ -63,6 +64,7 @@ export const onMqttPublish = (topic, message) => {
         client.publish(topic, message);
         
         client.on('message', (topic, message) => {
+            console.log(`Received message from ${topic}: message: ${message.toString()}`);
             // if (topic === 'route_puv_vehicle_app_feeds') {
             //     console.log(`Received message from ${topic}: message: ${message.toString()}`);
             // } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
@@ -74,6 +76,16 @@ export const onMqttPublish = (topic, message) => {
     } catch (error) {
         return false
     }
+}
+
+export const onMqttUnsubscribe = (topic) => {
+    client.unsubscribe(topic, (err) => {
+        if (err) {
+            console.log('UNSUBSCRIBE ERROR: ', err);
+        } else {
+            console.log('UNSUBSCRIBED SUCCESS: ', topic);
+        }
+    });
 }
 
 export const onMqttReconnect = () => {

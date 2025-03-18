@@ -38,16 +38,15 @@ import TripFeed from './(feed)/feed';
 import CommuteHistoryScreen from './(history)/history';
 import CommuteSettingsScreen from './(settings)/settings';
 
-import { mqttBroker, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './commuteViewModel';
+import { mqttPassenger, mqttCommuter, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './commuteViewModel';
 import { modeOptions } from '@/assets/values/strings';
 import { generateGPX, generateTripCode, getLocationName, getUserState } from '../tabViewModel';
-import { onMqttClose, onMqttConnect } from '@/app/service/mqtt/mqtt';
+import { onMqttClose, onMqttConnect, onMqttUnsubscribe } from '@/app/service/mqtt/mqtt';
 import { getCommuteSetting } from './(settings)/settingsViewModel';
 import { APOLLO_CLIENT, SEND_START_TRIP, SEND_STOP_TRIP } from '@/app/service/graphql';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
-// const LocationContext = createContext({});
 
 interface Coordinate {
     latitude: number;
@@ -60,6 +59,9 @@ export default function CommuteScreen() {
     const [selectedCheckboxes, setSelectedCheckboxes] = useState(false);
 
     const openModal = () => setModalVisible(true);
+    
+    // when modal is closed
+    // check if checkbox is checked
     const closeModal = async () => {
         if (selectedCheckboxes === true) {
             try {
@@ -79,6 +81,8 @@ export default function CommuteScreen() {
     }
 
     const toggleCheckbox = () => setSelectedCheckboxes(!selectedCheckboxes);
+
+    // check if quick tour is enabled
     const checkQuickTour = () => {
         getQuickTourPref().then((res) => {
             if (res === '0') {
@@ -204,13 +208,13 @@ function Screen() {
     const [ isOverlayRateVisible, setOverlayRateVisible ] = useState(false);
     const [ isOverlayFeedVisible, setOverlayFeedVisible ] = useState(false);
 
-    let mqttInterval:any = null;
+    let mqttCommuterInterval:any = null;
+    let mqttTrackingInterval:any = null;
 
     const toggleOverlayInfo = () => {
-        setOverlayInfoVisible(!isOverlayInfoVisible);
-        // locationSubscription?.remove();
-        // setLocationSubscription(null);
+        setOverlayInfoVisible(!isOverlayInfoVisible); // close/open overlay
 
+        // get scanned commute details
         getCommuteDetails().then((response) => {
             setVehicleId(response.vehicleId);
             setVehicleDescription(response.vehicleDescription);
@@ -221,23 +225,38 @@ function Screen() {
             }
         });
     };
+
+    // close/open overlay
     const toggleOverlayAlert = () => setOverlayAlertVisible(!isOverlayAlertVisible);
     const toggleOverlayRate = () => setOverlayRateVisible(!isOverlayRateVisible);
     const toggleOverlayFeed = () => setOverlayFeedVisible(!isOverlayFeedVisible);
+
+    const setMqttCommuter = async (userId: string) => {
+        if (isCommuteStart == false) {
+            if (!mqttCommuterInterval) {
+                mqttCommuterInterval = setInterval(async () => {
+                    const message = {
+                        deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                        lat: location?.coords.latitude,
+                        lng: location?.coords.longitude,
+                        timestamp: new Date().toISOString(),
+                        userId: userId,
+                        preferred_vehicles: ''
+                    }
+                    
+                    await mqttCommuter(message);
+                }, 30000);
+            }
+        }
+    }
 
     const getLocation = async () => {
         const loc = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced
         });
         setLocation(loc);
-
-        console.log({
-            coordinates: [
-                location?.coords.longitude,
-                location?.coords.latitude
-            ]
-        });
-
+        
+        // center the map on user location
         if (location && mapRef.current) {
             mapRef.current.animateToRegion(
                 {
@@ -252,6 +271,28 @@ function Screen() {
     }
 
     useEffect(() => {
+        getUserState().then(async (response) => {
+            console.log('HEYYYY ', response);
+            onMqttConnect();
+
+            // if guest
+            if (response.username !== undefined) {
+                console.log('GUEST ', response.username);
+                setUsername(response.username);
+
+                await setMqttCommuter(response.username);
+            }
+
+            // if login from keycloak
+            if (response.preferred_username !== undefined)  {
+                console.log('KEYCLOAK ', response.preferred_username);
+                setUsername(response.preferred_username);
+
+                await setMqttCommuter(response.preferred_username);
+            }
+        })
+
+        // check if app is in foreground
         const subscription = AppState.addEventListener('change', (state) => {
             console.log('AppState changed: ', state);
         })
@@ -265,6 +306,7 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
+            // check if commute setting gpx extract is on
             getCommuteSetting().then((setting) => {
                 console.log('Commute ', setting);
                 setGpxOn(setting.gps_tracks);
@@ -294,84 +336,84 @@ function Screen() {
     );
 
     const startCommuteTracking = async () => {
+        let origin: string;
+
         const time = new Date().toISOString();
         setStartTime(time);
 
+        // check if location subscription is already active
+        // then remove previous location subscription
         if (locationSubscription) {
-            console.log('Removing previous location subscription...');
             locationSubscription.remove();
             setLocationSubscription(null);
             return;
         }
 
+        // start location subscription
+        // location tracking
         const subscription = await Location.watchPositionAsync({
             accuracy: Location.Accuracy.Balanced,
-            timeInterval: 5000, // 10 seconds interval
-            distanceInterval: 5, // 10 meters interval
+            timeInterval: 5000,
+            distanceInterval: 5,
             mayShowUserSettingsDialog: true
-        }, (newLocation) => {
+        }, async (newLocation) => {
+            if (origin === undefined) {
+                origin = await getLocationName({latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude});
+            }
+
             updateCamera(
                 newLocation.coords.latitude,
                 newLocation.coords.longitude,
                 newLocation.coords.heading || 0
             )
 
+            // for map polyline
             setRouteCoordinates((prevCoords) => [
                 ...prevCoords,
                 { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date().toString() }
             ])
-
-            const message = {
-                deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
-                lat: newLocation.coords.latitude,
-                lng: newLocation.coords.longitude,
-                timestamp: new Date().toISOString(),
-                userId: username,
-                vehicleId: vehicleId,
-                vehicleDetails: vehicleDescription,
-                passengerId: '',
-                passengerDetails: '',
-                altitude: newLocation.coords.altitude,
-                accuracy: newLocation.coords.accuracy
-            }
-            
-            mqttBroker(message);
             
             setLocation(newLocation);
-
-            // console.log('4')
         })
-
-        // console.log('1')
 
         setLocationSubscription(subscription);
 
-        if (!mqttInterval) {
-            console.log('Starting MQTT interval every 30 seconds...')
+        // send mqtt message every 30 seconds
+        if (!mqttTrackingInterval) {
+            console.log('start mqtt tracking');
 
-            mqttInterval = setInterval(() => {
+            mqttTrackingInterval = setInterval(async() => {
+                console.log('mqtt tracking passenger ', origin);
+
+                // await getLocationName(routeCoordinates[routeCoordinates.length - 1])
+
                 if (location) {
-                    const message = {
-                        deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
-                        lat: location.coords.latitude,
-                        lng: location.coords.longitude,
-                        timestamp: new Date().toISOString(),
-                        userId: username,
-                        vehicleId: vehicleId,
-                        vehicleDetails: vehicleDescription,
-                        passengerId: '',
-                        passengerDetails: '',
-                        altitude: location.coords.altitude,
-                        accuracy: location.coords.accuracy
+                    try {
+                        const message = {
+                            deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                            lat: location?.coords.latitude,
+                            lng: location?.coords.longitude,
+                            timestamp: new Date().toISOString(),
+                            userId: username,
+                            orig: origin,
+                            dest: await getLocationName({latitude: location.coords.latitude, longitude: location.coords.longitude}),
+                            purpose: '',
+                            mode: selectedMode,
+                            vehicleId: vehicleId,
+                            vehicleDescription: vehicleDescription,
+                            tripId: ''
+                        }
+                        
+                        await mqttPassenger(message);
+                    } catch (err) {
+                        console.log(err);
                     }
-                    
-                    console.log('Sending MQTT message...')
-                    mqttBroker(message);
                 }
             }, 30000)
         }
     }
 
+    // update camera on location tracking
     const updateCamera = (latitude: number, longitude: number, heading: number) => {
         if (mapRef.current) {
             const camera: Camera = {
@@ -396,6 +438,8 @@ function Screen() {
             return;
         }
 
+        setMqttCommuter(username);
+
         if (isCommuteStart && data) {
             const {locations} = data as any;
             const newLocation = locations[0];
@@ -403,32 +447,16 @@ function Screen() {
             if (newLocation) {
                 console.log('Background location: ', newLocation);
 
+                // for map polyline
                 setRouteCoordinates((prevCoords) => [
                     ...prevCoords,
                     { latitude: newLocation.coords.latitude, longitude: newLocation.coords.longitude, timestamp: new Date().toString() }
                 ])
-    
-                // const message = {
-                //     deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
-                //     lat: newLocation.coords.latitude,
-                //     lng: newLocation.coords.longitude,
-                //     timestamp: new Date().toISOString(),
-                //     userId: username,
-                //     vehicleId: vehicleId,
-                //     vehicleDetails: vehicleDescription,
-                //     passengerId: '',
-                //     passengerDetails: '',
-                //     altitude: newLocation.coords.altitude,
-                //     accuracy: newLocation.coords.accuracy
-                // }
-                
-                // mqttBroker(message);
             }
 
-            if (!mqttInterval) {
-                console.log('Starting MQTT interval every 30 seconds...')
-    
-                mqttInterval = setInterval(() => {
+            // send mqtt message every 30 seconds
+            if (!mqttTrackingInterval) {
+                mqttTrackingInterval = setInterval(() => {
                     if (location) {
                         const message = {
                             deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
@@ -443,18 +471,25 @@ function Screen() {
                             altitude: location.coords.altitude,
                             accuracy: location.coords.accuracy
                         }
-                        
-                        console.log('Sending MQTT message...')
-                        mqttBroker(message);
+
+                        mqttPassenger(message);
                     }
-                }, 30000)
+                }, 30000);
             }
         }
     })
 
+    // stop commute
+    // clear mqttInterval, locationSubscription and commute mode
+    // rerun mqtt commuter and stop passenger app feeds
     const stopCommuteTracking = () => {
-        mqttInterval = null;
-        mqttInterval.clearInterval();
+        onMqttUnsubscribe("passenger_app_feeds");
+        setMqttCommuter(username);
+
+        if (mqttTrackingInterval) {
+            clearInterval(mqttTrackingInterval);
+            mqttTrackingInterval = null;
+        }
 
         locationSubscription?.remove();
         setLocationSubscription(null);
@@ -465,6 +500,7 @@ function Screen() {
         modeSelectChange(null);
     }
 
+    // set commute mode/vehicle type
     const modeSelectChange = async (value: string | null): Promise<boolean> => {
         setSelectedMode(value);
         setShowModalSelect(false);
@@ -472,13 +508,14 @@ function Screen() {
         handleCommuteStart(true);
         isCommuteStop === true && handleCommuteStop(false);
 
-        // await startCommuteTracking()
         return Promise.resolve(true);
     }
 
+    // set start/stop commute
     const handleCommuteStart = (i: boolean) => setCommuteStart(i);
     const handleCommuteStop = (i: boolean) => setCommuteStop(i);
 
+    // floating button
     const CustomTripFab = () => {
         return (
             <VStack space='md' className="absolute p-3 items-start">
@@ -486,7 +523,6 @@ function Screen() {
                 <CustomCommuteFab
                     iconName='emoticon'
                     onPress={() => {
-                        // toggleOverlayRate();
                         vehicleId !== '' ? toggleOverlayRate() : alert('Please scan QR code first');
                     }}
                 />
@@ -497,6 +533,8 @@ function Screen() {
                     }}
                 />
                 <CustomCommuteFab iconName='comment-text' onPress={() => toggleOverlayFeed()}/>
+                
+                {/* show commute mode/vehicle type */}
                 {
                     selectedMode && (
                         <Button
@@ -521,7 +559,7 @@ function Screen() {
 
                             stopCommuteTracking();
                             
-                            // api sending...
+                            // api stop trip
                             await stopTrip({
                                 variables: {
                                     altitude: location?.coords.latitude,
@@ -536,6 +574,7 @@ function Screen() {
                                 console.log('STOP TRIP GQL: ', err);
                             });
 
+                            // save to local database
                             setCommuteRecord({
                                 origin: await getLocationName(routeCoordinates[0]),
                                 originLat: routeCoordinates[0].latitude,
@@ -551,6 +590,7 @@ function Screen() {
                             }).then((response) => {
                                 console.log(response)
 
+                                // show rate modal
                                 if (response === true) {
                                     Alert.alert(
                                         'Earn Paracoints',
@@ -584,23 +624,8 @@ function Screen() {
                 ) : (
                     <Button className='bg-custom-secondary h-fit rounded-none p-4'
                         onPress={() => {
-                            // setShowModalSelect(true)
-                            getUserState().then((response) => {
-                                if (response.username !== undefined) {
-                                    setUsername(response.username);
-                                }
-
-                                if (response.preferred_username !== undefined)  {
-                                    setUsername(response.preferred_username);
-                                }
-
-                                // onMqttConnect().then((response) => {
-                                //     console.log(response)
-                                //     setShowModalSelect(true)
-                                // })
-                                
-                                setShowModalSelect(true)
-                            })
+                            console.log('Start commute tracking ', username);
+                            setShowModalSelect(true)
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -611,6 +636,7 @@ function Screen() {
             }
 
             {(() => {
+                // check if overlay is visible
                 if (isOverlayInfoVisible) {
                     return <TripInfo handleAction={toggleOverlayInfo} rate={isCommuteStop !== true ? null : 'rate'} />
                 } else if (isOverlayAlertVisible) {
@@ -620,6 +646,7 @@ function Screen() {
                 } else if (isOverlayFeedVisible) {
                     return <TripFeed handleAction={toggleOverlayFeed} />
                 } else {
+                    // default screen
                     return (
                         <Box className='flex-1 w-full h-full'>
                             <Box className='flex-1'>
@@ -661,6 +688,7 @@ function Screen() {
                                 }
                             </Box>
 
+                            {/* hide floating button when modal is open */}
                             {
                                 showModalSelect === false && (
                                     <Box className='absolute justify-between bottom-1/2'>
@@ -675,6 +703,7 @@ function Screen() {
                 }
             })()}
 
+            {/* modal to select vehicle type */}
             <Modal
                 className='p-6'
                 isOpen={showModalSelect}
@@ -696,14 +725,20 @@ function Screen() {
                                         label={option.label}
                                         value={option.value}
                                         onPress={() => {
+                                            // do this when selected vehicle type
                                             modeSelectChange(option.label).then(async () => {
-                                                onMqttConnect();
+                                                onMqttUnsubscribe('commuters');
+                                                
+                                                if (mqttCommuterInterval) {
+                                                    clearInterval(mqttCommuterInterval);
+                                                    mqttCommuterInterval = null;
+                                                }
+
+                                                // onMqttConnect();
                                                 await startCommuteTracking();
 
                                                 var code = generateTripCode();
                                                 setIsTripCode(code);
-
-                                                console.log('Trip code: ', code);
 
                                                 await startTrip({
                                                     variables: {

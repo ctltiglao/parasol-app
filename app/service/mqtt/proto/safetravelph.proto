@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+enum GpsAccuracy {
+    UNKNOWN = 0;
+    LOW = 1;
+    MEDIUM = 2;
+    HIGH = 3;
+}
+
+message RoutePuvVehicleAppFeed {
+    float latitude = 1;
+    float longitude = 2;
+    string timestamp = 3;
+    int32 currentNumberOfPassengers = 4;
+    float altitudeInMeters = 5;
+    GpsAccuracy gpsAccuracy = 6;
+    string deviceCode = 8;
+    string driverCode = 9;
+    string vehicleCode = 10;
+
+    bool isBoarding = 11;
+    bool isAlighting = 12;
+    string tripCode = 13;
+}
+
+message Passenger {
+    string deviceId = 1;
+    string lat = 2;
+    string lng = 3;
+    string timestamp = 4;
+    string userId = 5;
+    string orig = 6;
+    string dest = 7;
+    string purpose = 8;
+    string mode = 9;
+    string vehicleId = 10;
+    string vehicleDetails = 11;
+    string tripId = 12;
+}
+
+message Commuter {
+    string deviceId = 1;
+    string lat = 2;
+    string lng = 3;
+    string timestamp = 4;
+    string userId = 5;
+    repeated string preferred_vehicles = 6;
+}

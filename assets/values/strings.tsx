@@ -15,13 +15,13 @@ export const SECRET = 'E2bpLBo94YOBLWGaljCyMuQc0xU19AnP';
 export const APOLLO_URL = 'http://52.221.1.119:5000/graphql'
 
 // for production
-// export const REDIRECT_URI = AuthSession.makeRedirectUri({
-//   scheme: 'parasol',
-//   path: 'com.safetravelph.parasol'
-// });
+export const REDIRECT_URI = AuthSession.makeRedirectUri({
+  scheme: 'parasol',
+  path: 'com.safetravelph.parasol'
+});
 
 // for development
-export const REDIRECT_URI = AuthSession.makeRedirectUri();
+// export const REDIRECT_URI = AuthSession.makeRedirectUri();
 
 export const DISCOVERY = {
     authorizationEndpoint: `${REALM}/protocol/openid-connect/auth`,

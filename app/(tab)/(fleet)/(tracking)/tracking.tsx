@@ -210,10 +210,10 @@ function Screen() {
         startFleetTracking();
         
         if (locationSubscription) {
-            // onMqttConnect().then((response) => {
-            //     console.log(response);
-            //     // startFleetTracking();
-            // });
+            onMqttConnect().then((response) => {
+                console.log(response);
+                // startFleetTracking();
+            });
         }
 
         return () => {
@@ -355,7 +355,7 @@ function Screen() {
                 accuracy: newLocation.coords.accuracy
             }
 
-            // mqttBroker(message);
+            mqttBroker(message);
 
             setLocation(newLocation);
         })

@@ -39,6 +39,8 @@ export default function TripInfo({ handleAction, rate } : any) {
     // qrcode scanner result
     // close camer when result is set
     const handleQRCodeScanned = ({ data }: any) => {
+        console.log(data);
+
         setScanned(true);
         
         const pattern =/Plate:(.*?)\*\*\*/;

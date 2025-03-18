@@ -219,18 +219,22 @@ function Screen() {
                     var tripCode = generateTripCode();
                     console.log(tripCode)
 
-                    // await startTrip({
-                    //     variables: {
-                    //         altitude: location?.coords.altitude,
-                    //         deviceCode: vehicleId,
-                    //         latitude: location.coords.latitude,
-                    //         longitude: location.coords.longitude,
-                    //         qrCode: vehicleDetails,
-                    //         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                    //         tripCode: tripCode,
-                    //         userCode: username
-                    //     }
-                    // })
+                    await startTrip({
+                        variables: {
+                            altitude: location?.coords.altitude,
+                            deviceCode: vehicleId,
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude,
+                            qrCode: vehicleDetails,
+                            timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                            tripCode: tripCode,
+                            userCode: username
+                        }
+                    }).then((res) => {
+                        console.log('START FLEET GQL: ', res);
+                    }).catch((err) => {
+                        console.log('START FLEET GQL: ', err);
+                    });
 
                     // handleFleetStart(true);
                     // isFleetStop === true && handleFleetStop(false);

@@ -6,6 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { addCommuteRecord, onCreate } from "@/app/service/sql/tripHistoryDBHelper";
 import { Tracking } from "@/app/service/mqtt/proto/Tracking.proto.js";
 import { onMqttConnect, onMqttPublish } from "@/app/service/mqtt/mqtt";
+import { Commuter, Passenger } from "@/app/service/mqtt/proto/safetravelph.proto.js";
 
 // remove previous commute vehicle
 // export const removeItem = async () => {
@@ -36,6 +37,7 @@ export const getCommuteDetails = async () => {
     }
 }
 
+// add commute record to local database
 export const setCommuteRecord = async ({
     origin,
     originLat,
@@ -78,34 +80,81 @@ export const setCommuteRecord = async ({
     }
 }
 
-export const mqttBroker = async(message: any) => {
-    // console.log(message);
-    const MQTT_OPTIONS = {
-        clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
-        clean: true
-    }
-
+// send data to mqtt
+export const mqttPassenger = async(message: any) => {
     try {
-        const trackingData = {
+        const data = {
             deviceId: message.deviceId,
             lat: message.lat,
             lng: message.lng,
             timestamp: message.timestamp,
             userId: message.userId,
+            orig: message.orig,
+            dest: message.dest,
+            purpose: message.purpose,
+            mode: message.mode,
             vehicleId: message.vehicleId,
             vehicleDetails: message.vehicleDetails,
-            passengerId: message.passengerId,
-            passengerDetails: message.passengerDetails,
-            altitude: message.altitude,
-            accuracy: message.accuracy
+            tripId: message.tripId
         }
 
-        // console.log('Tracking data', trackingData)
+        const buffer = Passenger.encode(data).finish();
 
-        const buffer = Tracking.encode(trackingData).finish();
-        
-        onMqttPublish('route_puv_vehicle_app_feeds', buffer);
+        onMqttPublish('passenger_app_feeds', buffer);
     } catch (error) {
         console.error('Error in mqttBroker', error);
     }
 }
+
+export const mqttCommuter = async(message: any) => {
+    // console.log('MQTT COMMUTER ', message);
+
+    try {
+        const data = {
+            deviceId: message.deviceId,
+            lat: message.lat,
+            lng: message.lng,
+            timestamp: message.timestamp,
+            userId: message.userId,
+            preferred_vehicles: message.preferred_vehicles
+        }
+
+        const buffer = Commuter.encode(data).finish();
+
+        onMqttPublish('commuters', buffer);
+    } catch (error) {
+        console.error('Error in mqttBroker', error);
+    }
+}
+
+// export const mqttBroker = async(message: any) => {
+//     // console.log(message);
+//     const MQTT_OPTIONS = {
+//         clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
+//         clean: true
+//     }
+
+//     try {
+//         const trackingData = {
+//             deviceId: message.deviceId,
+//             lat: message.lat,
+//             lng: message.lng,
+//             timestamp: message.timestamp,
+//             userId: message.userId,
+//             vehicleId: message.vehicleId,
+//             vehicleDetails: message.vehicleDetails,
+//             passengerId: message.passengerId,
+//             passengerDetails: message.passengerDetails,
+//             altitude: message.altitude,
+//             accuracy: message.accuracy
+//         }
+
+//         // console.log('Tracking data', trackingData)
+
+//         const buffer = Tracking.encode(trackingData).finish();
+        
+//         onMqttPublish('route_puv_vehicle_app_feeds', buffer);
+//     } catch (error) {
+//         console.error('Error in mqttBroker', error);
+//     }
+// }
