@@ -43,12 +43,10 @@ export const getLocationPermission = async () => {
 }
 
 export const getLocationName = async ({latitude, longitude}: any) => {
-    console.log('location ', latitude, longitude);
 
     const [place] = await Location.reverseGeocodeAsync({
         latitude, longitude
     })
-    console.log(place);
 
     return `${place.name}, ${place.city}`;
 }
@@ -155,7 +153,6 @@ export const generateTripCode = () => {
 export async function generateGPX(coord: Coordinate[]) {
     try {
         if (Platform.OS === 'ios') {
-            console.log('generateGpx');
             const permission = await MediaLibrary.requestPermissionsAsync();
             if (!permission.granted) {
                 return
@@ -174,8 +171,6 @@ export async function generateGPX(coord: Coordinate[]) {
             })
                         
             const gpxData = gpx.end({prettyPrint: true});
-
-            console.log(gpxData);
 
             const uri = `${FileSystem.documentDirectory}track.gpx`;
 
@@ -214,8 +209,6 @@ export async function generateGPX(coord: Coordinate[]) {
                     
             const gpxData = gpx.end({prettyPrint: true});
 
-            console.log(gpxData);
-
             await StorageAccessFramework.createFileAsync(
                 permission.directoryUri,
                 'track.gpx',
@@ -225,7 +218,6 @@ export async function generateGPX(coord: Coordinate[]) {
                     encoding: FileSystem.EncodingType.UTF8
                 });
 
-                console.log(uri);
                 saveGPXDetails(uri);
             }).catch((error) => {
                 alert(`Failed to save GPS tracks ${error}`);
@@ -250,9 +242,7 @@ const saveGPXDetails = async(uri: string) => {
             await AsyncStorage.setItem('GPXFile', JSON.stringify(data));
         } else {
             // console.log('checked json: ', json);
-            console.log(check);
             const merged = { ...set, ...data };
-            console.log(merged);
 
             // await AsyncStorage.setItem('GPXFile', JSON.stringify(merged));
         }
@@ -276,7 +266,6 @@ export function is30Days(date1: Date, date2: Date) {
 export async function generateCSV(csv: any, title: string) {
     try {
         if (Platform.OS === 'ios') {
-            console.log('generateCSV new iOS');
             const permission = await MediaLibrary.requestPermissionsAsync();
             if (!permission.granted) {
                 return;
@@ -294,7 +283,6 @@ export async function generateCSV(csv: any, title: string) {
         }
 
         if (Platform.OS === 'android') {
-            console.log('generateCSV new Android');
             const permission = await StorageAccessFramework.requestDirectoryPermissionsAsync();
             if (!permission.granted) {
                 return;
@@ -308,8 +296,7 @@ export async function generateCSV(csv: any, title: string) {
                 await FileSystem.writeAsStringAsync(uri, csv, {
                     encoding: FileSystem.EncodingType.UTF8
                 });
-
-                console.log(uri);
+                
             }).catch((error) => {
                 alert(`Failed to save records ${error}`);
             });

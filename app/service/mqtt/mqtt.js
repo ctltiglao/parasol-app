@@ -12,6 +12,8 @@ import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
 // import { resolve } from 'path';
 
+import { RoutePuvVehicleAppFeed } from './proto/safetravelph.proto.js';
+
 if (!global.Buffer) global.Buffer = Buffer;
 if (!global.atob) global.atob = decode;
 if (!global.btoa) global.btoa = encode;
@@ -32,7 +34,7 @@ export const onMqttConnect = () => {
     client = mqttConnect(MQTT_URL, MQTT_OPTIONS);
     return new Promise((resolve, reject) => {
         client.on('connect', () => {
-            console.log('MQTT: Connected');
+            // console.log('MQTT: Connected');
             resolve(true)
         });
 
@@ -52,11 +54,12 @@ export const onMqttPublish = (topic, message) => {
         client.removeAllListeners('message');
 
         if (!subscribedTopics.has(topic)) {
-            console.log('here')
             client.subscribe(topic, (err) => {
                 if (!err) {
                     subscribedTopics.add(topic);
                     // console.log(`Subscribed to ${topic}`);
+                } else {
+                    console.log(`Failed to resubscribe ${err}`)
                 }
             })
         }
@@ -64,12 +67,15 @@ export const onMqttPublish = (topic, message) => {
         client.publish(topic, message);
         
         client.on('message', (topic, message) => {
-            console.log(`Received message from ${topic}: message: ${message.toString()}`);
-            // if (topic === 'route_puv_vehicle_app_feeds') {
-            //     console.log(`Received message from ${topic}: message: ${message.toString()}`);
-            // } else if (topic === 'boardings' || topic === 'alightings' || topic === 'ratings' || topic === 'alerts') {
-            //     console.warn(`Received message from ${topic}: message: ${message.toString()}`);
-            // }
+            if (topic === 'commuters') {
+                console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+            }
+
+            if (topic === 'route_puv_vehicle_app_feeds') {
+                // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+                const data = RoutePuvVehicleAppFeed.decode(new Uint8Array(message));
+                console.log(data);
+            }
         })
 
         return true
@@ -78,14 +84,50 @@ export const onMqttPublish = (topic, message) => {
     }
 }
 
-export const onMqttUnsubscribe = (topic) => {
-    client.unsubscribe(topic, (err) => {
-        if (err) {
-            console.log('UNSUBSCRIBE ERROR: ', err);
-        } else {
-            console.log('UNSUBSCRIBED SUCCESS: ', topic);
+export const onMqttSubscribe = (topic) => {
+    console.log('SUBSCRIBED')
+
+    if (!client || !client.connected) {
+        return false;
+    }
+
+    return new Promise((resolve, reject) => {
+        try {
+            let coordinates = {latitude: 0, longitude: 0};
+    
+            client.removeAllListeners('message');
+    
+            if (!subscribedTopics.has(topic)) {
+                console.log('here')
+                client.subscribe(topic, (err) => {
+                    if (!err) {
+                        subscribedTopics.add(topic);
+                        console.log(`Subscribed to ${topic}`);
+                    } else {
+                        console.log(`Failed to resubscribe ${err}`)
+                    }
+                })
+            }
+    
+            client.on('message', (topic, message) => {
+                if (topic === 'commuters') {
+                    console.log(`Received message from ${topic}: message: ${message.toString()}`);
+                }
+    
+                if (topic === 'route_puv_vehicle_app_feeds') {
+                    // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+                    const data = RoutePuvVehicleAppFeed.decode(new Uint8Array(message));
+                    coordinates = {latitude: data.latitude, longitude: data.longitude};
+                    
+                    resolve(coordinates)
+                } else {
+                    reject(false)
+                }
+            })
+        } catch (error) {
+            return false
         }
-    });
+    })
 }
 
 export const onMqttReconnect = () => {

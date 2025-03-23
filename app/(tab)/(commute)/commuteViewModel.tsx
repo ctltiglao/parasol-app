@@ -55,7 +55,7 @@ export const setCommuteRecord = async ({
         // await AsyncStorage.removeItem('CommuteDetails');
         // return CommuteRecord;
 
-        console.log(commute_date);
+        // console.log(commute_date);
 
         await onCreate().then(async () => {
             addCommuteRecord({
