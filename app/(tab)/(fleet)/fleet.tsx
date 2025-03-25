@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
-import MapView, { Polyline } from 'react-native-maps';
+import MapView, { MapMarker, Polyline } from 'react-native-maps';
 import { StyleSheet } from 'react-native';
 // expo
 import * as Location from 'expo-location';
@@ -37,6 +37,12 @@ import { APOLLO_CLIENT, SEND_START_FLEET } from '@/app/service/graphql';
 interface Coordinate {
     latitude: number;
     longitude: number;
+}
+
+type MqttData = {
+    latitude: number;
+    longitude: number;
+    userId: string;
 }
 
 type TrackingParams = {
@@ -133,6 +139,7 @@ function Screen() {
     const [maxOnBoard, setMaxOnBoard] = useState(0);
     const [totalTrip, setTotalTrip] = useState(0);
     const [tripStart, setTripStart] = useState(null);
+    const [mqttMarkers, setMqttMarkers] = useState<Record<string, MqttData>>({});
 
     const [ isOverlayInfoVisible, setIsOverlayInfoVisible ] = useState(false);
 
@@ -168,9 +175,13 @@ function Screen() {
     }
 
     useEffect(() => {
-        onMqttConnect().then(async () => {
-            const response = await onMqttSubscribe('commuters');
-            console.log(response);
+        onMqttConnect().then(() => {
+            onMqttSubscribe('commuters', (data: any) => {
+                setMqttMarkers((prev) => ({
+                    ...prev,
+                    [data.userId]: data
+                }))
+            });
             // startFleetTracking();
         });
 
@@ -293,6 +304,21 @@ function Screen() {
                                             />
                                         )
                                     }
+                                    <>
+                                        {
+                                            Object.values(mqttMarkers).map((marker: any) => {
+                                                <MapMarker
+                                                    key={marker.userId}
+                                                    coordinate={{
+                                                        latitude: marker.latitude,
+                                                        longitude: marker.longitude
+                                                    }}
+                                                    anchor={{ x: 0.5, y: 0.5 }}
+                                                    title={marker.userId}
+                                                />
+                                            })
+                                        }
+                                    </>
                                 </MapView>
                             )
                         }

@@ -12,13 +12,14 @@ import { Buffer } from 'buffer';
 import { decode, encode } from 'base-64';
 // import { resolve } from 'path';
 
-import { RoutePuvVehicleAppFeed } from './proto/safetravelph.proto.js';
+import { Commuter, RoutePuvVehicleAppFeed } from './proto/safetravelph.proto.js';
 
 if (!global.Buffer) global.Buffer = Buffer;
 if (!global.atob) global.atob = decode;
 if (!global.btoa) global.btoa = encode;
 
 const MQTT_URL = 'ws://staging-mqtt.safetravel.ph:8000/mqtt';
+// const MQTT_URL = 'mqtt://52.221.1.119:1883'
 const MQTT_OPTIONS = {
     clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
     clean: true
@@ -86,15 +87,13 @@ export const onMqttPublish = (topic, message) => {
 }
 
 export const onMqttSubscribe = (topic, onMessageCallback) => {
-    console.log('SUBSCRIBED')
+    console.log('SUBSCRIBED', topic);
 
     if (!client || !client.connected) {
         return false;
     }
 
     try {
-        let coordinates = {latitude: 0, longitude: 0};
-
         client.removeAllListeners('message');
 
         if (!subscribedTopics.has(topic)) {
@@ -112,12 +111,17 @@ export const onMqttSubscribe = (topic, onMessageCallback) => {
         client.on('message', (topic, message) => {
             if (topic === 'commuters') {
                 console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+                const data = Commuter.decode(new Uint8Array(message));
+                console.warn(data);
+                const coordinates = {latitude: data.lat, longitude: data.lng, userId: data.userId}
+
+                onMessageCallback(coordinates);
             }
 
             if (topic === 'route_puv_vehicle_app_feeds') {
                 // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
                 const data = RoutePuvVehicleAppFeed.decode(new Uint8Array(message));
-                coordinates = {latitude: data.latitude, longitude: data.longitude};
+                const coordinates = {latitude: data.latitude, longitude: data.longitude, vehicleCode: data.vehicleCode};
 
                 onMessageCallback(coordinates);
                 // return new Promise.resolve(coordinates);

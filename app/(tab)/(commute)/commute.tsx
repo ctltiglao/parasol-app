@@ -6,7 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MapView, { MapMarker, Polyline, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Camera} from 'react-native-maps';
-import { Alert, AppState, Platform, StyleSheet } from 'react-native';
+import { Alert, AppState, Image, Platform, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebView from 'react-native-webview';
 // expo
@@ -52,6 +52,12 @@ interface Coordinate {
     latitude: number;
     longitude: number;
     timestamp: string
+}
+
+type MqttData = {
+    latitude: number;
+    longitude: number;
+    vehicleCode: string;
 }
 
 export default function CommuteScreen() {
@@ -210,6 +216,7 @@ function Screen() {
 
     const mqttCommuterInterval = useRef<NodeJS.Timeout | null>(null)
     const mqttTrackingInterval = useRef<NodeJS.Timeout | null>(null)
+    const [mqttMarkers, setMqttMarkers] = useState<Record<string, MqttData>>({});
 
     const toggleOverlayInfo = () => {
         setOverlayInfoVisible(!isOverlayInfoVisible); // close/open overlay
@@ -232,6 +239,7 @@ function Screen() {
     const toggleOverlayFeed = () => setOverlayFeedVisible(!isOverlayFeedVisible);
 
     const setMqttCommuter = async (userId: string) => {
+        console.log('HERE', userId);
         if (!mqttCommuterInterval.current) {
             mqttCommuterInterval.current = setInterval(async () => {
                 try {
@@ -274,9 +282,14 @@ function Screen() {
 
     useEffect(() => {
         getUserState().then(async (response) => {
-            onMqttConnect().then(() => {
+            onMqttConnect().then((res) => {
+                console.log('RES', res);
                 onMqttSubscribe('route_puv_vehicle_app_feeds', (data: any) => {
-                    console.log('RES', data);
+                    // console.log('RES', data);
+                    setMqttMarkers((prev) => ({
+                        ...prev,
+                        [data.vehicleCode]: data
+                    }))
                 })
             });
 
@@ -658,7 +671,7 @@ function Screen() {
                                             showsCompass
                                             mapType='standard'
                                         >
-                                            { isCommuteStart && (
+                                            { isCommuteStart ? (
                                                 <MapMarker
                                                     coordinate={{
                                                         latitude: location.coords.latitude,
@@ -666,10 +679,29 @@ function Screen() {
                                                     }}
                                                     anchor={{ x: 0.5, y: 0.5 }}
                                                 />
+                                            ) : (
+                                                <>
+                                                    {
+                                                        Object.values(mqttMarkers).map((marker: any) => (
+                                                            <MapMarker
+                                                                key={marker.vehicleCode}
+                                                                coordinate={{
+                                                                    latitude: marker.latitude,
+                                                                    longitude: marker.longitude
+                                                                }}
+                                                                anchor={{ x: 0.5, y: 0.5 }}
+                                                                title={marker.vehicleCode}
+                                                            >
+                                                                <Image
+                                                                    source={require('@/assets/icons/jeepney.png')}
+                                                                    style={{width: 40, height: 40}}
+                                                                />
+                                                            </MapMarker>
+                                                        ))
+                                                    }
+                                                </>
                                             )}
                                             {( isCommuteStop || isCommuteStart ) && (
-
-
                                                 <Polyline
                                                     coordinates={routeCoordinates}
                                                     strokeColor='blue'

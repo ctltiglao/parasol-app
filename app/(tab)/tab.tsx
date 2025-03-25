@@ -139,10 +139,23 @@ export default function TabScreen() {
                                 if (currentTab === 'Commute') {
                                     await AsyncStorage.removeItem('CommuteDetails');
                                     console.log('removed commute details');
+
+                                    navigation.reset({
+                                        index: 0,
+                                        routes: [{ name: "Commute" }],
+                                    })
+                                } else if (currentTab === 'Fleet') {
+                                    navigation.reset({
+                                        index: 1,
+                                        routes: [{ name: "Fleet" }],
+                                    })
+                                } else {
+                                    navigation.navigate(route.name);
                                 }
 
-                                navigation.navigate(route.name);
-                                onMqttClose();
+                                // navigation.navigate(route.name);
+                                
+                                // onMqttClose();
                                 console.log(navigation.navigate(route));
                             }},
                         ]
