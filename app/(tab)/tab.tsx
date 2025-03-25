@@ -151,11 +151,11 @@ export default function TabScreen() {
             })}
         >
             <Tab.Screen name='Commute' component={CommuteScreen} />
-            {/* <Tab.Screen name='Fleet' component={FleetScreen} /> */}
+            <Tab.Screen name='Fleet' component={FleetScreen} />
 
-            { isGuest === false &&
+            {/* { isGuest === false &&
                 <Tab.Screen name='Fleet' component={FleetScreen} />
-            }
+            } */}
 
             <Tab.Screen name='News' component={NewsScreen} />
             <Tab.Screen name='Road Safety' component={RoadSafetyScreen} />

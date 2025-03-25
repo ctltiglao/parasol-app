@@ -6,7 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MapView, { MapMarker, Polyline, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Camera} from 'react-native-maps';
-import { AppState, Platform, StyleSheet } from 'react-native';
+import { Alert, AppState, Platform, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebView from 'react-native-webview';
 // expo
@@ -274,9 +274,10 @@ function Screen() {
 
     useEffect(() => {
         getUserState().then(async (response) => {
-            onMqttConnect().then(async() => {
-                const response = await onMqttSubscribe('route_puv_vehicle_app_feeds')
-                console.log('RES', response);
+            onMqttConnect().then(() => {
+                onMqttSubscribe('route_puv_vehicle_app_feeds', (data: any) => {
+                    console.log('RES', data);
+                })
             });
 
             // if guest
@@ -577,34 +578,34 @@ function Screen() {
                                 vehicle_details: vehicleDescription,
                                 commute_date: startTime
                             })
-                            // .then((response) => {
-                            //     console.log(response)
+                            .then((response) => {
+                                console.log(response)
 
-                            //     // show rate modal
-                            //     if (response === true) {
-                            //         Alert.alert(
-                            //             'Earn Paracoints',
-                            //             'Earn tokens by rating your trip.',
-                            //             [
-                            //                 {text: 'NO THANKS', onPress: () => {
-                            //                     if (isGpxOn) {
-                            //                         generateGPX(routeCoordinates);
-                            //                     }
-                            //                 }},{text: 'RATE TRIP', onPress: () => {
-                            //                     if (vehicleId !== '') {
-                            //                         toggleOverlayRate();
-                            //                     } else {
-                            //                         toggleOverlayInfo();
-                            //                     }
+                                // show rate modal
+                                if (response === true) {
+                                    Alert.alert(
+                                        'Earn Paracoints',
+                                        'Earn tokens by rating your trip.',
+                                        [
+                                            {text: 'NO THANKS', onPress: () => {
+                                                // if (isGpxOn) {
+                                                //     generateGPX(routeCoordinates);
+                                                // }
+                                            }},{text: 'RATE TRIP', onPress: () => {
+                                                if (vehicleId !== '') {
+                                                    toggleOverlayRate();
+                                                } else {
+                                                    toggleOverlayInfo();
+                                                }
 
-                            //                     if (isGpxOn) {
-                            //                         generateGPX(routeCoordinates);
-                            //                     }
-                            //                 }},
-                            //             ]
-                            //         )
-                            //     }
-                            // })
+                                                // if (isGpxOn) {
+                                                //     generateGPX(routeCoordinates);
+                                                // }
+                                            }},
+                                        ]
+                                    )
+                                }
+                            })
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -667,6 +668,8 @@ function Screen() {
                                                 />
                                             )}
                                             {( isCommuteStop || isCommuteStart ) && (
+
+
                                                 <Polyline
                                                     coordinates={routeCoordinates}
                                                     strokeColor='blue'

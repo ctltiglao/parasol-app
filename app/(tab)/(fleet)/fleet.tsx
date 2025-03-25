@@ -31,7 +31,7 @@ import { generateTripCode, getLocationPermission, getUserState } from '../tabVie
 import { getFleetDetails } from './fleetViewModel';
 // import TrackingScreen from './(tracking)/tracking';
 import { TrackingScreen } from './(tracking)/tracking';
-import { onMqttConnect } from '@/app/service/mqtt/mqtt';
+import { onMqttConnect, onMqttSubscribe } from '@/app/service/mqtt/mqtt';
 import { APOLLO_CLIENT, SEND_START_FLEET } from '@/app/service/graphql';
 
 interface Coordinate {
@@ -168,6 +168,12 @@ function Screen() {
     }
 
     useEffect(() => {
+        onMqttConnect().then(async () => {
+            const response = await onMqttSubscribe('commuters');
+            console.log(response);
+            // startFleetTracking();
+        });
+
         // getLocationPermission();
         // get user info
         getUserState().then((response) => {
@@ -219,37 +225,27 @@ function Screen() {
                     var tripCode = generateTripCode();
                     console.log(tripCode)
 
-                    await startTrip({
-                        variables: {
-                            altitude: location?.coords.altitude,
-                            deviceCode: vehicleId,
-                            latitude: location.coords.latitude,
-                            longitude: location.coords.longitude,
-                            qrCode: vehicleDetails,
-                            timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                            tripCode: tripCode,
-                            userCode: username
-                        }
-                    }).then((res) => {
-                        console.log('START FLEET GQL: ', res);
-                    }).catch((err) => {
-                        console.log('START FLEET GQL: ', err);
-                    });
+                    // await startTrip({
+                    //     variables: {
+                    //         altitude: location?.coords.altitude,
+                    //         deviceCode: vehicleId,
+                    //         latitude: location.coords.latitude,
+                    //         longitude: location.coords.longitude,
+                    //         qrCode: vehicleDetails,
+                    //         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                    //         tripCode: tripCode,
+                    //         userCode: username
+                    //     }
+                    // }).then((res) => {
+                    //     console.log('START FLEET GQL: ', res);
+                    // }).catch((err) => {
+                    //     console.log('START FLEET GQL: ', err);
+                    // });
 
-                    // handleFleetStart(true);
-                    // isFleetStop === true && handleFleetStop(false);
-
-                    // await startFleetTracking();
                     onMqttConnect()
                     nav.navigate('Tracking', {
                         tripCode: tripCode
                     });
-                    
-                    // onMqttConnect().then((response) => {
-                    //     console.log('here ', response);
-                    //     nav.navigate('Tracking');
-                    //     // startFleetTracking();
-                    // });
                 }}
             >
                 <ButtonText className='text-white text-lg font-bold'>

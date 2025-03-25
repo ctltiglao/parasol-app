@@ -8,9 +8,9 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import { StorageAccessFramework } from 'expo-file-system';
-import * as AuthSession from 'expo-auth-session';
 // gluestack
 
+import { v4 as uuidv4 } from "uuid";
 import { create } from 'xmlbuilder2';
 import { jwtDecode } from "jwt-decode";
 
@@ -146,6 +146,8 @@ export const generateTripCode = () => {
 
     let char = Array.from({ length: 3 }, () => getRandomChar(alphabets)).join('');
     let num =  Array.from({ length: 3 }, () => getRandomChar(digits)).join('');
+    // const newUUID = uuidv4();
+    // console.log(newUUID);
 
     return `${char}${num}`;
 }

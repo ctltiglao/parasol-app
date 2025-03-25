@@ -66,6 +66,49 @@ export const onMqttPublish = (topic, message) => {
 
         client.publish(topic, message);
         
+        // client.on('message', (topic, message) => {
+        //     if (topic === 'commuters') {
+        //         console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+        //     }
+
+        //     if (topic === 'route_puv_vehicle_app_feeds') {
+        //         // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
+        //         const data = RoutePuvVehicleAppFeed.decode(new Uint8Array(message));
+        //         // console.log(data);
+        //         return data;
+        //     }
+        // })
+
+        // return true
+    } catch (error) {
+        return false
+    }
+}
+
+export const onMqttSubscribe = (topic, onMessageCallback) => {
+    console.log('SUBSCRIBED')
+
+    if (!client || !client.connected) {
+        return false;
+    }
+
+    try {
+        let coordinates = {latitude: 0, longitude: 0};
+
+        client.removeAllListeners('message');
+
+        if (!subscribedTopics.has(topic)) {
+            console.log('here')
+            client.subscribe(topic, (err) => {
+                if (!err) {
+                    subscribedTopics.add(topic);
+                    console.log(`Subscribed to ${topic}`);
+                } else {
+                    console.log(`Failed to resubscribe ${err}`)
+                }
+            })
+        }
+
         client.on('message', (topic, message) => {
             if (topic === 'commuters') {
                 console.warn(`Received message from ${topic}: message: ${message.toString()}`);
@@ -74,60 +117,16 @@ export const onMqttPublish = (topic, message) => {
             if (topic === 'route_puv_vehicle_app_feeds') {
                 // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
                 const data = RoutePuvVehicleAppFeed.decode(new Uint8Array(message));
-                console.log(data);
+                coordinates = {latitude: data.latitude, longitude: data.longitude};
+
+                onMessageCallback(coordinates);
+                // return new Promise.resolve(coordinates);
+                // console.log(coordinates);
             }
         })
-
-        return true
     } catch (error) {
         return false
     }
-}
-
-export const onMqttSubscribe = (topic) => {
-    console.log('SUBSCRIBED')
-
-    if (!client || !client.connected) {
-        return false;
-    }
-
-    return new Promise((resolve, reject) => {
-        try {
-            let coordinates = {latitude: 0, longitude: 0};
-    
-            client.removeAllListeners('message');
-    
-            if (!subscribedTopics.has(topic)) {
-                console.log('here')
-                client.subscribe(topic, (err) => {
-                    if (!err) {
-                        subscribedTopics.add(topic);
-                        console.log(`Subscribed to ${topic}`);
-                    } else {
-                        console.log(`Failed to resubscribe ${err}`)
-                    }
-                })
-            }
-    
-            client.on('message', (topic, message) => {
-                if (topic === 'commuters') {
-                    console.log(`Received message from ${topic}: message: ${message.toString()}`);
-                }
-    
-                if (topic === 'route_puv_vehicle_app_feeds') {
-                    // console.warn(`Received message from ${topic}: message: ${message.toString()}`);
-                    const data = RoutePuvVehicleAppFeed.decode(new Uint8Array(message));
-                    coordinates = {latitude: data.latitude, longitude: data.longitude};
-                    
-                    resolve(coordinates)
-                } else {
-                    reject(false)
-                }
-            })
-        } catch (error) {
-            return false
-        }
-    })
 }
 
 export const onMqttReconnect = () => {

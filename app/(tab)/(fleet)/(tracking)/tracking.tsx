@@ -116,6 +116,7 @@ function Screen() {
     const [aveSpeed, setAveSpeed] = useState<any|0>(0);
     const [maxSpeed, setMaxSpeed] = useState(0);
     const [travelTime, setTravelTime] = useState<any|0>(0);
+    const [travelCounter, setTravelCounter] = useState(0);
     const [originTime, setOriginTime] = useState<Date|null>(null);
 
     // for tracking
@@ -132,7 +133,8 @@ function Screen() {
     // stop fleet graphql
     const [stopTrip, { data: tripStopData, error: stopError }] = useMutation(SEND_STOP_FLEET);
     const [isTripCode, setIsTripCode] = useState<String|null>(null);
-    
+    let interval: NodeJS.Timeout | null = null;
+
     const toggleSelectPause = (value: any) => setIsSelectPause(value);
 
     const openModal = () => setPaxModalVisible(true);
@@ -209,12 +211,12 @@ function Screen() {
 
         startFleetTracking();
         
-        if (locationSubscription) {
-            onMqttConnect().then((response) => {
-                console.log(response);
-                // startFleetTracking();
-            });
-        }
+        // if (locationSubscription) {
+        //     onMqttConnect().then((response) => {
+        //         console.log(response);
+        //         // startFleetTracking();
+        //     });
+        // }
 
         return () => {
             if (notificationListner.current) {
@@ -230,6 +232,7 @@ function Screen() {
     // refresh tab
     useFocusEffect(
         useCallback(() => {
+            console.log('Screen is focused, resetting state...');
             setFleetPause(false);
             setFleetStop(false);
             setRoute('');
@@ -252,9 +255,9 @@ function Screen() {
             setTravelTime(0);
             setOriginTime(null);
             setRouteCoordinates([]);
-
-            locationSubscription?.remove();
-            setLocationSubscription(null);
+            
+            // locationSubscription?.remove();
+            // setLocationSubscription(null);
 
             closeModal();
         }, [])
@@ -262,6 +265,11 @@ function Screen() {
 
     const startFleetTracking = async() => {
         sendPushNotification('SafeTravelPH', 'Currently tracking your fleet...');
+        
+
+        interval = setInterval(() => {
+            setTravelCounter((prev) => prev + 1);
+        }, 2000);
 
         const prevLoc = await Location.getCurrentPositionAsync({});
         setOriginTime(new Date());
@@ -355,7 +363,7 @@ function Screen() {
                 accuracy: newLocation.coords.accuracy
             }
 
-            mqttBroker(message);
+            // mqttBroker(message);
 
             setLocation(newLocation);
         })
@@ -456,29 +464,40 @@ function Screen() {
                 setStationary(false);
             }
 
+            if (interval) {
+                clearInterval(interval);
+                setTravelCounter(0);
+            }
+
             // stop sending location
             // mqttBroker('#');
-
+            setIsTripCode(null);
             setRoute('');
             setVehicleId('');
 
             onMqttClose()
 
-            nav.navigate('Main', {
-                route_coordinates: routeCoordinates,
-                ave_speed: aveSpeed,
-                max_speed: maxSpeed.toFixed(2),
-                travel_time: travelTime,
-                max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
-                total_trip: board,
-                trip_start: moment(originTime).format('hh:mm:ss')
-            });
+            nav.reset({
+                index: 0,
+                routes: [
+                    {
+                        name: 'Main',
+                        params: {
+                            route_coordinates: routeCoordinates,
+                            ave_speed: aveSpeed,
+                            max_speed: maxSpeed.toFixed(2),
+                            travel_time: travelTime,
+                            max_pax: `${ paxOnBoard > maxOnBoard ? paxOnBoard : maxOnBoard }`,
+                            total_trip: board,
+                            trip_start: moment(originTime).format('hh:mm:ss')
+                        }
+                    }
+                ]
+            })
 
-            if (isGpxOn) {
-                generateGPX(routeCoordinates);
-
-                
-            }
+            // if (isGpxOn) {
+            //     generateGPX(routeCoordinates);
+            // }
         }
     }, [isFleetStop, aveSpeed, maxSpeed, travelTime, routeCoordinates])
     
@@ -562,42 +581,42 @@ function Screen() {
                             setMaxSpeed(Number(speed));
                         }
 
-                        await stopTrip({
-                            variables: {
-                                altitude: location?.coords.altitude,
-                                latitude: location?.coords.latitude,
-                                longitude: location?.coords.longitude,
-                                timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                                tripCode: isTripCode
-                            }
-                        }).then((res) => {
-                            console.log('STOP TRIP GQL: ', res);
-                        }).catch((err) => {
-                            console.log('ERROR STOP TRIP GQL: ', err);
-                            console.log('STOP TRIP GQL: ', err.message);
-                        });
+                        // await stopTrip({
+                        //     variables: {
+                        //         altitude: location?.coords.altitude,
+                        //         latitude: location?.coords.latitude,
+                        //         longitude: location?.coords.longitude,
+                        //         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                        //         tripCode: isTripCode
+                        //     }
+                        // }).then((res) => {
+                        //     console.log('STOP TRIP GQL: ', res);
+                        // }).catch((err) => {
+                        //     console.log('ERROR STOP TRIP GQL: ', err);
+                        //     console.log('STOP TRIP GQL: ', err.message);
+                        // });
 
-                        setFleetRecord({
-                            route: route,
-                            origin: await getLocationName(routeCoordinates[0]),
-                            origin_lat: routeCoordinates[0].latitude,
-                            origin_lng: routeCoordinates[0].longitude,
-                            destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
-                            destination_lat: routeCoordinates[routeCoordinates.length - 1].latitude,
-                            destination_lng: routeCoordinates[routeCoordinates.length - 1].longitude,
-                            travel_distance: distance,
-                            start_time: moment(originTime).format('YYYY-MM-DD HH:mm:ss'),
-                            travel_time: travelTime,
-                            type: '',
-                            capacity: capacity,
-                            vehicle_id: vehicleId,
-                            vehicle_details: vehicleDetails,
-                            trip_date: moment(new Date()).format('YYYY-MM-DD'),
-                            consumption: '0.0',
-                            consumption_unit: 'liters',
-                            start_odometer: '0.0',
-                            end_odometer: '0.0'
-                        });
+                        // setFleetRecord({
+                        //     route: route,
+                        //     origin: await getLocationName(routeCoordinates[0]),
+                        //     origin_lat: routeCoordinates[0].latitude,
+                        //     origin_lng: routeCoordinates[0].longitude,
+                        //     destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                        //     destination_lat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                        //     destination_lng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                        //     travel_distance: distance,
+                        //     start_time: moment(originTime).format('YYYY-MM-DD HH:mm:ss'),
+                        //     travel_time: travelTime,
+                        //     type: '',
+                        //     capacity: capacity,
+                        //     vehicle_id: vehicleId,
+                        //     vehicle_details: vehicleDetails,
+                        //     trip_date: moment(new Date()).format('YYYY-MM-DD'),
+                        //     consumption: '0.0',
+                        //     consumption_unit: 'liters',
+                        //     start_odometer: '0.0',
+                        //     end_odometer: '0.0'
+                        // });
 
                         closeModal();
                         // stopFleetTracking();
@@ -721,7 +740,8 @@ function Screen() {
                                     size='4xl'
                                     className='text-white'
                                 >
-                                    {formatTravelTime(trackingTime)}
+                                    {/* {formatTravelTime(trackingTime)} */}
+                                    {formatTravelTime(travelCounter)}
                                 </Text>
                             </VStack>
 
