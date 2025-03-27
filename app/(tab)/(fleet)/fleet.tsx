@@ -5,7 +5,7 @@ import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } fr
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MapView, { MapMarker, Polyline } from 'react-native-maps';
-import { StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 // expo
 import * as Location from 'expo-location';
 // gluestack
@@ -31,7 +31,7 @@ import { generateTripCode, getLocationPermission, getUserState } from '../tabVie
 import { getFleetDetails } from './fleetViewModel';
 // import TrackingScreen from './(tracking)/tracking';
 import { TrackingScreen } from './(tracking)/tracking';
-import { onMqttConnect, onMqttSubscribe } from '@/app/service/mqtt/mqtt';
+import { onMqttConnect, onMqttCommuterSubscribe } from '@/app/service/mqtt/mqtt';
 import { APOLLO_CLIENT, SEND_START_FLEET } from '@/app/service/graphql';
 
 interface Coordinate {
@@ -176,7 +176,8 @@ function Screen() {
 
     useEffect(() => {
         onMqttConnect().then(() => {
-            onMqttSubscribe('commuters', (data: any) => {
+            onMqttCommuterSubscribe('commuters', (data: any) => {
+                console.warn("FLEET COMMUTERS", data.userId, data.latitude, data.longitude);
                 setMqttMarkers((prev) => ({
                     ...prev,
                     [data.userId]: data
@@ -294,19 +295,12 @@ function Screen() {
                                     }}
                                     showsTraffic
                                     showsCompass
+                                    mapType='standard'
                                 >
-                                    {
-                                        routeCoordinates.length > 0 && (
-                                            <Polyline
-                                                coordinates={routeCoordinates}
-                                                strokeWidth={5}
-                                                strokeColor='blue'
-                                            />
-                                        )
-                                    }
                                     <>
                                         {
-                                            Object.values(mqttMarkers).map((marker: any) => {
+                                            mqttMarkers && Object.values(mqttMarkers).map((marker: any) => {
+                                                console.log("herrrrrrreeeeeee", marker);
                                                 <MapMarker
                                                     key={marker.userId}
                                                     coordinate={{
@@ -319,6 +313,15 @@ function Screen() {
                                             })
                                         }
                                     </>
+                                    {
+                                        routeCoordinates.length > 0 && (
+                                            <Polyline
+                                                coordinates={routeCoordinates}
+                                                strokeWidth={5}
+                                                strokeColor='blue'
+                                            />
+                                        )
+                                    }
                                 </MapView>
                             )
                         }

@@ -41,9 +41,10 @@ import CommuteSettingsScreen from './(settings)/settings';
 import { mqttPassenger, mqttCommuter, getCommuteDetails, getQuickTourPref, setCommuteRecord } from './commuteViewModel';
 import { modeOptions } from '@/assets/values/strings';
 import { generateGPX, generateTripCode, getLocationName, getUserState } from '../tabViewModel';
-import { onMqttConnect, onMqttSubscribe } from '@/app/service/mqtt/mqtt';
+import { onMqttConnect, onMqttPuvVehicleSubscribe } from '@/app/service/mqtt/mqtt';
 import { getCommuteSetting } from './(settings)/settingsViewModel';
 import { APOLLO_CLIENT, SEND_START_TRIP, SEND_STOP_TRIP } from '@/app/service/graphql';
+import { subscribe } from 'graphql';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -239,35 +240,46 @@ function Screen() {
     const toggleOverlayFeed = () => setOverlayFeedVisible(!isOverlayFeedVisible);
 
     const setMqttCommuter = async (userId: string) => {
-        console.log('HERE', userId);
-        if (!mqttCommuterInterval.current) {
-            mqttCommuterInterval.current = setInterval(async () => {
-                try {
-                    const message = {
-                        deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
-                        lat: location?.coords.latitude,
-                        lng: location?.coords.longitude,
-                        timestamp: new Date().toISOString(),
-                        userId: userId,
-                        preferred_vehicles: ''
+        await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 5000,
+            distanceInterval: 1
+        }).then((loc) => {
+            if (!mqttCommuterInterval.current) {
+                mqttCommuterInterval.current = setInterval(async () => {
+                    try {
+                        if (!loc?.coords?.latitude || !loc?.coords?.longitude) {
+                            console.log('No location found');
+                            return
+                        }
+
+                        const message = {
+                            deviceId: Device.osBuildId ?? Device.osInternalBuildId ?? '',
+                            lat: loc?.coords.latitude.toString(),
+                            lng: loc?.coords.longitude.toString(),
+                            timestamp: new Date().toISOString(),
+                            userId: userId,
+                            preferred_vehicles: ''
+                        }
+                        
+                        await mqttCommuter(message);
+                    } catch (error) {
+                        console.error('Error in mqttBroker', error);
                     }
-                    
-                    await mqttCommuter(message);
-                } catch (error) {
-                    console.error('Error in mqttBroker', error);
-                }
-            }, 30000);
-        }
+                }, 30000);
+            }
+        });
     }
 
     const getLocation = async () => {
         const loc = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced
         });
+        
         setLocation(loc);
         
         // center the map on user location
-        if (location && mapRef.current) {
+        if (loc && mapRef.current) {
             mapRef.current.animateToRegion(
                 {
                     latitude: loc.coords.latitude,
@@ -281,10 +293,12 @@ function Screen() {
     }
 
     useEffect(() => {
+        getLocation();
+
         getUserState().then(async (response) => {
             onMqttConnect().then((res) => {
                 console.log('RES', res);
-                onMqttSubscribe('route_puv_vehicle_app_feeds', (data: any) => {
+                onMqttPuvVehicleSubscribe('route_puv_vehicle_app_feeds', (data: any) => {
                     // console.log('RES', data);
                     setMqttMarkers((prev) => ({
                         ...prev,
@@ -315,7 +329,7 @@ function Screen() {
             console.log('AppState changed: ', state);
         })
 
-        getLocation();
+        // getLocation();
 
         return () => subscription.remove();
     }, []);
@@ -563,62 +577,62 @@ function Screen() {
                             stopCommuteTracking();
                             
                             // api stop trip
-                            await stopTrip({
-                                variables: {
-                                    altitude: location?.coords.latitude,
-                                    latitude: location?.coords.latitude,
-                                    longitude: location?.coords.longitude,
-                                    timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                                    tripCode: isTripCode
-                                }
-                            }).then((res) => {
-                                console.log('STOP TRIP GQL: ', res);
-                            }).catch((err) => {
-                                console.log('STOP TRIP GQL: ', err);
-                            });
+                            // await stopTrip({
+                            //     variables: {
+                            //         altitude: location?.coords.latitude,
+                            //         latitude: location?.coords.latitude,
+                            //         longitude: location?.coords.longitude,
+                            //         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                            //         tripCode: isTripCode
+                            //     }
+                            // }).then((res) => {
+                            //     console.log('STOP TRIP GQL: ', res);
+                            // }).catch((err) => {
+                            //     console.log('STOP TRIP GQL: ', err);
+                            // });
 
                             // save to local database
-                            setCommuteRecord({
-                                origin: await getLocationName(routeCoordinates[0]),
-                                originLat: routeCoordinates[0].latitude,
-                                originLng: routeCoordinates[0].longitude,
-                                destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
-                                destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
-                                destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
-                                mode: selectedMode,
-                                purpose: '',
-                                vehicle_id: vehicleId,
-                                vehicle_details: vehicleDescription,
-                                commute_date: startTime
-                            })
-                            .then((response) => {
-                                console.log(response)
+                            // setCommuteRecord({
+                            //     origin: await getLocationName(routeCoordinates[0]),
+                            //     originLat: routeCoordinates[0].latitude,
+                            //     originLng: routeCoordinates[0].longitude,
+                            //     destination: await getLocationName(routeCoordinates[routeCoordinates.length - 1]),
+                            //     destinationLat: routeCoordinates[routeCoordinates.length - 1].latitude,
+                            //     destinationLng: routeCoordinates[routeCoordinates.length - 1].longitude,
+                            //     mode: selectedMode,
+                            //     purpose: '',
+                            //     vehicle_id: vehicleId,
+                            //     vehicle_details: vehicleDescription,
+                            //     commute_date: startTime
+                            // })
+                            // .then((response) => {
+                            //     console.log(response)
 
-                                // show rate modal
-                                if (response === true) {
-                                    Alert.alert(
-                                        'Earn Paracoints',
-                                        'Earn tokens by rating your trip.',
-                                        [
-                                            {text: 'NO THANKS', onPress: () => {
-                                                // if (isGpxOn) {
-                                                //     generateGPX(routeCoordinates);
-                                                // }
-                                            }},{text: 'RATE TRIP', onPress: () => {
-                                                if (vehicleId !== '') {
-                                                    toggleOverlayRate();
-                                                } else {
-                                                    toggleOverlayInfo();
-                                                }
+                            //     // show rate modal
+                            //     if (response === true) {
+                            //         Alert.alert(
+                            //             'Earn Paracoints',
+                            //             'Earn tokens by rating your trip.',
+                            //             [
+                            //                 {text: 'NO THANKS', onPress: () => {
+                            //                     // if (isGpxOn) {
+                            //                     //     generateGPX(routeCoordinates);
+                            //                     // }
+                            //                 }},{text: 'RATE TRIP', onPress: () => {
+                            //                     if (vehicleId !== '') {
+                            //                         toggleOverlayRate();
+                            //                     } else {
+                            //                         toggleOverlayInfo();
+                            //                     }
 
-                                                // if (isGpxOn) {
-                                                //     generateGPX(routeCoordinates);
-                                                // }
-                                            }},
-                                        ]
-                                    )
-                                }
-                            })
+                            //                     // if (isGpxOn) {
+                            //                     //     generateGPX(routeCoordinates);
+                            //                     // }
+                            //                 }},
+                            //             ]
+                            //         )
+                            //     }
+                            // })
                         }}
                     >
                         <ButtonText className='text-white text-lg font-bold'>
@@ -762,22 +776,22 @@ function Screen() {
                                                 var code = generateTripCode();
                                                 setIsTripCode(code);
 
-                                                await startTrip({
-                                                    variables: {
-                                                        altitude: location?.coords.altitude,
-                                                        deviceCode: vehicleId,
-                                                        latitude: location?.coords.latitude,
-                                                        longitude: location?.coords.longitude,
-                                                        qrCode: vehicleDescription,
-                                                        timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
-                                                        tripCode: code,
-                                                        userCode: username
-                                                    }
-                                                }).then((res) => {
-                                                    console.log('START TRIP GQL: ', res);
-                                                }).catch((err) => {
-                                                    console.log('START TRIP GQL: ', err);
-                                                });
+                                                // await startTrip({
+                                                //     variables: {
+                                                //         altitude: location?.coords.altitude,
+                                                //         deviceCode: vehicleId,
+                                                //         latitude: location?.coords.latitude,
+                                                //         longitude: location?.coords.longitude,
+                                                //         qrCode: vehicleDescription,
+                                                //         timestamp: moment(new Date()).format('YYYY-MM-DD HH:mm:ss'),
+                                                //         tripCode: code,
+                                                //         userCode: username
+                                                //     }
+                                                // }).then((res) => {
+                                                //     console.log('START TRIP GQL: ', res);
+                                                // }).catch((err) => {
+                                                //     console.log('START TRIP GQL: ', err);
+                                                // });
                                             })
                                         }}
                                     />

@@ -122,3 +122,7 @@ export const SEND_STOP_FLEET = gql`
         }
     }
 `;
+
+// export const SEND_FUEL_LOGS = gql`
+//     mutation 
+// `;

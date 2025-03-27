@@ -107,7 +107,6 @@ export const mqttPassenger = async(message: any) => {
 }
 
 export const mqttCommuter = async(message: any) => {
-    // console.log('MQTT COMMUTER ', message);
 
     try {
         const data = {
@@ -118,8 +117,11 @@ export const mqttCommuter = async(message: any) => {
             userId: message.userId,
             preferred_vehicles: message.preferred_vehicles
         }
+        console.log('MQTT COMMUTER ', data);
 
         const buffer = Commuter.encode(data).finish();
+
+        console.log("mqttCommuter", Commuter.decode(new Uint8Array(buffer)))
 
         onMqttPublish('commuters', buffer);
     } catch (error) {

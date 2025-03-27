@@ -475,7 +475,7 @@ function Screen() {
             setRoute('');
             setVehicleId('');
 
-            onMqttClose()
+            // onMqttClose()
 
             nav.reset({
                 index: 0,

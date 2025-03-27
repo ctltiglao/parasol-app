@@ -29,6 +29,8 @@ import moment from 'moment';
 import { CustomAddFab } from '@/app/screen/customFab';
 import { getUserState } from '../../tabViewModel';
 import { addFuelLog, allFuelRecords, deleteFuelRecord, onCreate, updateFuelRecord } from '@/app/service/sql/fuelLogDBHelper';
+import { ApolloProvider } from '@apollo/client';
+import { APOLLO_CLIENT } from '@/app/service/graphql';
 
 const Drawer = createDrawerNavigator();
 
@@ -113,204 +115,206 @@ function Screen() {
     );
     
     return (
-        <GluestackUIProvider mode='light'>
-            <Box className='bg-gray-200 w-screen h-full p-4'>
-                <Box className='flex-1 z-10 absolute bottom-0 right-0'>
-                    {/* <FabAdd /> */}
-                    <CustomAddFab onFabPress={() => openModal()} />
-                </Box>
+        <ApolloProvider client={APOLLO_CLIENT}>
+            <GluestackUIProvider mode='light'>
+                <Box className='bg-gray-200 w-screen h-full p-4'>
+                    <Box className='flex-1 z-10 absolute bottom-0 right-0'>
+                        {/* <FabAdd /> */}
+                        <CustomAddFab onFabPress={() => openModal()} />
+                    </Box>
 
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    {
-                        fuelLogs.map((res, index) => (
-                            <VStack
-                                key={index} space='md'
-                                className='bg-white rounded-md mb-4 p-4'
-                            >
-                                <HStack className='justify-between'>
-                                    <Heading>{moment(res.log_date).format('MMMM DD, YYYY')}</Heading>
-                                    <SqlMenu
-                                        id={res.id}
-                                        log_date={new Date(res.log_date)}
-                                        start_odometer={res.start_odometer}
-                                        end_odometer={res.end_odometer}
-                                        total_fuel={res.total_fuel}
-                                        consumption_unit={res.consumption_unit}
-                                    />
-                                </HStack>
-                                <Text>Update On {moment(res.date_update).format('YYYY-MM-DD')}</Text>
-                                
-                                <Divider />
-                                <HStack>
-                                    <VStack className='w-1/2'>
-                                        <Text>Start Odometer</Text>
-                                        <Text bold={true}>{res.start_odometer} km</Text>
-                                    </VStack>
-                                    <VStack className='w-1/2'>
-                                        <Text>End Odometer</Text>
-                                        <Text bold={true}>{res.end_odometer} km</Text>
-                                    </VStack>
-                                </HStack>
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        {
+                            fuelLogs.map((res, index) => (
+                                <VStack
+                                    key={index} space='md'
+                                    className='bg-white rounded-md mb-4 p-4'
+                                >
+                                    <HStack className='justify-between'>
+                                        <Heading>{moment(res.log_date).format('MMMM DD, YYYY')}</Heading>
+                                        <SqlMenu
+                                            id={res.id}
+                                            log_date={new Date(res.log_date)}
+                                            start_odometer={res.start_odometer}
+                                            end_odometer={res.end_odometer}
+                                            total_fuel={res.total_fuel}
+                                            consumption_unit={res.consumption_unit}
+                                        />
+                                    </HStack>
+                                    <Text>Update On {moment(res.date_update).format('YYYY-MM-DD')}</Text>
+                                    
+                                    <Divider />
+                                    <HStack>
+                                        <VStack className='w-1/2'>
+                                            <Text>Start Odometer</Text>
+                                            <Text bold={true}>{res.start_odometer} km</Text>
+                                        </VStack>
+                                        <VStack className='w-1/2'>
+                                            <Text>End Odometer</Text>
+                                            <Text bold={true}>{res.end_odometer} km</Text>
+                                        </VStack>
+                                    </HStack>
 
-                                <Divider />
-                                <HStack>
-                                    <VStack className='w-1/2'>
-                                        <Text>Total Distance</Text>
-                                        <Text bold={true}>{res.end_odometer - res.start_odometer} km</Text>
-                                    </VStack>
-                                    <VStack className='w-1/2'>
-                                        <Text>Total Fuel Consumed</Text>
-                                        <Text bold={true}>
-                                            {
-                                                res.total_fuel 
-                                            }{
-                                                res.consumption_unit === 'liters' ? ' (L)' : ' (kWh)'
-                                            }
-                                        </Text>
-                                    </VStack>
-                                </HStack>
-                            </VStack>
-                        ))
-                    }    
-                </ScrollView>
-
-                <Modal className='h-full p-8 justify-center items-center' isOpen={modalVisible} onClose={closeModal}>
-                    <ModalContent className='w-full h-fit'>
-                        <Heading>Add Fuel Record</Heading>
-                        <ModalBody>
-                            <ScrollView automaticallyAdjustKeyboardInsets={true}>
-                                <Text bold={true} size='md'>Log Date</Text>
-                                {
-                                    Platform.OS === 'ios' ? (
-                                        <HStack space='md' className='items-center mb-4'>
-                                            <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
-                                                { moment(inputDate).format('YYYY-MM-DD') }
+                                    <Divider />
+                                    <HStack>
+                                        <VStack className='w-1/2'>
+                                            <Text>Total Distance</Text>
+                                            <Text bold={true}>{res.end_odometer - res.start_odometer} km</Text>
+                                        </VStack>
+                                        <VStack className='w-1/2'>
+                                            <Text>Total Fuel Consumed</Text>
+                                            <Text bold={true}>
+                                                {
+                                                    res.total_fuel 
+                                                }{
+                                                    res.consumption_unit === 'liters' ? ' (L)' : ' (kWh)'
+                                                }
                                             </Text>
-                                            <DateTimePicker
-                                                className='w-full h-fit'
-                                                value={moment(inputDate).toDate()}
-                                                mode='date'
-                                                display='default'
-                                                onChange={(event, date) => {onChangeDate(event, date)}}
-                                            />
-                                        </HStack>
-                                    ) : (
-                                        <Box>
-                                            <HStack space='md' className='justify-between items-center mb-4'>
+                                        </VStack>
+                                    </HStack>
+                                </VStack>
+                            ))
+                        }    
+                    </ScrollView>
+
+                    <Modal className='h-full p-8 justify-center items-center' isOpen={modalVisible} onClose={closeModal}>
+                        <ModalContent className='w-full h-fit'>
+                            <Heading>Add Fuel Record</Heading>
+                            <ModalBody>
+                                <ScrollView automaticallyAdjustKeyboardInsets={true}>
+                                    <Text bold={true} size='md'>Log Date</Text>
+                                    {
+                                        Platform.OS === 'ios' ? (
+                                            <HStack space='md' className='items-center mb-4'>
                                                 <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
                                                     { moment(inputDate).format('YYYY-MM-DD') }
                                                 </Text>
-                                                
-                                                <Button
-                                                    className='bg-zinc-300 p-1 rounded-md'
-                                                    onPress={() => setShowDatePicker(true)}
-                                                >
-                                                    <ButtonText className='text-black'>CHANGE</ButtonText>
-                                                </Button>
-
-                                                { showDatePicker &&
-                                                    <DateTimePicker
-                                                        value={inputDate}
-                                                        mode='date'
-                                                        display='default'
-                                                        onChange={onChangeDate}
-                                                    />
-                                                }
+                                                <DateTimePicker
+                                                    className='w-full h-fit'
+                                                    value={moment(inputDate).toDate()}
+                                                    mode='date'
+                                                    display='default'
+                                                    onChange={(event, date) => {onChangeDate(event, date)}}
+                                                />
                                             </HStack>
-                                        </Box>
-                                    )
-                                }
-                                
-                                <Text bold={true} size='md'>Start Odometer Reading</Text>
-                                <Input
-                                    className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
-                                    variant='underlined'
-                                >
-                                    <InputField
-                                        onChangeText={(text) => setInputStartOdometer(parseFloat(text))}
-                                        value={inputStartOdometer ? inputStartOdometer.toString() : ''}
-                                        placeholder=''
-                                        keyboardType='numeric'
-                                    />
-                                </Input>
+                                        ) : (
+                                            <Box>
+                                                <HStack space='md' className='justify-between items-center mb-4'>
+                                                    <Text className='w-1/2 border-b-2 border-gray-300 pb-2'>
+                                                        { moment(inputDate).format('YYYY-MM-DD') }
+                                                    </Text>
+                                                    
+                                                    <Button
+                                                        className='bg-zinc-300 p-1 rounded-md'
+                                                        onPress={() => setShowDatePicker(true)}
+                                                    >
+                                                        <ButtonText className='text-black'>CHANGE</ButtonText>
+                                                    </Button>
 
-                                <Text bold={true} size='md'>End Odometer Reading</Text>
-                                <Input
-                                    className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
-                                    variant='underlined'
-                                >
-                                    <InputField
-                                        onChangeText={(text) => setInputEndOdometer(parseFloat(text))}
-                                        value={inputEndOdometer ? inputEndOdometer.toString() : ''}
-                                        placeholder=''
-                                        keyboardType='numeric'
-                                    />
-                                </Input>
+                                                    { showDatePicker &&
+                                                        <DateTimePicker
+                                                            value={inputDate}
+                                                            mode='date'
+                                                            display='default'
+                                                            onChange={onChangeDate}
+                                                        />
+                                                    }
+                                                </HStack>
+                                            </Box>
+                                        )
+                                    }
+                                    
+                                    <Text bold={true} size='md'>Start Odometer Reading</Text>
+                                    <Input
+                                        className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
+                                        variant='underlined'
+                                    >
+                                        <InputField
+                                            onChangeText={(text) => setInputStartOdometer(parseFloat(text))}
+                                            value={inputStartOdometer ? inputStartOdometer.toString() : ''}
+                                            placeholder=''
+                                            keyboardType='numeric'
+                                        />
+                                    </Input>
 
-                                <Text bold={true} size='md'>Total Fuel Consumed</Text>
-                                <Input
-                                    className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
-                                    variant='underlined'
-                                >
-                                    <InputField
-                                        onChangeText={(text) => setInputTotalFuel(parseFloat(text))}
-                                        value={inputTotalFuel ? inputTotalFuel.toString() : ''}
-                                        placeholder=''
-                                        keyboardType='numeric'
-                                    />
-                                </Input>
+                                    <Text bold={true} size='md'>End Odometer Reading</Text>
+                                    <Input
+                                        className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
+                                        variant='underlined'
+                                    >
+                                        <InputField
+                                            onChangeText={(text) => setInputEndOdometer(parseFloat(text))}
+                                            value={inputEndOdometer ? inputEndOdometer.toString() : ''}
+                                            placeholder=''
+                                            keyboardType='numeric'
+                                        />
+                                    </Input>
 
-                                <Text bold={true} size='md'>Consumption Unit</Text>
-                                <Select
-                                    onValueChange={setInputFuelUnit}
-                                    selectedValue={inputFuelUnit === 'liters' ? 'Diesel (L)' : 'Electric (kWh)'}
-                                >
-                                    <SelectTrigger className='bg-white h-fit border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 mt-2 mb-4'>
-                                        <SelectInput className='pt-3 pb-3'/>
-                                        <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
-                                    </SelectTrigger>
-                                    <SelectPortal>
-                                        <SelectContent>
-                                            <SelectItem value='liters' label='Diesel (L)'/>
-                                            <SelectItem value='kWh' label='Electric (kWh)'/>
-                                        </SelectContent>
-                                    </SelectPortal>
-                                </Select>
-                            </ScrollView>
-                        </ModalBody>
-                        <ModalFooter className='p-2'>
-                            <Button className='bg-transparent me-4'
-                                onPress={closeModal}
-                            >
-                                <ButtonText className='text-custom-secondary'>CANCEL</ButtonText>
-                            </Button>
+                                    <Text bold={true} size='md'>Total Fuel Consumed</Text>
+                                    <Input
+                                        className='w-full bg-white border-r-0 border-b-2 border-gray-300 mt-2 mb-4'
+                                        variant='underlined'
+                                    >
+                                        <InputField
+                                            onChangeText={(text) => setInputTotalFuel(parseFloat(text))}
+                                            value={inputTotalFuel ? inputTotalFuel.toString() : ''}
+                                            placeholder=''
+                                            keyboardType='numeric'
+                                        />
+                                    </Input>
 
-                            <Button className='bg-transparent'
-                                onPress={async() => {
-                                    console.log(inputFuelUnit);
-                                    await addFuelLog({
-                                        log_date: moment(inputDate).format('YYYY-MM-DD'),
-                                        date_update: inputeUpdateDate,
-                                        start_odometer: inputStartOdometer,
-                                        end_odometer: inputEndOdometer,
-                                        total_fuel: inputTotalFuel,
-                                        consumption_unit: inputFuelUnit
-                                    }).then((res) => {
-                                        console.log(res);
-                                        
-                                        if (Number(res) > 0) {
-                                            closeModal();
-                                        }
-                                    })
-                                }}
-                            >
-                                <ButtonText className='text-custom-secondary'>SAVE</ButtonText>
-                            </Button>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
-            </Box>
-        </GluestackUIProvider>
+                                    <Text bold={true} size='md'>Consumption Unit</Text>
+                                    <Select
+                                        onValueChange={setInputFuelUnit}
+                                        selectedValue={inputFuelUnit === 'liters' ? 'Diesel (L)' : 'Electric (kWh)'}
+                                    >
+                                        <SelectTrigger className='bg-white h-fit border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 mt-2 mb-4'>
+                                            <SelectInput className='pt-3 pb-3'/>
+                                            <MaterialCommunityIcons className='absolute right-2' size={24} name='chevron-down' />
+                                        </SelectTrigger>
+                                        <SelectPortal>
+                                            <SelectContent>
+                                                <SelectItem value='liters' label='Diesel (L)'/>
+                                                <SelectItem value='kWh' label='Electric (kWh)'/>
+                                            </SelectContent>
+                                        </SelectPortal>
+                                    </Select>
+                                </ScrollView>
+                            </ModalBody>
+                            <ModalFooter className='p-2'>
+                                <Button className='bg-transparent me-4'
+                                    onPress={closeModal}
+                                >
+                                    <ButtonText className='text-custom-secondary'>CANCEL</ButtonText>
+                                </Button>
+
+                                <Button className='bg-transparent'
+                                    onPress={async() => {
+                                        console.log(inputFuelUnit);
+                                        await addFuelLog({
+                                            log_date: moment(inputDate).format('YYYY-MM-DD'),
+                                            date_update: inputeUpdateDate,
+                                            start_odometer: inputStartOdometer,
+                                            end_odometer: inputEndOdometer,
+                                            total_fuel: inputTotalFuel,
+                                            consumption_unit: inputFuelUnit
+                                        }).then((res) => {
+                                            console.log(res);
+                                            
+                                            if (Number(res) > 0) {
+                                                closeModal();
+                                            }
+                                        })
+                                    }}
+                                >
+                                    <ButtonText className='text-custom-secondary'>SAVE</ButtonText>
+                                </Button>
+                            </ModalFooter>
+                        </ModalContent>
+                    </Modal>
+                </Box>
+            </GluestackUIProvider>
+        </ApolloProvider>
     );
 }
 
